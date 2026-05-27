@@ -1,15 +1,19 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { Tabs } from 'expo-router';
+import { FavoritesProvider } from '@/context/FavoritesContext';
+import CustomTabBar from '@/components/navigation/CustomTabBar';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <FavoritesProvider>
+      <Tabs
+        tabBar={props => <CustomTabBar {...(props as any)} />}
+        screenOptions={{ headerShown: false }}>
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="calendario" />
+        <Tabs.Screen name="nueva" />
+        <Tabs.Screen name="favoritos" />
+        <Tabs.Screen name="ajustes" />
+      </Tabs>
+    </FavoritesProvider>
   );
 }
