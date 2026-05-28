@@ -1,26 +1,26 @@
-import React, { useCallback, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  StatusBar,
-  Platform,
-  TouchableOpacity,
-  ListRenderItemInfo,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
-import { Categoria, Espacio } from '@/types';
-import { useFavoritesContext } from '@/context/FavoritesContext';
-import { useFilteredSpaces } from '@/hooks/useFilteredSpaces';
 import SearchBar from '@/components/common/SearchBar';
 import CategoryCard from '@/components/home/CategoryCard';
-import SpaceCard from '@/components/home/SpaceCard';
 import EmptyState from '@/components/home/EmptyState';
+import SpaceCard from '@/components/home/SpaceCard';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
+import { Colors } from '@/constants/colors';
+import { BorderRadius, Spacing } from '@/constants/spacing';
+import { FontSize, FontWeight } from '@/constants/typography';
+import { useFavoritesContext } from '@/context/FavoritesContext';
+import { useFilteredSpaces } from '@/hooks/useFilteredSpaces';
+import { Categoria, Espacio } from '@/types';
+import { useCallback, useState } from 'react';
+import {
+  FlatList,
+  ListRenderItemInfo,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CATEGORIAS: Categoria[] = ['canchas', 'piscinas', 'salones'];
 
@@ -129,12 +129,14 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>Hola de nuevo</Text>
             <Text style={styles.headerTitle}>Busca tu Espacio</Text>
           </View>
+
           <View style={styles.avatarContainer}>
             <View style={styles.avatarPlaceholder}>
               <Text style={styles.avatarInitial}>U</Text>
             </View>
             <View style={styles.onlineDot} />
           </View>
+          
         </View>
 
         <SearchBar

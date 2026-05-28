@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { BuildingIcon2, FootBallIcon, WaterIcon2 } from '@/components/icons';
 import { Colors } from '@/constants/colors';
+import { BorderRadius, Spacing } from '@/constants/spacing';
 import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Categoria } from '@/types';
-import { SportIcon, WaterIcon, BuildingIcon } from '@/components/icons';
+import React, { useCallback } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface CategoryCardProps {
   categoria: Categoria;
@@ -19,17 +19,17 @@ const CATEGORY_META: Record<
   canchas: {
     label: 'Canchas',
     sublabel: 'Deportivas',
-    Icon: SportIcon,
+    Icon: FootBallIcon,
   },
   piscinas: {
     label: 'Piscinas',
     sublabel: 'Recreativas',
-    Icon: WaterIcon,
+    Icon: WaterIcon2,
   },
   salones: {
     label: 'Salones',
     sublabel: 'De Eventos',
-    Icon: BuildingIcon,
+    Icon: BuildingIcon2,
   },
 };
 

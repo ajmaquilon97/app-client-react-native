@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 interface IconProps {
   size?: number;
@@ -216,6 +216,27 @@ export const SportIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+export const FootBallIcon: React.FC<IconProps> = ({
+  size = 24,
+  color = '#1E3A5F',
+  strokeWidth = 2,
+}) => (
+  <Svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={color}>
+    <Path
+      strokeWidth={strokeWidth}
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m15 10.42 4.8-5.07M19 18h3M9.5 22 21.414 9.415A2 2 0 0 0 21.2 6.4l-5.61-4.208A1 1 0 0 0 14 3v2a2 2 0 0 1-1.394 1.906L8.677 8.053A1 1 0 0 0 8 9c-.155 6.393-2.082 9-4 9a2 2 0 0 0 0 4h14"
+    />
+  </Svg>
+);
+
+
 export const WaterIcon: React.FC<IconProps> = ({
   size = 24,
   color = '#1E3A5F',
@@ -239,6 +260,22 @@ export const WaterIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+export const WaterIcon2: React.FC<IconProps> = ({
+  size = 24,
+  color = '#1E3A5F',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      stroke={color}
+      d="M2 12q2.5 2 5 0t5 0 5 0 5 0M2 19q2.5 2 5 0t5 0 5 0 5 0M2 5q2.5 2 5 0t5 0 5 0 5 0"
+    />
+  </Svg>
+);
+
 export const BuildingIcon: React.FC<IconProps> = ({
   size = 24,
   color = '#1E3A5F',
@@ -251,6 +288,29 @@ export const BuildingIcon: React.FC<IconProps> = ({
       strokeWidth={strokeWidth}
       stroke={color}
       d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+    />
+  </Svg>
+);
+
+export const BuildingIcon2: React.FC<IconProps> = ({
+  size = 24,
+  color = '#1E3A5F',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      stroke={color}
+      d="M2 10s3-3 3-8M22 10s-3-3-3-8"
+    />
+    <Path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      stroke={color}
+      d="M10 2c0 4.4-3.6 8-8 8M14 2c0 4.4 3.6 8 8 8M2 10s2 2 2 5M22 10s-2 2-2 5M8 15h8M2 22v-1a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1M14 22v-1a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1"
     />
   </Svg>
 );
