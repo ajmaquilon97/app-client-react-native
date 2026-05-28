@@ -116,6 +116,7 @@ export default function SearchScreen({
   }, [onClose, onSelectEspacio]);
 
   return (
+    <>
     <Modal
       visible={visible}
       animationType="slide"
@@ -124,10 +125,10 @@ export default function SearchScreen({
 
       <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
 
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
 
         {/* ── Header ── */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity
               onPress={handleClose}
@@ -240,66 +241,76 @@ export default function SearchScreen({
           )}
         </ScrollView>
 
-        {/* ── Pantalla de Lugares Sugeridos (overlay dentro del mismo Modal) ── */}
-        {pantallaSugeridos && (
-          <View style={[styles.sugeridosOverlay, { paddingTop: insets.top }]}>
+      </View>
+    </Modal>
 
-            {/* Header sugeridos */}
-            <View style={styles.sugeridosHeader}>
-              <View style={styles.sugeridosHeaderLeft}>
-                <TouchableOpacity
-                  onPress={() => setPantallaSugeridos(false)}
-                  style={styles.backButton}
-                  activeOpacity={0.8}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <ArrowLeftIcon size={20} color={Colors.white} strokeWidth={2.5} />
-                </TouchableOpacity>
-                <View>
-                  <Text style={styles.sugeridosTitle}>Lugares Sugeridos</Text>
-                  <Text style={styles.sugeridosSubtitle}>Búsqueda: "{busqueda}"</Text>
-                </View>
-              </View>
-              <View style={styles.fuzzyBadge}>
-                <Text style={styles.fuzzyBadgeText}>Fuzzy Match</Text>
-              </View>
+    {/* ── Modal independiente: Lugares Sugeridos ── */}
+    <Modal
+      visible={pantallaSugeridos}
+      animationType="slide"
+      onRequestClose={() => setPantallaSugeridos(false)}
+      statusBarTranslucent>
+
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+
+      <View style={styles.container}>
+
+        {/* Header sugeridos */}
+        <View style={[styles.sugeridosHeader, { paddingTop: insets.top }]}>
+          <View style={styles.sugeridosHeaderLeft}>
+            <TouchableOpacity
+              onPress={() => setPantallaSugeridos(false)}
+              style={styles.backButton}
+              activeOpacity={0.8}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <ArrowLeftIcon size={20} color={Colors.white} strokeWidth={2.5} />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.sugeridosTitle}>Lugares Sugeridos</Text>
+              <Text style={styles.sugeridosSubtitle}>Búsqueda: "{busqueda}"</Text>
             </View>
-
-            <ScrollView
-              contentContainerStyle={styles.bodyContent}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}>
-
-              {/* Explicación del algoritmo */}
-              <View style={styles.algorithmCard}>
-                <Text style={styles.algorithmTitle}>🔍 Algoritmo de Coincidencias</Text>
-                <Text style={styles.algorithmDesc}>
-                  Mostrando todos los espacios que comparten palabras o características con{' '}
-                  <Text style={styles.algorithmQuery}>"{busqueda}"</Text>, ordenados de mayor a menor relevancia.
-                </Text>
-              </View>
-
-              {aproximadas.length > 0 ? (
-                aproximadas.map(espacio => (
-                  <FuzzyCard
-                    key={espacio.id}
-                    espacio={espacio}
-                    onPress={handleSelectEspacio}
-                  />
-                ))
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>Sin coincidencias</Text>
-                  <Text style={styles.emptyDesc}>
-                    No logramos enlazar tu búsqueda con ningún espacio del catálogo.
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
           </View>
-        )}
+          <View style={styles.fuzzyBadge}>
+            <Text style={styles.fuzzyBadgeText}>Fuzzy Match</Text>
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.body}
+          contentContainerStyle={styles.bodyContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+
+          {/* Explicación del algoritmo */}
+          <View style={styles.algorithmCard}>
+            <Text style={styles.algorithmTitle}>🔍 Algoritmo de Coincidencias</Text>
+            <Text style={styles.algorithmDesc}>
+              Mostrando todos los espacios que comparten palabras o características con{' '}
+              <Text style={styles.algorithmQuery}>"{busqueda}"</Text>, ordenados de mayor a menor relevancia.
+            </Text>
+          </View>
+
+          {aproximadas.length > 0 ? (
+            aproximadas.map(espacio => (
+              <FuzzyCard
+                key={espacio.id}
+                espacio={espacio}
+                onPress={handleSelectEspacio}
+              />
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>Sin coincidencias</Text>
+              <Text style={styles.emptyDesc}>
+                No logramos enlazar tu búsqueda con ningún espacio del catálogo.
+              </Text>
+            </View>
+          )}
+        </ScrollView>
 
       </View>
     </Modal>
+    </>
   );
 }
 
@@ -565,11 +576,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.primaryDark, marginBottom: Spacing.xs },
   emptyDesc: { fontSize: FontSize.xs, color: Colors.gray500, textAlign: 'center' },
 
-  // Pantalla sugeridos (overlay)
-  sugeridosOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.background,
-  },
+  // Pantalla sugeridos
   sugeridosHeader: {
     backgroundColor: Colors.primaryDark,
     paddingHorizontal: Spacing.lg,

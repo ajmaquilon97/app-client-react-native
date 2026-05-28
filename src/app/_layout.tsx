@@ -1,6 +1,6 @@
-import { Tabs } from 'expo-router';
-import { FavoritesProvider } from '@/context/FavoritesContext';
 import CustomTabBar from '@/components/navigation/CustomTabBar';
+import { FavoritesProvider } from '@/context/FavoritesContext';
+import { Tabs } from 'expo-router';
 
 export default function RootLayout() {
   return (
@@ -12,7 +12,7 @@ export default function RootLayout() {
         <Tabs.Screen name="calendario" />
         <Tabs.Screen name="nueva" />
         <Tabs.Screen name="favoritos" />
-        <Tabs.Screen name="ajustes" />
+        <Tabs.Screen name="ajustes" />      
       </Tabs>
     </FavoritesProvider>
   );
