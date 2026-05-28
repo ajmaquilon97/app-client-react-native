@@ -17,6 +17,8 @@ interface SearchBarProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   onClear?: () => void;
+  editable?: boolean;
+  pointerEvents?: 'none' | 'box-none' | 'box-only' | 'auto';
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -24,6 +26,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onChangeText,
   placeholder = 'Buscar canchas, piscinas o salones...',
   onClear,
+  editable = true,
+  pointerEvents,
 }) => {
   const inputRef = useRef<TextInput>(null);
 
@@ -47,11 +51,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} pointerEvents={pointerEvents}>
       <View style={styles.iconWrapper}>
         <SearchIcon size={18} color={Colors.teal200} />
       </View>
-      <TextInput {...inputProps} />
+      <TextInput {...inputProps} editable={editable} />
       {value.length > 0 && (
         <TouchableOpacity
           onPress={handleClear}

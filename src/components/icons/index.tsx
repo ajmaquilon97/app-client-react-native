@@ -315,6 +315,22 @@ export const BuildingIcon2: React.FC<IconProps> = ({
   </Svg>
 );
 
+export const ReservationsIcon: React.FC<IconProps> = ({
+  size = 24,
+  color = '#1F2937',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      stroke={color}
+      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+    />
+  </Svg>
+);
+
 export const SadFaceIcon: React.FC<IconProps> = ({
   size = 24,
   color = '#9CA3AF',

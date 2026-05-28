@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CalendarIcon, HeartIcon, HomeIcon, ReservationsIcon, SettingsIcon } from '@/components/icons';
 import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing } from '@/constants/spacing';
-import { HomeIcon, CalendarIcon, HeartIcon, SettingsIcon, PlusIcon } from '@/components/icons';
+import { FontSize, FontWeight } from '@/constants/typography';
+import React from 'react';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TabBarIconProps {
   color: string;
@@ -27,9 +27,14 @@ function SettingsTabIcon({ color }: TabBarIconProps) {
   return <SettingsIcon size={22} color={color} />;
 }
 
+function ReservationsTabIcon({ color }: TabBarIconProps) {
+  return <ReservationsIcon size={22} color={color} />;
+}
+
 const ICONS: Record<string, React.FC<TabBarIconProps>> = {
   index: HomeTabIcon,
   calendario: CalendarTabIcon,
+  nueva: ReservationsTabIcon,
   favoritos: HeartTabIcon,
   ajustes: SettingsTabIcon,
 };
@@ -37,6 +42,7 @@ const ICONS: Record<string, React.FC<TabBarIconProps>> = {
 const LABELS: Record<string, string> = {
   index: 'Inicio',
   calendario: 'Calendario',
+  nueva: 'Reservas',
   favoritos: 'Favoritos',
   ajustes: 'Ajustes',
 };
@@ -58,10 +64,8 @@ export default function CustomTabBar({ state, navigation }: CustomTabBarProps) {
     <View style={[styles.tabBar, { paddingBottom }]}>
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
-        const isCenter = route.name === 'nueva';
 
         const onPress = () => {
-          if (isCenter) return;
           const event = navigation.emit({
             type: 'tabPress',
             target: route.key,
@@ -71,19 +75,6 @@ export default function CustomTabBar({ state, navigation }: CustomTabBarProps) {
             navigation.navigate(route.name);
           }
         };
-
-        if (isCenter) {
-          return (
-            <View key={route.key} style={styles.fabWrapper}>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={onPress}
-                style={styles.fabButton}>
-                <PlusIcon size={26} color={Colors.white} strokeWidth={2.5} />
-              </TouchableOpacity>
-            </View>
-          );
-        }
 
         const IconComponent = ICONS[route.name];
         const iconColor = isFocused ? Colors.primaryDark : Colors.gray400;
@@ -145,32 +136,5 @@ const styles = StyleSheet.create({
   tabLabelActive: {
     color: Colors.primaryDark,
     fontWeight: FontWeight.bold,
-  },
-  fabWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -Spacing.xxl,
-  },
-  fabButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: Colors.accentTeal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: Colors.background,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.accentTeal,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
   },
 });

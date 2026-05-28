@@ -8,7 +8,9 @@ import { BorderRadius, Spacing } from '@/constants/spacing';
 import { FontSize, FontWeight } from '@/constants/typography';
 import { useFavoritesContext } from '@/context/FavoritesContext';
 import { useFilteredSpaces } from '@/hooks/useFilteredSpaces';
-import { Categoria, Espacio } from '@/types';
+import QuickFilters from '@/components/home/QuickFilters';
+import SearchScreen from '@/components/home/SearchScreen';
+import { Categoria, Espacio, FiltroRapido } from '@/types';
 import { useCallback, useState } from 'react';
 import {
   FlatList,
@@ -32,11 +34,14 @@ export default function HomeScreen() {
   const [busqueda, setBusqueda] = useState('');
   const [espacioDetalle, setEspacioDetalle] = useState<Espacio | null>(null);
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [filtroRapido, setFiltroRapido] = useState<FiltroRapido | null>(null);
+  const [pantallaBusqueda, setPantallaBusqueda] = useState(false);
 
   const { isFavorite, toggleFavorite } = useFavoritesContext();
   const { espacios, total } = useFilteredSpaces({
     categoria: categoriaSeleccionada,
     query: busqueda,
+    filtroRapido,
   });
 
   const handleCategoryPress = useCallback(
@@ -61,6 +66,7 @@ export default function HomeScreen() {
   const handleReset = useCallback(() => {
     setBusqueda('');
     setCategoriaSeleccionada(null);
+    setFiltroRapido(null);
   }, []);
 
   const renderSpaceCard = useCallback(
@@ -101,6 +107,8 @@ export default function HomeScreen() {
         ))}
       </View>
 
+      <QuickFilters active={filtroRapido} onSelect={setFiltroRapido} />
+
       <View style={styles.resultsHeader}>
         <Text style={styles.resultsTitle}>
           {categoriaSeleccionada
@@ -139,11 +147,17 @@ export default function HomeScreen() {
           
         </View>
 
-        <SearchBar
-          value={busqueda}
-          onChangeText={setBusqueda}
-          onClear={handleReset}
-        />
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => setPantallaBusqueda(true)}>
+          <SearchBar
+            value={busqueda}
+            onChangeText={setBusqueda}
+            onClear={handleReset}
+            editable={false}
+            pointerEvents="none"
+          />
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -164,6 +178,14 @@ export default function HomeScreen() {
         isFavorite={espacioDetalle ? isFavorite(espacioDetalle.id) : false}
         onToggleFavorite={toggleFavorite}
         onClose={handleSheetClose}
+      />
+
+      <SearchScreen
+        visible={pantallaBusqueda}
+        busqueda={busqueda}
+        onChangeText={setBusqueda}
+        onClose={() => setPantallaBusqueda(false)}
+        onSelectEspacio={handleCardPress}
       />
     </View>
   );

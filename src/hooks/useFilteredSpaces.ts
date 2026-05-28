@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
-import { Espacio, Categoria } from '@/types';
+import { Espacio, Categoria, FiltroRapido } from '@/types';
 import { ESPACIOS_DATA } from '@/data/espacios';
 
 interface UseFilteredSpacesParams {
   categoria: Categoria | null;
   query: string;
+  filtroRapido?: FiltroRapido | null;
 }
 
 interface UseFilteredSpacesReturn {
@@ -15,11 +16,12 @@ interface UseFilteredSpacesReturn {
 export function useFilteredSpaces({
   categoria,
   query,
+  filtroRapido,
 }: UseFilteredSpacesParams): UseFilteredSpacesReturn {
   const espacios = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return ESPACIOS_DATA.filter(espacio => {
+    let lista = ESPACIOS_DATA.filter(espacio => {
       const matchesCategoria = categoria ? espacio.categoria === categoria : true;
 
       const matchesQuery =
@@ -30,7 +32,17 @@ export function useFilteredSpaces({
 
       return matchesCategoria && matchesQuery;
     });
-  }, [categoria, query]);
+
+    if (filtroRapido === 'cercanos') {
+      lista = [...lista].sort((a, b) => a.distancia - b.distancia);
+    } else if (filtroRapido === 'puntuacion') {
+      lista = [...lista].sort((a, b) => b.rating - a.rating);
+    } else if (filtroRapido === 'inmediato') {
+      lista = lista.filter(e => e.disponibleHoy);
+    }
+
+    return lista;
+  }, [categoria, query, filtroRapido]);
 
   return {
     espacios,
