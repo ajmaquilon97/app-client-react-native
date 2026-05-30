@@ -12,6 +12,7 @@ import {
   Modal,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
@@ -20,6 +21,7 @@ import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/components/icons';
 import PaymentModal from '@/components/payment/PaymentModal';
+import { useReservationsContext } from '@/context/ReservationsContext';
 
 interface SpaceDetailSheetProps {
   visible: boolean;
@@ -37,6 +39,8 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   onClose,
 }) => {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { addReserva } = useReservationsContext();
   const [fechaReserva, setFechaReserva] = useState('');
   const [cantidad, setCantidad] = useState(1);
   const [showPayment, setShowPayment] = useState(false);
@@ -61,12 +65,26 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     setShowPayment(true);
   }, [fechaReserva]);
 
-  const handlePaymentSuccess = useCallback(() => {
-    setShowPayment(false);
-    setFechaReserva('');
-    setCantidad(1);
-    onClose();
-  }, [onClose]);
+  const handlePaymentSuccess = useCallback(
+    (result: { transactionId: string; amount: string }) => {
+      if (espacio) {
+        const totalReserva = espacio.precio * cantidad * 1.1;
+        addReserva({
+          espacio,
+          fecha: fechaReserva,
+          cantidad,
+          total: totalReserva,
+          codigo: result.transactionId,
+        });
+      }
+      setShowPayment(false);
+      setFechaReserva('');
+      setCantidad(1);
+      onClose();
+      router.navigate('/calendario');
+    },
+    [espacio, cantidad, fechaReserva, addReserva, onClose, router],
+  );
 
   if (!espacio) return null;
 
@@ -291,7 +309,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
           cantidad={cantidad}
           total={total.toFixed(2)}
           onClose={() => setShowPayment(false)}
-          onSuccess={() => handlePaymentSuccess()}
+          onSuccess={handlePaymentSuccess}
         />
       )}
     </Modal>

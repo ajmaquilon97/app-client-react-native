@@ -16,6 +16,12 @@ import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { ArrowLeftIcon } from '@/components/icons';
+import PaymentResult from './PaymentResult';
+
+/** Tarjeta de prueba que fuerza un rechazo (para probar el flujo de error). */
+const DECLINE_TEST_CARD = '4000000000000002';
+
+type PaymentStatus = 'form' | 'processing' | 'success' | 'error';
 
 export interface KushkiPaymentModalProps {
   visible: boolean;
@@ -39,7 +45,19 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
   const insets = useSafeAreaInsets();
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(false);
-  const [procesando, setProcesando] = useState(false);
+  const [status, setStatus] = useState<PaymentStatus>('form');
+  const [transactionId, setTransactionId] = useState<string>('');
+
+  const procesando = status === 'processing';
+
+  // Reinicia el estado cada vez que se abre/cierra el modal
+  useEffect(() => {
+    if (!visible) {
+      setStatus('form');
+      setTransactionId('');
+      setLoading(false);
+    }
+  }, [visible]);
 
   if (!espacio) return null;
 
@@ -324,26 +342,41 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
         const data = JSON.parse(event.nativeEvent.data);
 
         if (data.type === 'PROCESS_PAYMENT') {
-          setProcesando(true);
+          setStatus('processing');
 
-          // Aquí es donde tu backend procesa el pago real
-          // Por ahora, simulamos el flujo
+          // SIMULACIÓN: aquí tu backend procesaría el pago real con Kushki.
+          // Por ahora decidimos éxito/fallo según la tarjeta de prueba usada.
+          const cardNumber: string = data.data?.cardNumber || '';
+          const isDeclined = cardNumber === DECLINE_TEST_CARD;
+
           setTimeout(() => {
-            setProcesando(false);
-
-            // Simular éxito
-            onSuccess({
-              transactionId: `TXN-${Date.now()}`,
-              amount: total,
-            });
+            if (isDeclined) {
+              setStatus('error');
+            } else {
+              setTransactionId(`RES-${Math.floor(100000 + Math.random() * 900000)}`);
+              setStatus('success');
+            }
           }, 2000);
         }
       } catch (error) {
         console.error('Error procesando mensaje del WebView:', error);
       }
     },
-    [total, onSuccess]
+    []
   );
+
+  // Confirma el pago exitoso → el padre cierra el modal y navega a reservas
+  const handleContinue = useCallback(() => {
+    onSuccess({ transactionId, amount: total });
+  }, [onSuccess, transactionId, total]);
+
+  // Vuelve al formulario de pago para reintentar
+  const handleRetry = useCallback(() => {
+    setStatus('form');
+  }, []);
+
+  // Solo se puede cerrar manualmente en el formulario o tras un error
+  const canClose = status === 'form' || status === 'error';
 
   return (
     <Modal
@@ -351,18 +384,18 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
       animationType="slide"
       transparent={false}
       statusBarTranslucent
-      onRequestClose={procesando ? undefined : onClose}>
+      onRequestClose={canClose ? onClose : undefined}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             activeOpacity={0.8}
-            disabled={procesando}
+            disabled={!canClose}
             onPress={onClose}
             style={styles.headerBtn}>
             <ArrowLeftIcon
               size={20}
-              color={procesando ? Colors.gray500 : Colors.white}
+              color={canClose ? Colors.white : Colors.gray500}
               strokeWidth={2.5}
             />
           </TouchableOpacity>
@@ -398,6 +431,19 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
             <ActivityIndicator size="large" color={Colors.accentTeal} />
             <Text style={styles.processingText}>Procesando pago seguro...</Text>
           </View>
+        )}
+
+        {/* Pantalla de resultado: éxito o fallo */}
+        {(status === 'success' || status === 'error') && (
+          <PaymentResult
+            status={status}
+            amount={total}
+            fecha={fecha}
+            transactionId={transactionId}
+            onContinue={handleContinue}
+            onRetry={handleRetry}
+            onCancel={onClose}
+          />
         )}
       </View>
     </Modal>
@@ -452,7 +498,11 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.semiBold,
   },
   processingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(30, 58, 95, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',

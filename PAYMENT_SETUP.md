@@ -31,12 +31,12 @@ La app automáticamente usará la pasarela que elegiste. No necesitas cambiar na
 
 ### Tarjetas Kushki (UAT)
 ```
-VISA
+VISA (aprobada)
 - Número: 4111 1111 1111 1111
 - Vencimiento: 12/29 (o cualquiera futuro)
 - CVV: 123 (o cualquier número)
 
-Mastercard
+Mastercard (aprobada)
 - Número: 5555 5555 5555 4444
 - Vencimiento: 12/29
 - CVV: 123
@@ -44,16 +44,26 @@ Mastercard
 
 ### Tarjetas Datafast (UAT)
 ```
-VISA
+VISA (aprobada)
 - Número: 4200 0000 0000 0000
 - Vencimiento: 12/29
 - CVV: 123
 
-Mastercard
+Mastercard (aprobada)
 - Número: 5105 1051 0510 5100
 - Vencimiento: 12/29
 - CVV: 123
 ```
+
+### 🔴 Tarjeta de RECHAZO (para probar el flujo de error)
+```
+Cualquier pasarela
+- Número: 4000 0000 0000 0002
+- Vencimiento: 12/29
+- CVV: 123
+```
+Con esta tarjeta verás la pantalla de **Pago Rechazado** y podrás reintentar.
+Con cualquier otra tarjeta el pago se aprueba y te redirige a **Calendario** (Mis Reservas).
 
 ---
 
@@ -168,8 +178,18 @@ Por ahora, **ambas pasarelas simulan el pago** sin llamar a un backend real. Cua
 2. ✅ Escribes datos de tarjeta
 3. ✅ Presionas "Pagar"
 4. ⏳ Espera 2 segundos (simulación)
-5. ✅ Muestra "Pago exitoso"
-6. ✅ Cierra el modal y confirma la reserva
+5. La pantalla de resultado depende de la tarjeta:
+   - **Aprobada** → pantalla verde "¡Pago Autorizado!" → se guarda la reserva → redirige a **Calendario**
+   - **Rechazada** (`4000 0000 0000 0002`) → pantalla "Pago Rechazado" → botón **Reintentar** (vuelve al formulario) o **Cancelar**
+
+> La decisión éxito/fallo se simula según el número de tarjeta en `KushkiPaymentModal.tsx` /
+> `DatafastPaymentModal.tsx` (constante `DECLINE_TEST_CARD`). En producción, esto lo decide la
+> respuesta de tu backend.
+
+### ¿Dónde se guardan las reservas?
+Al aprobarse el pago, la reserva se agrega vía `ReservationsContext` y aparece en la pestaña
+**Calendario** (`src/app/calendario.tsx`), donde puedes verla y cancelarla. Este estado vive en
+memoria; se pierde al cerrar la app (más adelante se puede persistir con AsyncStorage o backend).
 
 **Para activar pagos reales**, necesitas:
 - Backend con los endpoints descritos arriba
@@ -198,16 +218,22 @@ Por ahora, **ambas pasarelas simulan el pago** sin llamar a un backend real. Cua
 src/
 ├── components/
 │   └── payment/
-│       ├── PaymentModal.tsx          ← Selector automático
-│       ├── KushkiPaymentModal.tsx    ← Modal Kushki
-│       ├── DatafastPaymentModal.tsx  ← Modal Datafast
-│       └── PaymentGatewayModal.tsx   ← (Antiguo - para eliminar)
+│       ├── PaymentModal.tsx          ← Selector automático (Kushki o Datafast)
+│       ├── KushkiPaymentModal.tsx    ← Modal Kushki (WebView)
+│       ├── DatafastPaymentModal.tsx  ← Modal Datafast (WebView)
+│       └── PaymentResult.tsx         ← Pantalla de éxito/fallo (compartida)
 │
 ├── config/
 │   └── paymentConfig.ts              ← Configuración centralizada
 │
+├── context/
+│   └── ReservationsContext.tsx       ← Estado global de reservas
+│
+├── app/
+│   └── calendario.tsx                ← Pestaña "Mis Reservas"
+│
 └── components/space/
-    └── SpaceDetailSheet.tsx          ← Usa PaymentModal
+    └── SpaceDetailSheet.tsx          ← Usa PaymentModal + guarda reserva + navega
 ```
 
 ---

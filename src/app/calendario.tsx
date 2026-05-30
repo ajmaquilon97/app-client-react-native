@@ -1,13 +1,63 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Platform,
+  FlatList,
+  TouchableOpacity,
+  ListRenderItemInfo,
+} from 'react-native';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
 import { CalendarIcon } from '@/components/icons';
+import { useReservationsContext, Reserva } from '@/context/ReservationsContext';
 
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { reservas, reservasCount, cancelReserva } = useReservationsContext();
+
+  const renderReserva = ({ item }: ListRenderItemInfo<Reserva>) => (
+    <View style={styles.card}>
+      <Image
+        source={{ uri: item.espacio.imagen }}
+        style={styles.cardImage}
+        contentFit="cover"
+      />
+      <View style={styles.cardBody}>
+        <View>
+          <Text style={styles.cardSubcat}>{item.espacio.subcategoria}</Text>
+          <Text style={styles.cardName} numberOfLines={1}>
+            {item.espacio.nombre}
+          </Text>
+          <View style={styles.cardMetaRow}>
+            <CalendarIcon size={13} color={Colors.gray400} strokeWidth={2} />
+            <Text style={styles.cardFecha}>{item.fecha}</Text>
+          </View>
+          <Text style={styles.cardDetail}>
+            Cantidad: <Text style={styles.cardDetailBold}>{item.cantidad}</Text>
+            {'   |   '}Total:{' '}
+            <Text style={styles.cardDetailBold}>${item.total.toFixed(2)}</Text>
+          </Text>
+        </View>
+
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardCodigo}>{item.codigo}</Text>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => cancelReserva(item.id)}>
+            <Text style={styles.cardCancel}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -18,34 +68,45 @@ export default function CalendarScreen() {
       />
 
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Text style={styles.headerTitle}>Calendario</Text>
-        <Text style={styles.headerSubtitle}>Tus reservas y disponibilidad</Text>
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.iconCircle}>
-          <CalendarIcon size={44} color={Colors.gray300} strokeWidth={1.5} />
-        </View>
-        <Text style={styles.title}>Próximamente</Text>
-        <Text style={styles.subtitle}>
-          Aquí podrás ver todas tus reservas programadas, gestionar fechas y
-          revisar la disponibilidad de los espacios en tiempo real.
-        </Text>
-
-        <View style={styles.featureList}>
-          {[
-            'Ver reservas activas',
-            'Historial de reservas',
-            'Disponibilidad en tiempo real',
-            'Notificaciones de recordatorio',
-          ].map((feature, idx) => (
-            <View key={idx} style={styles.featureItem}>
-              <View style={styles.featureDot} />
-              <Text style={styles.featureText}>{feature}</Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.headerTitle}>Mis Reservas</Text>
+            <Text style={styles.headerSubtitle}>Tus reservas y disponibilidad</Text>
+          </View>
+          {reservasCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{reservasCount} Activas</Text>
             </View>
-          ))}
+          )}
         </View>
       </View>
+
+      {reservasCount > 0 ? (
+        <FlatList
+          data={reservas}
+          renderItem={renderReserva}
+          keyExtractor={item => String(item.id)}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.content}>
+          <View style={styles.iconCircle}>
+            <CalendarIcon size={44} color={Colors.gray300} strokeWidth={1.5} />
+          </View>
+          <Text style={styles.title}>Sin reservas</Text>
+          <Text style={styles.subtitle}>
+            No tienes ninguna reserva agendada en este momento. Explora los espacios
+            disponibles y reserva el que más te guste.
+          </Text>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.exploreBtn}
+            onPress={() => router.navigate('/')}>
+            <Text style={styles.exploreBtnText}>Explorar Espacios</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -73,6 +134,11 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   headerTitle: {
     color: Colors.white,
     fontSize: FontSize.xxl,
@@ -84,6 +150,102 @@ const styles = StyleSheet.create({
     color: Colors.teal200,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
+  },
+  badge: {
+    backgroundColor: Colors.accentTeal,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.full,
+  },
+  badgeText: {
+    color: Colors.white,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+  },
+  listContent: {
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: Spacing.md,
+    gap: Spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  cardImage: {
+    width: 80,
+    height: 80,
+    borderRadius: BorderRadius.lg,
+  },
+  cardBody: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  cardSubcat: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.extraBold,
+    color: Colors.accentTeal,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  cardName: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
+    color: Colors.primaryDark,
+    marginTop: 1,
+  },
+  cardMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  cardFecha: {
+    fontSize: FontSize.xs,
+    color: Colors.gray700,
+    fontWeight: FontWeight.semiBold,
+  },
+  cardDetail: {
+    fontSize: FontSize.xs,
+    color: Colors.gray500,
+    marginTop: 4,
+  },
+  cardDetailBold: {
+    fontWeight: FontWeight.bold,
+    color: Colors.primaryDark,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+  },
+  cardCodigo: {
+    fontSize: FontSize.xs,
+    color: Colors.gray400,
+    fontWeight: FontWeight.medium,
+  },
+  cardCancel: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+    color: Colors.rose,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   content: {
     flex: 1,
@@ -114,29 +276,15 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: Spacing.xl,
   },
-  featureList: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: Colors.border,
+  exploreBtn: {
+    backgroundColor: Colors.primaryDark,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.xxl,
   },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.xs,
-    gap: Spacing.sm,
-  },
-  featureDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.accentTeal,
-  },
-  featureText: {
-    fontSize: FontSize.base,
-    color: Colors.gray700,
-    fontWeight: FontWeight.medium,
+  exploreBtnText: {
+    color: Colors.white,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.bold,
   },
 });
