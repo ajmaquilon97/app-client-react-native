@@ -42,7 +42,7 @@ const ICONS: Record<string, React.FC<TabBarIconProps>> = {
 const LABELS: Record<string, string> = {
   index: 'Inicio',
   calendario: 'Calendario',
-  nueva: 'Reservas',
+  //nueva: 'Reservas',
   favoritos: 'Favoritos',
   ajustes: 'Ajustes',
 };

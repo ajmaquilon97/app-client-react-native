@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  Animated,
   Modal,
 } from 'react-native';
 import { Image } from 'expo-image';
@@ -20,6 +19,7 @@ import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/components/icons';
+import PaymentModal from '@/components/payment/PaymentModal';
 
 interface SpaceDetailSheetProps {
   visible: boolean;
@@ -39,14 +39,13 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   const insets = useSafeAreaInsets();
   const [fechaReserva, setFechaReserva] = useState('');
   const [cantidad, setCantidad] = useState(1);
-  const [reservaConfirmada, setReservaConfirmada] = useState(false);
-  const successOpacity = useRef(new Animated.Value(0)).current;
+  const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
     if (!visible) {
       setFechaReserva('');
       setCantidad(1);
-      setReservaConfirmada(false);
+      setShowPayment(false);
     }
   }, [visible]);
 
@@ -59,18 +58,15 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       Alert.alert('Fecha requerida', 'Por favor ingresa la fecha para tu reserva.', [{ text: 'Entendido' }]);
       return;
     }
-    setReservaConfirmada(true);
-    Animated.sequence([
-      Animated.timing(successOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.delay(1800),
-      Animated.timing(successOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start(() => {
-      setReservaConfirmada(false);
-      setFechaReserva('');
-      setCantidad(1);
-      onClose();
-    });
-  }, [fechaReserva, successOpacity, onClose]);
+    setShowPayment(true);
+  }, [fechaReserva]);
+
+  const handlePaymentSuccess = useCallback(() => {
+    setShowPayment(false);
+    setFechaReserva('');
+    setCantidad(1);
+    onClose();
+  }, [onClose]);
 
   if (!espacio) return null;
 
@@ -256,15 +252,9 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   </View>
                 </View>
 
-                {reservaConfirmada ? (
-                  <Animated.View style={[styles.successBanner, { opacity: successOpacity }]}>
-                    <Text style={styles.successText}>¡Reserva agregada a tu perfil! 🎉</Text>
-                  </Animated.View>
-                ) : (
-                  <TouchableOpacity activeOpacity={0.85} onPress={handleReservar} style={styles.reserveButton}>
-                    <Text style={styles.reserveButtonText}>CONFIRMAR RESERVA</Text>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity activeOpacity={0.85} onPress={handleReservar} style={styles.reserveButton}>
+                  <Text style={styles.reserveButtonText}>CONTINUAR AL PAGO →</Text>
+                </TouchableOpacity>
               </View>
 
               {/* Reseñas */}
@@ -292,6 +282,18 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
+
+      {espacio && (
+        <PaymentModal
+          visible={showPayment}
+          espacio={espacio}
+          fecha={fechaReserva}
+          cantidad={cantidad}
+          total={total.toFixed(2)}
+          onClose={() => setShowPayment(false)}
+          onSuccess={() => handlePaymentSuccess()}
+        />
+      )}
     </Modal>
   );
 };

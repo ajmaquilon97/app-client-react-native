@@ -212,7 +212,7 @@ const calcularCoincidenciasFuzzy = (query, categoriaSeleccionada) => {
 export default function App() {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
   const [busqueda, setBusqueda] = useState("");
-  const [espacioDetalle, setEspacioDetalle] = useState(null); // Contiene el espacio que se visualizará en la NUEVA VENTANA completa
+  const [espacioDetalle, setEspacioDetalle] = useState(null);
   const [favoritos, setFavoritos] = useState([1, 4]);
   const [reservaConfirmada, setReservaConfirmada] = useState(false);
   const [fechaReserva, setFechaReserva] = useState("");
@@ -221,9 +221,52 @@ export default function App() {
   const [pantallaSugeridos, setPantallaSugeridos] = useState(false);
   const [filtroRapido, setFiltroRapido] = useState(null);
   
-  // Estado para la calculadora de la nueva ventana de reserva
   const [cantidadUnidades, setCantidadUnidades] = useState(1);
 
+  // Estados de Pasarela de Pagos
+  const [pantallaPagos, setPantallaPagos] = useState(false);
+  const [metodoPago, setMetodoPago] = useState('tarjeta'); // 'tarjeta' | 'wallet'
+  const [procesandoPago, setProcesandoPago] = useState(false);
+  const [pagoCompletado, setPagoCompletado] = useState(false);
+
+  // Estados de tarjetas agregadas
+  const [tarjetasGuardadas, setTarjetasGuardadas] = useState([
+    {
+      id: 1,
+      numero: "4556 7812 3490 5214",
+      nombre: "MARIANA DE LOS ANGELES",
+      fecha: "12/29",
+      cvv: "421",
+      tipo: "visa",
+      color: "from-slate-800 to-slate-950"
+    },
+    {
+      id: 2,
+      numero: "5412 7590 1283 4967",
+      nombre: "MARIANA D. ANGELES",
+      fecha: "08/28",
+      cvv: "115",
+      tipo: "mastercard",
+      color: "from-cyan-900 to-emerald-950"
+    }
+  ]);
+  const [tarjetaSeleccionada, setTarjetaSeleccionada] = useState(1);
+
+  // Estados del Carrusel de Agregar Tarjeta
+  const [pantallaAgregarTarjeta, setPantallaAgregarTarjeta] = useState(false);
+  const [pasoCarousel, setPasoCarousel] = useState(1); // 1: numero, 2: fecha, 3: cvv, 4: nombre
+  const [nuevoNum, setNuevoNum] = useState("");
+  const [nuevaFecha, setNuevaFecha] = useState("");
+  const [nuevoCvv, setNuevoCvv] = useState("");
+  const [nuevoNombre, setNuevoNombre] = useState("");
+
+  // Formulario de Facturación
+  const [facturaNombre, setFacturaNombre] = useState('');
+  const [facturaId, setFacturaId] = useState('');
+  const [facturaEmail, setFacturaEmail] = useState('');
+  const [facturaDireccion, setFacturaDireccion] = useState('');
+
+  // Lista de reservas activas
   const [reservasRealizadas, setReservasRealizadas] = useState([
     {
       id: 101,
@@ -236,7 +279,6 @@ export default function App() {
     }
   ]);
 
-  // Memorizar resultados para optimizar rendimiento de renderizado
   const resultadoBusqueda = useMemo(() => {
     const { exactas, aproximadas, esFuzzyMode, tokens } = calcularCoincidenciasFuzzy(busqueda, categoriaSeleccionada);
     let listaOriginal = esFuzzyMode ? aproximadas : (busqueda ? exactas : ESPACIOS_DATA.filter(e => !categoriaSeleccionada || e.categoria === categoriaSeleccionada));
@@ -273,33 +315,51 @@ export default function App() {
     }
   };
 
-  const handleReservar = (e) => {
+  const irAPasarelaDePagos = (e) => {
     e.preventDefault();
     if (!fechaReserva) return;
+    
+    setFacturaNombre("Mariana de los Ángeles");
+    setFacturaId("0987654321001");
+    setFacturaEmail("mariana.angeles@mail.com");
+    setFacturaDireccion("Av. Samborondón Km 2.5");
+    
+    setPantallaPagos(true);
+  };
 
-    const subtotal = espacioDetalle.precio * cantidadUnidades;
-    const tarifaPlataforma = subtotal * 0.10;
-    const totalCalculado = subtotal + tarifaPlataforma;
-
-    const nuevaReserva = {
-      id: Date.now(),
-      espacio: espacioDetalle,
-      fecha: fechaReserva,
-      codigo: `RES-${Math.floor(100000 + Math.random() * 900000)}`,
-      estado: "Confirmada",
-      unidades: cantidadUnidades,
-      total: totalCalculado
-    };
-
-    setReservasRealizadas([nuevaReserva, ...reservasRealizadas]);
-    setReservaConfirmada(true);
+  const ejecutarPagoFinal = (e) => {
+    e.preventDefault();
+    setProcesandoPago(true);
 
     setTimeout(() => {
-      setReservaConfirmada(false);
-      setEspacioDetalle(null);
-      setFechaReserva("");
-      setCantidadUnidades(1);
-    }, 1800);
+      setProcesandoPago(false);
+      setPagoCompletado(true);
+
+      const subtotal = espacioDetalle.precio * cantidadUnidades;
+      const tarifaPlataforma = subtotal * 0.10;
+      const totalCalculado = subtotal + tarifaPlataforma;
+
+      const nuevaReserva = {
+        id: Date.now(),
+        espacio: espacioDetalle,
+        fecha: fechaReserva,
+        codigo: `RES-${Math.floor(100000 + Math.random() * 900000)}`,
+        estado: "Confirmada",
+        unidades: cantidadUnidades,
+        total: totalCalculado
+      };
+
+      setTimeout(() => {
+        setReservasRealizadas([nuevaReserva, ...reservasRealizadas]);
+        setPagoCompletado(false);
+        setPantallaPagos(false);
+        setEspacioDetalle(null);
+        setFechaReserva("");
+        setCantidadUnidades(1);
+        setVerMisReservas(true); 
+      }, 1500);
+
+    }, 2200);
   };
 
   const cancelarReserva = (id) => {
@@ -309,6 +369,58 @@ export default function App() {
   const handleToggleFiltroRapido = (filtro) => {
     setFiltroRapido(filtroRapido === filtro ? null : filtro);
   };
+
+  // Funciones formateadoras del carrusel de tarjeta
+  const formatNumTarjeta = (val) => {
+    const raw = val.replace(/\D/g, "");
+    const match = raw.match(/.{1,4}/g);
+    return match ? match.slice(0, 4).join(" ") : raw;
+  };
+
+  const formatFechaTarjeta = (val) => {
+    const raw = val.replace(/\D/g, "");
+    if (raw.length >= 3) {
+      return `${raw.slice(0, 2)}/${raw.slice(2, 4)}`;
+    }
+    return raw;
+  };
+
+  const handleGuardarTarjeta = (e) => {
+    e.preventDefault();
+    const detectTipo = nuevoNum.startsWith("5") ? "mastercard" : "visa";
+    const colors = [
+      "from-indigo-900 to-slate-900",
+      "from-purple-900 to-rose-950",
+      "from-teal-800 to-blue-950",
+      "from-amber-800 to-stone-900"
+    ];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+    const nuevaTarjeta = {
+      id: Date.now(),
+      numero: nuevoNum || "4000 1234 5678 9010",
+      nombre: (nuevoNombre || "TITULAR TARJETA").toUpperCase(),
+      fecha: nuevaFecha || "12/30",
+      cvv: nuevoCvv || "999",
+      tipo: detectTipo,
+      color: randomColor
+    };
+
+    setTarjetasGuardadas([...tarjetasGuardadas, nuevaTarjeta]);
+    setTarjetaSeleccionada(nuevaTarjeta.id);
+    
+    // Limpieza de estados
+    setNuevoNum("");
+    setNuevaFecha("");
+    setNuevoCvv("");
+    setNuevoNombre("");
+    setPasoCarousel(1);
+    setPantallaAgregarTarjeta(false);
+  };
+
+  const totalCalculado = espacioDetalle 
+    ? (espacioDetalle.precio * cantidadUnidades * 1.10).toFixed(2) 
+    : "0.00";
 
   return (
     <div className="min-h-screen bg-slate-900 py-6 px-4 flex justify-center items-center font-sans antialiased text-[#1F2937]">
@@ -524,19 +636,16 @@ export default function App() {
                     onClick={() => setEspacioDetalle(espacio)}
                     className="bg-[#FFFFFF] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-slate-100 flex flex-col cursor-pointer active:scale-[0.99]"
                   >
-                    {/* Contenedor Imagen */}
                     <div className="relative h-44 w-full bg-slate-200 overflow-hidden">
                       <img 
                         src={espacio.imagen} 
                         alt={espacio.nombre} 
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                       />
-                      {/* Badge Categoría */}
                       <span className="absolute top-3 left-3 bg-[#1E3A5F]/90 backdrop-blur-md text-[#14B8A6] text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
                         {espacio.categoria}
                       </span>
 
-                      {/* Badge de Disponibilidad Inmediata */}
                       {espacio.disponibleHoy && (
                         <span className="absolute bottom-3 left-3 bg-[#14B8A6]/90 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-sm flex items-center space-x-1">
                           <span>⚡</span>
@@ -544,7 +653,6 @@ export default function App() {
                         </span>
                       )}
 
-                      {/* Botón Favorito */}
                       <button 
                         onClick={(e) => { e.stopPropagation(); toggleFavorito(espacio.id); }}
                         className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-md shadow-sm text-slate-700 hover:text-red-500 hover:bg-white transition-all"
@@ -560,7 +668,6 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Información de la tarjeta */}
                     <div className="p-4">
                       <div className="flex justify-between items-start mb-1">
                         <span className="text-xs font-semibold text-[#14B8A6]">{espacio.subcategoria}</span>
@@ -688,7 +795,6 @@ export default function App() {
         {/* VENTANA DE BÚSQUEDA A PANTALLA COMPLETA */}
         {pantallaBusqueda && (
           <div className="absolute inset-0 bg-[#F5F7FA] z-20 flex flex-col pb-24 animate-fade-in">
-            {/* Header Buscador */}
             <div className="bg-[#1E3A5F] text-white p-5 pt-8 flex items-center space-x-3 shadow-md shrink-0">
               <button 
                 onClick={() => setPantallaBusqueda(false)} 
@@ -718,7 +824,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Contenido Dinámico de la ventana de búsqueda */}
             <div className="flex-1 overflow-y-auto p-5 no-scrollbar">
               {!busqueda ? (
                 <div>
@@ -744,7 +849,6 @@ export default function App() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Banner interactivo de coincidencia aproximada (SIEMPRE DISPONIBLE AL ESCRIBIR) */}
                   {busqueda && (
                     <div 
                       onClick={() => { setPantallaBusqueda(false); setPantallaSugeridos(true); }}
@@ -817,7 +921,6 @@ export default function App() {
         {/* VENTANA DE LUGARES COINCIDENTES (FUZZY MATCH DETAILS) */}
         {pantallaSugeridos && (
           <div className="absolute inset-0 bg-[#F5F7FA] z-25 flex flex-col pb-24 animate-fade-in">
-            {/* Header de la ventana */}
             <div className="bg-[#1E3A5F] text-white p-5 pt-8 flex items-center justify-between shadow-md shrink-0">
               <div className="flex items-center space-x-3">
                 <button 
@@ -838,7 +941,6 @@ export default function App() {
               </span>
             </div>
 
-            {/* Listado con porcentaje de coincidencia */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
               <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mb-2">
                 <div className="text-xs font-bold text-[#1E3A5F] mb-1">🔍 Algoritmo de Coincidencias</div>
@@ -854,7 +956,6 @@ export default function App() {
                     onClick={() => { setEspacioDetalle(espacio); }}
                     className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition-all active:scale-[0.99] animate-fade-in"
                   >
-                    {/* Imagen con porcentaje */}
                     <div className="relative h-32 w-full bg-slate-200">
                       <img 
                         src={espacio.imagen} 
@@ -862,13 +963,11 @@ export default function App() {
                         className="w-full h-full object-cover"
                       />
                       
-                      {/* Badge de porcentaje de compatibilidad */}
                       <span className="absolute top-3 left-3 bg-[#14B8A6] text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center space-x-1">
                         <span>🎯</span>
                         <span>{espacio.coincidenciaPorcentaje || 50}% de coincidencia</span>
                       </span>
 
-                      {/* Badge de Distancia */}
                       <span className="absolute bottom-3 right-3 bg-[#1E3A5F]/90 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-sm">
                         📍 a {espacio.distancia} km de ti
                       </span>
@@ -918,7 +1017,6 @@ export default function App() {
         {verMisReservas && (
           <div className="absolute inset-0 bg-[#F5F7FA] z-25 flex flex-col pb-24">
             
-            {/* Cabecera de la vista */}
             <div className="bg-[#1E3A5F] text-white p-5 pt-8 flex items-center justify-between shadow-sm">
               <div className="flex items-center space-x-3">
                 <button 
@@ -936,20 +1034,17 @@ export default function App() {
               </span>
             </div>
 
-            {/* Listado de reservas */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar">
               {reservasRealizadas.length > 0 ? (
                 reservasRealizadas.map((res) => (
                   <div key={res.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex space-x-4 animate-fade-in">
                     
-                    {/* Imagen pequeña del espacio */}
                     <img 
                       src={res.espacio.imagen} 
                       alt={res.espacio.nombre} 
                       className="w-20 h-20 rounded-xl object-cover shrink-0"
                     />
 
-                    {/* Información resumida */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div>
                         <span className="text-[10px] font-extrabold text-[#14B8A6] uppercase tracking-wider block">
@@ -972,7 +1067,6 @@ export default function App() {
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-50">
                         <span className="text-[10px] font-mono text-slate-400">{res.codigo}</span>
                         
-                        {/* Cancelar Reserva */}
                         <button 
                           onClick={() => cancelarReserva(res.id)}
                           className="text-[10px] font-bold text-rose-500 hover:text-rose-700 uppercase tracking-widest active:scale-95 transition-all"
@@ -1006,11 +1100,10 @@ export default function App() {
           </div>
         )}
 
-        {}
-        {espacioDetalle && (
+        {/* VENTANA DE DETALLES PREMIUM (NUEVA VENTANA A PANTALLA COMPLETA) */}
+        {espacioDetalle && !pantallaPagos && (
           <div className="absolute inset-0 bg-[#F5F7FA] z-30 flex flex-col pb-6 animate-fade-in overflow-hidden">
             
-            {/* Header de la Nueva Ventana */}
             <div className="bg-[#1E3A5F] text-white px-5 pt-8 pb-4 flex items-center justify-between shadow-md shrink-0 z-10">
               <button 
                 onClick={() => { setEspacioDetalle(null); setCantidadUnidades(1); }} 
@@ -1023,7 +1116,6 @@ export default function App() {
               </button>
               <h2 className="text-sm font-bold tracking-tight truncate max-w-[200px]">Detalle del Espacio</h2>
               
-              {/* Favorito */}
               <button 
                 onClick={() => toggleFavorito(espacioDetalle.id)}
                 className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center justify-center"
@@ -1039,10 +1131,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* Cuerpo Scrollable de la Ventana */}
             <div className="flex-1 overflow-y-auto no-scrollbar pb-6">
               
-              {/* Imagen Envolvente */}
               <div className="relative h-60 w-full bg-slate-200">
                 <img 
                   src={espacioDetalle.imagen} 
@@ -1060,10 +1150,8 @@ export default function App() {
                 )}
               </div>
 
-              {/* Contenido General */}
               <div className="p-5 space-y-6">
                 
-                {/* Título y Rating */}
                 <div>
                   <h3 className="text-xl font-black text-[#1E3A5F] leading-tight mb-2">
                     {espacioDetalle.nombre}
@@ -1082,10 +1170,8 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Divider */}
                 <hr className="border-slate-200" />
 
-                {/* Anfitrión */}
                 <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs">
                   <div className="flex items-center space-x-3">
                     <img 
@@ -1109,7 +1195,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Descripción */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-extrabold text-[#1E3A5F] uppercase tracking-wider">Sobre el Espacio</h4>
                   <p className="text-xs text-slate-600 leading-relaxed bg-white p-4 rounded-2xl border border-slate-100">
@@ -1117,7 +1202,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Qué ofrece este espacio (Servicios/Amenidades) */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-extrabold text-[#1E3A5F] uppercase tracking-wider">Servicios Incluidos</h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -1130,11 +1214,9 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Mapa de ubicación ficticio con SVG */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-extrabold text-[#1E3A5F] uppercase tracking-wider">Ubicación aproximada</h4>
                   <div className="relative h-36 bg-slate-200 rounded-2xl overflow-hidden border border-slate-100">
-                    {/* SVG Map Layout */}
                     <svg className="w-full h-full bg-emerald-50" viewBox="0 0 100 100" preserveAspectRatio="none">
                       <path d="M0 20 L100 10 M0 50 L100 70 M30 0 L50 100 M70 0 L80 100" stroke="#CBD5E1" strokeWidth="2" fill="none" />
                       <rect x="15" y="15" width="20" height="20" fill="#E2E8F0" rx="3" />
@@ -1149,7 +1231,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Normas del espacio */}
                 {espacioDetalle.normas && (
                   <div className="space-y-3">
                     <h4 className="text-sm font-extrabold text-[#1E3A5F] uppercase tracking-wider">Normas del Lugar</h4>
@@ -1164,7 +1245,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Calculadora Dinámica de Reserva */}
                 <div className="bg-white p-4 rounded-2xl border-2 border-[#1E3A5F]/20 shadow-sm space-y-4">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                     <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">Planifica tu reserva</h4>
@@ -1173,7 +1253,7 @@ export default function App() {
                     </span>
                   </div>
 
-                  <form onSubmit={handleReservar} className="space-y-3">
+                  <form onSubmit={irAPasarelaDePagos} className="space-y-3">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-500 mb-1 uppercase">Fecha del Evento</label>
                       <input 
@@ -1185,7 +1265,6 @@ export default function App() {
                       />
                     </div>
 
-                    {/* Selector de cantidad / Unidades */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-500 mb-1 uppercase">Cantidad de {espacioDetalle.unidad}s</label>
                       <div className="flex items-center justify-between bg-[#F5F7FA] border border-slate-200 rounded-xl p-1">
@@ -1207,7 +1286,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Desglose de costos en vivo */}
                     <div className="bg-[#F5F7FA] rounded-xl p-3 space-y-1.5 text-xs text-slate-600 border border-slate-100">
                       <div className="flex justify-between">
                         <span>Costo por {cantidadUnidades} {espacioDetalle.unidad}s:</span>
@@ -1220,27 +1298,20 @@ export default function App() {
                       <hr className="border-slate-200 my-1" />
                       <div className="flex justify-between text-sm font-black text-[#1E3A5F]">
                         <span>Total estimado:</span>
-                        <span>${(espacioDetalle.precio * cantidadUnidades * 1.10).toFixed(2)}</span>
+                        <span>${totalCalculado}</span>
                       </div>
                     </div>
 
-                    {/* Botón de envío */}
-                    {reservaConfirmada ? (
-                      <div className="bg-[#14B8A6] text-white rounded-xl py-3 px-4 text-center text-xs font-bold shadow-md animate-pulse">
-                        ¡Reserva agregada a tu perfil! 🎉
-                      </div>
-                    ) : (
-                      <button 
-                        type="submit"
-                        className="w-full bg-[#1E3A5F] text-[#14B8A6] hover:bg-[#1E3A5F]/95 active:scale-[0.98] py-3 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-md"
-                      >
-                        Confirmar Reserva
-                      </button>
-                    )}
+                    <button 
+                      type="submit"
+                      className="w-full bg-[#1E3A5F] text-[#14B8A6] hover:bg-[#1E3A5F]/95 active:scale-[0.98] py-3 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-md flex items-center justify-center space-x-1"
+                    >
+                      <span>Continuar al Pago</span>
+                      <span>➔</span>
+                    </button>
                   </form>
                 </div>
 
-                {/* Sección de Reseñas */}
                 {espacioDetalle.comentarios && (
                   <div className="space-y-3">
                     <h4 className="text-sm font-extrabold text-[#1E3A5F] uppercase tracking-wider">Reseñas de Usuarios ({espacioDetalle.comentarios.length})</h4>
@@ -1264,6 +1335,538 @@ export default function App() {
                 )}
 
               </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* VENTANA DE PASARELA DE PAGOS (CHECKOUT SECURE SCREEN) */}
+        {pantallaPagos && espacioDetalle && !pantallaAgregarTarjeta && (
+          <div className="absolute inset-0 bg-[#F5F7FA] z-40 flex flex-col pb-6 animate-slide-up overflow-hidden">
+            
+            {/* Header de la Pasarela */}
+            <div className="bg-[#1E3A5F] text-white px-5 pt-8 pb-4 flex items-center justify-between shadow-md shrink-0">
+              <button 
+                onClick={() => { setPantallaPagos(false); setPagoCompletado(false); }} 
+                className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center justify-center"
+                disabled={procesandoPago}
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <h2 className="text-sm font-bold tracking-tight">Completar Pago</h2>
+              <div className="w-8"></div>
+            </div>
+
+            {/* Contenido de la Pasarela (Scrollable) */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-5">
+              
+              {/* RESUMEN DE COMPRA COMPACTO */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
+                <h3 className="text-xs font-black text-[#1E3A5F] uppercase tracking-wider">Resumen de la reserva</h3>
+                <div className="flex space-x-3">
+                  <img 
+                    src={espacioDetalle.imagen} 
+                    alt={espacioDetalle.nombre} 
+                    className="w-16 h-16 rounded-xl object-cover shrink-0"
+                  />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                    <h4 className="font-bold text-sm text-[#1E3A5F] truncate">{espacioDetalle.nombre}</h4>
+                    <p className="text-xs text-slate-500 font-semibold">{espacioDetalle.subcategoria}</p>
+                    <div className="flex justify-between items-center text-[10px] text-slate-400">
+                      <span>{fechaReserva}</span>
+                      <span className="font-bold text-slate-600">{cantidadUnidades} {espacioDetalle.unidad}(s)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-50 pt-2 flex justify-between items-center text-xs">
+                  <span className="font-medium text-slate-500">Monto total a debitar:</span>
+                  <span className="font-black text-[#1E3A5F] text-base">${totalCalculado}</span>
+                </div>
+              </div>
+
+              {/* MÉTODOS DE PAGO */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Método de pago</h3>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    type="button"
+                    onClick={() => setMetodoPago('tarjeta')}
+                    className={`py-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 border transition-all ${
+                      metodoPago === 'tarjeta'
+                        ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]'
+                        : 'bg-white text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    <span>💳</span>
+                    <span>Tarjeta Física</span>
+                  </button>
+
+                  <button 
+                    type="button"
+                    onClick={() => setMetodoPago('wallet')}
+                    className={`py-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 border transition-all ${
+                      metodoPago === 'wallet'
+                        ? 'bg-[#1E3A5F] text-white border-[#1E3A5F]'
+                        : 'bg-white text-slate-600 border-slate-200'
+                    }`}
+                  >
+                    <span>📱</span>
+                    <span>Digital Wallet</span>
+                  </button>
+                </div>
+
+                {/* CONTENIDO DEL MÉTODO SELECCIONADO */}
+                {metodoPago === 'tarjeta' ? (
+                  <div className="space-y-4 animate-fade-in">
+                    
+                    {/* Visualización del listado de tarjetas guardadas */}
+                    <div className="flex overflow-x-auto space-x-4 pb-3 pt-1 no-scrollbar snap-x snap-mandatory">
+                      {tarjetasGuardadas.map((card) => {
+                        const isSelected = tarjetaSeleccionada === card.id;
+                        return (
+                          <div 
+                            key={card.id}
+                            onClick={() => setTarjetaSeleccionada(card.id)}
+                            className={`snap-center shrink-0 w-64 h-36 bg-gradient-to-br ${card.color} rounded-2xl p-4 text-white flex flex-col justify-between shadow-md relative cursor-pointer transform active:scale-98 transition-all border-2 ${
+                              isSelected ? 'border-[#14B8A6] ring-2 ring-[#14B8A6]/30' : 'border-transparent'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <p className="text-[9px] uppercase tracking-wider text-white/60">Tarjeta Guardada</p>
+                                <p className="text-xs font-bold font-mono tracking-widest">{card.numero.replace(/\d{4} \d{4} \d{4}/, "•••• •••• ••••")}</p>
+                              </div>
+                              <span className="text-xs uppercase font-extrabold tracking-widest text-[#14B8A6]">
+                                {card.tipo === "visa" ? "VISA" : "MC"}
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between items-end">
+                              <div>
+                                <p className="text-[8px] uppercase text-white/50">Titular</p>
+                                <p className="text-[10px] font-bold tracking-wide truncate max-w-[130px]">{card.nombre}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[8px] uppercase text-white/50">Vence</p>
+                                <p className="text-[10px] font-bold font-mono">{card.fecha}</p>
+                              </div>
+                            </div>
+
+                            {/* Checkmark de Selección */}
+                            {isSelected && (
+                              <div className="absolute top-2 right-2 bg-[#14B8A6] text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold">
+                                ✓
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Botón interactivo para añadir una nueva tarjeta */}
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setPasoCarousel(1);
+                        setPantallaAgregarTarjeta(true);
+                      }}
+                      className="w-full py-3.5 border-2 border-dashed border-[#1E3A5F]/30 hover:border-[#14B8A6] rounded-2xl flex items-center justify-center space-x-2 text-xs font-bold text-[#1E3A5F] active:scale-[0.98] transition-all bg-[#1E3A5F]/5"
+                    >
+                      <span>➕</span>
+                      <span>Agregar nueva tarjeta bancaria</span>
+                    </button>
+
+                  </div>
+                ) : (
+                  <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs space-y-4 animate-fade-in flex flex-col items-center justify-center py-8">
+                    <p className="text-xs text-slate-500 text-center max-w-[240px] leading-relaxed mb-2">
+                      Paga rápido de forma segura utilizando la billetera digital registrada en tu dispositivo móvil.
+                    </p>
+                    <button 
+                      type="button"
+                      className="w-full max-w-[260px] bg-black text-white hover:bg-slate-900 py-3 px-6 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95"
+                    >
+                      <span className="text-white"> Pay</span>
+                      <span className="text-slate-400 text-xs">o</span>
+                      <span className="text-white font-black">G Pay</span>
+                    </button>
+                    <span className="text-[10px] text-slate-400 font-mono">Detección biométrica automatizada activa</span>
+                  </div>
+                )}
+              </div>
+
+              {/* DATOS DE FACTURACIÓN */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Datos para facturación</h3>
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Nombre Completo o Razón Social</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="Ej. Mariana de los Ángeles"
+                      value={facturaNombre}
+                      onChange={(e) => setFacturaNombre(e.target.value)}
+                      className="w-full bg-[#F5F7FA] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-[#14B8A6] focus:outline-none text-[#1F2937]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Identificación / RUC</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="Ej. 0987654321001"
+                        value={facturaId}
+                        onChange={(e) => setFacturaId(e.target.value)}
+                        className="w-full bg-[#F5F7FA] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-[#14B8A6] focus:outline-none text-[#1F2937]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Correo Electrónico</label>
+                      <input 
+                        type="email" 
+                        required
+                        placeholder="correo@ejemplo.com"
+                        value={facturaEmail}
+                        onChange={(e) => setFacturaEmail(e.target.value)}
+                        className="w-full bg-[#F5F7FA] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-[#14B8A6] focus:outline-none text-[#1F2937]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dirección Legal</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="Calle, Ciudad, Provincia"
+                      value={facturaDireccion}
+                      onChange={(e) => setFacturaDireccion(e.target.value)}
+                      className="w-full bg-[#F5F7FA] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-[#14B8A6] focus:outline-none text-[#1F2937]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 justify-center py-2 text-slate-400 text-[10px]">
+                <span>🔒</span>
+                <span>Conexión encriptada SSL de 256 bits</span>
+              </div>
+
+            </div>
+
+            {/* BOTÓN DE ACCIÓN FIJO EN LA BASE */}
+            <div className="bg-white border-t border-slate-100 p-4 shrink-0">
+              <form onSubmit={ejecutarPagoFinal}>
+                <button 
+                  type="submit"
+                  disabled={procesandoPago || pagoCompletado}
+                  className={`w-full py-4 rounded-xl text-xs font-extrabold tracking-wider uppercase transition-all shadow-md flex items-center justify-center space-x-2 ${
+                    procesandoPago 
+                      ? 'bg-slate-400 text-white cursor-not-allowed' 
+                      : 'bg-[#1E3A5F] text-[#14B8A6] hover:bg-[#1E3A5F]/95 active:scale-[0.98]'
+                  }`}
+                >
+                  {procesandoPago ? (
+                    <div className="flex items-center space-x-2">
+                      <svg className="animate-spin h-4 w-4 text-[#14B8A6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Procesando Pago Seguro...</span>
+                    </div>
+                  ) : pagoCompletado ? (
+                    <span>¡Pago Exitoso!</span>
+                  ) : (
+                    <span>Pagar ${totalCalculado}</span>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* PANTALLA DE COMPROBANTE/ÉXITO OVERLAY */}
+            {pagoCompletado && (
+              <div className="absolute inset-0 bg-[#1E3A5F] z-50 flex flex-col items-center justify-center p-6 text-white animate-fade-in text-center">
+                <div className="w-24 h-24 bg-[#14B8A6]/10 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                  <svg className="w-16 h-16 text-[#14B8A6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-black mb-2">¡Pago Autorizado!</h3>
+                <p className="text-sm text-teal-200 mb-6 max-w-[260px] leading-relaxed">
+                  Tu transacción ha sido procesada de manera segura. Hemos enviado el comprobante a tu email.
+                </p>
+                <div className="bg-white/10 p-4 rounded-2xl w-full max-w-[280px] space-y-1.5 text-xs text-left mb-6 font-semibold">
+                  <div className="flex justify-between">
+                    <span className="text-teal-200">Código de Reserva:</span>
+                    <span>RES-{Math.floor(100000 + Math.random() * 900000)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-teal-200">Monto Debitado:</span>
+                    <span className="text-[#14B8A6]">${totalCalculado}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-teal-200">Fecha del Evento:</span>
+                    <span>{fechaReserva}</span>
+                  </div>
+                </div>
+                <span className="text-[11px] text-slate-400 animate-pulse">Redirigiendo a tus Reservas...</span>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {}
+        {pantallaAgregarTarjeta && (
+          <div className="absolute inset-0 bg-[#F5F7FA] z-50 flex flex-col pb-6 animate-slide-up overflow-hidden">
+            
+            {/* Header Carrusel */}
+            <div className="bg-[#1E3A5F] text-white px-5 pt-8 pb-4 flex items-center justify-between shadow-md shrink-0">
+              <button 
+                onClick={() => setPantallaAgregarTarjeta(false)} 
+                className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center justify-center"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <h2 className="text-sm font-bold tracking-tight">Agregar Tarjeta</h2>
+              <div className="w-8"></div>
+            </div>
+
+            {/* Contenido Carrusel */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-5 flex flex-col justify-between">
+              
+              <div className="space-y-6">
+                
+                {/* Barra de Progreso Lineal */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span>Paso {pasoCarousel} de 4</span>
+                    <span>{pasoCarousel * 25}% completado</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[#14B8A6] transition-all duration-300"
+                      style={{ width: `${pasoCarousel * 25}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* VISUALIZADOR DE TARJETA INTERACTIVA CON ROTACIÓN 3D */}
+                <div className="w-full flex justify-center py-4 relative" style={{ perspective: '1000px' }}>
+                  <div 
+                    className="w-72 h-44 transition-transform duration-700 relative shadow-xl rounded-2xl"
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transform: pasoCarousel === 3 ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                    }}
+                  >
+                    
+                    {/* CARA FRONTAL DE LA TARJETA */}
+                    <div 
+                      className={`absolute inset-0 bg-gradient-to-br ${
+                        nuevoNum.startsWith("5") ? "from-cyan-900 to-emerald-950" : "from-slate-800 to-slate-950"
+                      } rounded-2xl p-5 text-white flex flex-col justify-between`}
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden'
+                      }}
+                    >
+                      <div className="flex justify-between items-start">
+                        {/* Chip Inteligente */}
+                        <div className="w-10 h-8 bg-gradient-to-br from-amber-200 to-amber-500 rounded-md relative shadow-inner flex items-center justify-center overflow-hidden">
+                          <div className="absolute inset-0 opacity-20 border border-slate-900 grid grid-cols-3 gap-0.5 p-0.5">
+                            <div className="border border-slate-900"></div><div className="border border-slate-900"></div><div className="border border-slate-900"></div>
+                            <div className="border border-slate-900"></div><div className="border border-slate-900"></div><div className="border border-slate-900"></div>
+                          </div>
+                        </div>
+                        {/* Logotipo de la Franquicia */}
+                        <span className="text-xs uppercase font-extrabold tracking-widest text-[#14B8A6]">
+                          {nuevoNum.startsWith("5") ? "Mastercard" : "Visa"}
+                        </span>
+                      </div>
+
+                      {/* Número de Tarjeta */}
+                      <p className="text-lg font-mono font-bold tracking-widest mt-2">
+                        {nuevoNum || "•••• •••• •••• ••••"}
+                      </p>
+
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-[7px] uppercase tracking-wider text-white/50">Titular de Tarjeta</p>
+                          <p className="text-[11px] font-bold tracking-wide uppercase truncate max-w-[170px]">
+                            {nuevoNombre || "TITULAR REQUERIDO"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[7px] uppercase tracking-wider text-white/50">Vence</p>
+                          <p className="text-[11px] font-bold font-mono">
+                            {nuevaFecha || "MM/YY"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CARA TRASERA DE LA TARJETA (Se muestra en el paso CVV) */}
+                    <div 
+                      className={`absolute inset-0 bg-gradient-to-br ${
+                        nuevoNum.startsWith("5") ? "from-cyan-900 to-emerald-950" : "from-slate-800 to-slate-950"
+                      } rounded-2xl text-white flex flex-col justify-between py-5`}
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)'
+                      }}
+                    >
+                      {/* Banda magnética */}
+                      <div className="w-full h-9 bg-black/80"></div>
+
+                      {/* Recuadro de Firma y CVV */}
+                      <div className="px-5 space-y-2">
+                        <div className="flex justify-between items-center bg-white/20 h-8 rounded-sm px-2 relative">
+                          {/* Líneas de firma simuladas */}
+                          <div className="w-1/2 h-2 border-b border-slate-300 opacity-30"></div>
+                          <span className="text-xs font-bold font-mono text-black bg-white px-2 py-0.5 rounded-sm shadow-inner relative z-10">
+                            {nuevoCvv || "CVV"}
+                          </span>
+                        </div>
+                        <p className="text-[6px] text-white/40 text-right">No compartir con nadie esta información</p>
+                      </div>
+
+                      <div className="px-5 flex justify-between items-center text-[8px] text-white/40">
+                        <span>SERVICIOS FINANCIEROS SECURE</span>
+                        <span className="font-extrabold uppercase text-[#14B8A6]">
+                          {nuevoNum.startsWith("5") ? "MC" : "VISA"}
+                        </span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* FORMULARIO DINÁMICO POR PASOS */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+                  {pasoCarousel === 1 && (
+                    <div className="space-y-2 animate-fade-in">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Número de la tarjeta</label>
+                      <p className="text-[11px] text-slate-500">Registra los 16 dígitos de la parte frontal.</p>
+                      <input 
+                        type="text"
+                        autoFocus
+                        maxLength="19"
+                        placeholder="4000 1234 5678 9010"
+                        value={nuevoNum}
+                        onChange={(e) => setNuevoNum(formatNumTarjeta(e.target.value))}
+                        className="w-full bg-[#F5F7FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-[#14B8A6] focus:outline-none text-[#1F2937]"
+                      />
+                    </div>
+                  )}
+
+                  {pasoCarousel === 2 && (
+                    <div className="space-y-2 animate-fade-in">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Fecha de vencimiento</label>
+                      <p className="text-[11px] text-slate-500">Introduce el mes y año (MM/YY).</p>
+                      <input 
+                        type="text"
+                        autoFocus
+                        maxLength="5"
+                        placeholder="12/29"
+                        value={nuevaFecha}
+                        onChange={(e) => setNuevaFecha(formatFechaTarjeta(e.target.value))}
+                        className="w-full bg-[#F5F7FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-[#14B8A6] focus:outline-none text-[#1F2937] text-center"
+                      />
+                    </div>
+                  )}
+
+                  {pasoCarousel === 3 && (
+                    <div className="space-y-2 animate-fade-in">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Código de seguridad (CVV)</label>
+                      <p className="text-[11px] text-slate-500">Los 3 dígitos de la banda trasera.</p>
+                      <input 
+                        type="password"
+                        autoFocus
+                        maxLength="3"
+                        placeholder="***"
+                        value={nuevoCvv}
+                        onChange={(e) => setNuevoCvv(e.target.value.replace(/\D/g, ""))}
+                        className="w-full bg-[#F5F7FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-[#14B8A6] focus:outline-none text-[#1F2937] text-center tracking-widest"
+                      />
+                    </div>
+                  )}
+
+                  {pasoCarousel === 4 && (
+                    <div className="space-y-2 animate-fade-in">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Nombre del titular</label>
+                      <p className="text-[11px] text-slate-500">Como aparece impreso en la tarjeta.</p>
+                      <input 
+                        type="text"
+                        autoFocus
+                        placeholder="MARIANA DE LOS ANGELES"
+                        value={nuevoNombre}
+                        onChange={(e) => setNuevoNombre(e.target.value)}
+                        className="w-full bg-[#F5F7FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-[#14B8A6] focus:outline-none text-[#1F2937] uppercase"
+                      />
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* BOTONES DE NAVEGACIÓN DEL CARRUSEL */}
+              <div className="flex space-x-3 pt-4">
+                {pasoCarousel > 1 && (
+                  <button 
+                    type="button"
+                    onClick={() => setPasoCarousel(pasoCarousel - 1)}
+                    className="w-1/3 py-3.5 border border-slate-200 rounded-xl font-bold text-xs text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+                  >
+                    Atrás
+                  </button>
+                )}
+
+                {pasoCarousel < 4 ? (
+                  <button 
+                    type="button"
+                    onClick={() => setPasoCarousel(pasoCarousel + 1)}
+                    disabled={
+                      (pasoCarousel === 1 && nuevoNum.length < 15) ||
+                      (pasoCarousel === 2 && nuevaFecha.length < 5) ||
+                      (pasoCarousel === 3 && nuevoCvv.length < 3)
+                    }
+                    className={`flex-1 py-3.5 rounded-xl font-bold text-xs tracking-wider uppercase transition-all shadow-md active:scale-95 ${
+                      (pasoCarousel === 1 && nuevoNum.length < 15) ||
+                      (pasoCarousel === 2 && nuevaFecha.length < 5) ||
+                      (pasoCarousel === 3 && nuevoCvv.length < 3)
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'bg-[#1E3A5F] text-[#14B8A6]'
+                    }`}
+                  >
+                    Siguiente
+                  </button>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={handleGuardarTarjeta}
+                    disabled={!nuevoNombre.trim()}
+                    className={`flex-1 py-3.5 rounded-xl font-bold text-xs tracking-wider uppercase transition-all shadow-md active:scale-95 ${
+                      !nuevoNombre.trim()
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'bg-[#14B8A6] text-white hover:bg-[#14B8A6]/90'
+                    }`}
+                  >
+                    Guardar Tarjeta
+                  </button>
+                )}
+              </div>
+
             </div>
 
           </div>
