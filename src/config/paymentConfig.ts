@@ -6,7 +6,7 @@
 export type PaymentProvider = 'kushki' | 'datafast';
 
 // ─── CAMBIAR AQUÍ PARA HACER PRUEBAS ───
-export const PAYMENT_PROVIDER: PaymentProvider = 'kushki'; // ← 'kushki' o 'datafast'
+export const PAYMENT_PROVIDER: PaymentProvider = 'datafast'; // ← 'kushki' o 'datafast'
 
 // ─── Configuración Kushki ───
 export const KUSHKI_CONFIG = {
