@@ -1,5 +1,5 @@
 {
-  "name": "appclientreactnative",
+  "name": "app-client-react-native",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
