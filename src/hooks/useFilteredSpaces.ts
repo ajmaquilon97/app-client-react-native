@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Espacio, Categoria, FiltroRapido } from '@/types';
-import { ESPACIOS_DATA } from '@/data/espacios';
+import { useEspacios } from '@/hooks/useEspacios';
 
 interface UseFilteredSpacesParams {
   categoria: Categoria | null;
@@ -11,6 +11,8 @@ interface UseFilteredSpacesParams {
 interface UseFilteredSpacesReturn {
   espacios: Espacio[];
   total: number;
+  isLoading: boolean;
+  isError: boolean;
 }
 
 export function useFilteredSpaces({
@@ -18,10 +20,12 @@ export function useFilteredSpaces({
   query,
   filtroRapido,
 }: UseFilteredSpacesParams): UseFilteredSpacesReturn {
+  const { data = [], isLoading, isError } = useEspacios();
+
   const espacios = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    let lista = ESPACIOS_DATA.filter(espacio => {
+    let lista = data.filter(espacio => {
       const matchesCategoria = categoria ? espacio.categoria === categoria : true;
 
       const matchesQuery =
@@ -42,17 +46,20 @@ export function useFilteredSpaces({
     }
 
     return lista;
-  }, [categoria, query, filtroRapido]);
+  }, [data, categoria, query, filtroRapido]);
 
   return {
     espacios,
     total: espacios.length,
+    isLoading,
+    isError,
   };
 }
 
 export function useFavoriteSpaces(favorites: number[]): Espacio[] {
+  const { data = [] } = useEspacios();
   return useMemo(
-    () => ESPACIOS_DATA.filter(e => favorites.includes(e.id)),
-    [favorites],
+    () => data.filter(e => favorites.includes(e.id)),
+    [data, favorites],
   );
 }

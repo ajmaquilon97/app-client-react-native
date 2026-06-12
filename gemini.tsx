@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-
+// Datos quemados
 // Datos de los espacios recreativos con atributos ampliados para la nueva ventana de detalles
 const ESPACIOS_DATA = [
   {
