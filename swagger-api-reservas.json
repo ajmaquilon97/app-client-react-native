@@ -1,0 +1,3155 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ApiTesis",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/login — Inicia sesión con credenciales locales (correo y contraseña).\r\nDevuelve un access token JWT (15 min) y un refresh token de larga duración.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo del usuario registrado.\r\n<b>Password</b> (string, requerido) — contraseña en texto plano; se valida contra el hash almacenado.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ accessToken, refreshToken }"
+          },
+          "401": {
+            "description": "Credenciales inválidas o cuenta anulada."
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/refresh — Rota el par de tokens: invalida el refresh token enviado\r\ny emite un access token nuevo junto con un refresh token de reemplazo.",
+        "requestBody": {
+          "description": "<b>RefreshToken</b> (string, requerido) — token de refresco obtenido en login o en una rotación anterior.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ accessToken, refreshToken } con los tokens renovados."
+          },
+          "401": {
+            "description": "Token inválido, expirado o ya revocado."
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/logout — Revoca el refresh token del usuario, cerrando la sesión activa.\r\nTras esta llamada el token queda inutilizable aunque no haya expirado.",
+        "requestBody": {
+          "description": "<b>RefreshToken</b> (string, requerido) — token de refresco que se desea invalidar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Token revocado correctamente (sin cuerpo de respuesta)."
+          }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "GET /api/auth/google — Construye y redirige a la pantalla de consentimiento de Google OAuth.\r\nGenera un parámetro `state` anti-CSRF almacenado en caché (válido 10 min) y lo incluye en la URL de autorización.\r\nNo recibe parámetros del cliente; la configuración proviene de `appsettings / user-secrets`.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "302": {
+            "description": "Redirección a accounts.google.com con scope openid, email y profile."
+          }
+        }
+      }
+    },
+    "/api/auth/google/callback": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "GET /api/auth/google/callback — Callback llamado por Google tras el consentimiento del usuario.\r\nValida el `state` anti-CSRF, intercambia el `code` por los datos del usuario,\r\nrealiza upsert del usuario (vincula login Google si ya existe cuenta local verificada),\r\nemite un par de tokens y redirige al frontend con un código de un solo uso de 60 segundos.\r\nLos tokens NUNCA viajan en la URL.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "<b>code</b> (string, query, inyectado por Google) — authorization code para intercambiar por tokens.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "<b>state</b> (string, query, inyectado por Google) — valor anti-CSRF generado en `GoogleLogin`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "description": "<b>error</b> (string, query, opcional) — presente si el usuario canceló o Google denegó el acceso.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "302": {
+            "description": "Redirección al frontend con `?code=<onetimeCode>` o `?error=<motivo>`."
+          }
+        }
+      }
+    },
+    "/api/auth/google/exchange": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/google/exchange — Canjea el código de un solo uso (60 s de vida)\r\ngenerado en el callback de Google por el par definitivo de tokens JWT.\r\nEl código se destruye en el primer uso para evitar reutilización.\r\nDebe llamarse desde el servidor Next.js, nunca desde el navegador.",
+        "requestBody": {
+          "description": "<b>Code</b> (string, requerido) — código de un solo uso recibido en la URL de redirección del callback.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ accessToken, refreshToken }"
+          },
+          "401": {
+            "description": "Código inválido, expirado o ya utilizado."
+          }
+        }
+      }
+    },
+    "/api/availability/schedule": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "GET /api/availability/schedule?espacioId={id} — Obtiene el horario general\r\nconfigurado para un espacio propio.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`HorarioGeneralResponse` del espacio."
+          },
+          "400": {
+            "description": "Falta el parámetro espacioId."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe el espacio, o no tiene un horario configurado."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "PUT /api/availability/schedule — Crea o actualiza el horario general de un espacio propio.",
+        "requestBody": {
+          "description": "<b>EspacioId</b> (int, requerido).\r\n<b>Apertura</b> / <b>Cierre</b> (TimeSpan).\r\n<b>DiasActivos</b> (List<int>, 0=domingo..6=sábado).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HorarioGeneralRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HorarioGeneralRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/HorarioGeneralRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`HorarioGeneralResponse` creado o actualizado."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/availability/exceptions": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "GET /api/availability/exceptions?espacioId={opcional} — Lista las excepciones de horario.\r\nSi se omite espacioId, devuelve las de todos los espacios del usuario autenticado.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de `ExcepcionHorarioResponse`."
+          },
+          "403": {
+            "description": "El espacio indicado no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "POST /api/availability/exceptions — Crea una excepción de horario\r\n(feriado, mantenimiento o cierre) para un espacio propio.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcepcionHorarioRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcepcionHorarioRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcepcionHorarioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "`ExcepcionHorarioResponse` creada."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/availability/exceptions/{id}": {
+      "put": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "PUT /api/availability/exceptions/{id} — Actualiza una excepción de horario existente.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcepcionHorarioRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcepcionHorarioRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcepcionHorarioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ExcepcionHorarioResponse` actualizada."
+          },
+          "403": {
+            "description": "La excepción (o el nuevo espacio indicado) no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una excepción con ese ID."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "DELETE /api/availability/exceptions/{id} — Elimina una excepción de horario.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Excepción eliminada."
+          },
+          "403": {
+            "description": "La excepción no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una excepción con ese ID."
+          }
+        }
+      }
+    },
+    "/api/availability/block": {
+      "post": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "POST /api/availability/block — Bloquea un rango de horas de un espacio propio.\r\nEj.: hourStart=9, hourEnd=11 crea bloqueos individuales para las horas 9 y 10.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BloqueoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BloqueoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BloqueoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Arreglo de `BloqueoResponse` creados."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          },
+          "409": {
+            "description": "Ya existe un bloqueo para alguna de las horas solicitadas."
+          }
+        }
+      }
+    },
+    "/api/availability/block/{id}": {
+      "delete": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "DELETE /api/availability/block/{id} — Elimina un bloqueo individual.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Bloqueo eliminado."
+          },
+          "403": {
+            "description": "El bloqueo no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un bloqueo con ese ID."
+          }
+        }
+      }
+    },
+    "/api/availability": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "GET /api/availability?fechaInicio&fechaFin&espacioId={opcional} — Genera el estado\r\n(\"available\", \"blocked\", \"reserved\", \"closed\", \"maintenance\") de cada slot de 1 hora en el\r\nrango de fechas, cruzando horario general, excepciones y bloqueos. Si se omite espacioId,\r\nincluye todos los espacios del usuario autenticado.",
+        "parameters": [
+          {
+            "name": "fechaInicio",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "fechaFin",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "espacioId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arreglo de `AvailabilitySlotResponse`."
+          },
+          "400": {
+            "description": "Faltan fechaInicio/fechaFin, o fechaFin es anterior a fechaInicio."
+          },
+          "403": {
+            "description": "El espacio indicado no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/availability/statistics": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "GET /api/availability/statistics?fechaInicio&fechaFin&espacioId={opcional} — Calcula el\r\nrecuento de horas disponibles, reservadas, bloqueadas y el porcentaje de ocupación (0-100)\r\nsobre el mismo rango que `GET /api/availability`.",
+        "parameters": [
+          {
+            "name": "fechaInicio",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "fechaFin",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "espacioId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`AvailabilityStatisticsResponse`."
+          },
+          "400": {
+            "description": "Faltan fechaInicio/fechaFin, o fechaFin es anterior a fechaInicio."
+          },
+          "403": {
+            "description": "El espacio indicado no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/dashboard/stats": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "GET /api/dashboard/stats — KPIs y gráfico de reservas de los últimos 6 meses para el\r\nanfitrión autenticado. Todos los cálculos se filtran por los espacios cuyo propietario\r\nes el usuario del claim `sub`.",
+        "responses": {
+          "200": {
+            "description": "`DashboardStatsResponse` con los KPIs y el detalle mensual.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStatsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStatsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStatsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/espacios": {
+      "get": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "GET /api/espacios — Devuelve todos los espacios registrados en el sistema.\r\nNo requiere parámetros.",
+        "responses": {
+          "200": {
+            "description": "Lista de `EspacioResponse` con todos los espacios.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error inesperado al consultar la base de datos."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "POST /api/espacios — Crea un nuevo espacio en el sistema.",
+        "requestBody": {
+          "description": "<b>Titulo</b> (string) — nombre descriptivo del espacio.\r\n<b>Descripcion</b> (string) — detalle del espacio.\r\n<b>PropietarioId</b> (string GUID) — ID del usuario propietario.\r\n<b>TipoEspacioId</b> (int) — ID del tipo de espacio (catálogo).\r\n<b>Ciudad</b> (string) — ciudad donde se ubica el espacio.\r\n<b>Provincia</b> (string) — provincia del espacio.\r\n<b>LinkUbicacion</b> (string) — URL de Google Maps u otro servicio de ubicación.\r\n<b>Referencia</b> (string) — referencia física o dirección complementaria.\r\n<b>ValidarAforo</b> (bool) — indica si se debe controlar el aforo máximo.\r\n<b>MaxCapacidad</b> (int) — número máximo de personas permitidas.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`EspacioResponse` con los datos del espacio creado.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos o error al guardar."
+          }
+        }
+      }
+    },
+    "/api/espacios/mis-espacios": {
+      "get": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "GET /api/espacios/mis-espacios — Devuelve los espacios cuyo propietario es el usuario autenticado.\r\nEl ID del propietario se extrae del claim `sub` del JWT.",
+        "responses": {
+          "200": {
+            "description": "Lista de `EspacioResponse` pertenecientes al usuario autenticado.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/espacios/{id}": {
+      "get": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "GET /api/espacios/{id} — Obtiene un espacio específico por su identificador numérico.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador único del espacio.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`EspacioResponse` con los datos del espacio.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "PUT /api/espacios/{id} — Actualiza los datos de un espacio existente.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador del espacio a actualizar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Mismo cuerpo que `POST /api/espacios` con los campos a modificar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`EspacioResponse` con los datos actualizados.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspacioResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "DELETE /api/espacios/{id} — Elimina un espacio del sistema.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador del espacio a eliminar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Espacio eliminado correctamente."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/activar": {
+      "post": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "POST /api/espacios/{espacioId}/activar — Activa un espacio propio que esté en estado\r\n\"inactivo\" y tenga al menos una modalidad de tarifa (hora, jornada o evento) activa con\r\nun precio mayor a 0 configurada en su Tarifario.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "<b>espacioId</b> (int, ruta, requerido) — identificador del espacio a activar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`EspacioResponse` con `Estado` actualizado a \"activo\"."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          },
+          "409": {
+            "description": "El espacio no está en estado \"inactivo\", o no tiene ninguna modalidad de tarifa activa."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/reseñas": {
+      "get": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "GET /api/espacios/{espacioId}/reseñas — Lista todas las reseñas de un espacio específico.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "<b>espacioId</b> (int, ruta, requerido) — ID del espacio del que se quieren obtener las reseñas.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de `ReseñaResponse`.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReseñaResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReseñaResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReseñaResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error al consultar la base de datos."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "POST /api/espacios/{espacioId}/reseñas — Agrega una nueva reseña a un espacio.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "<b>espacioId</b> (int, ruta, requerido) — ID del espacio que se reseña.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>UsuarioId</b> (string GUID) — ID del usuario que escribe la reseña.\r\n<b>Titulo</b> (string) — título corto de la reseña.\r\n<b>Descripcion</b> (string) — texto detallado de la reseña.\r\n<b>Calificacion</b> (int) — puntuación otorgada al espacio.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReseñaRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReseñaRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReseñaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ReseñaResponse` con los datos de la reseña creada.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReseñaResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReseñaResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReseñaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos o error al guardar."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/reseñas/{id}": {
+      "put": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "PUT /api/espacios/{espacioId}/reseñas/{id} — Actualiza el contenido de una reseña existente.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "<b>espacioId</b> (int, ruta, requerido) — ID del espacio al que pertenece la reseña.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — ID de la reseña a actualizar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Mismo cuerpo que `POST` reseñas con los campos a modificar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReseñaRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReseñaRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReseñaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ReseñaResponse` actualizada.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReseñaResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReseñaResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReseñaResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe una reseña con ese ID."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "DELETE /api/espacios/{espacioId}/reseñas/{id} — Anula (elimina) una reseña de un espacio.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "<b>espacioId</b> (int, ruta, requerido) — ID del espacio al que pertenece la reseña.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — ID de la reseña a anular.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reseña anulada correctamente."
+          },
+          "404": {
+            "description": "No existe una reseña con ese ID."
+          }
+        }
+      }
+    },
+    "/api/reservas": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "GET /api/reservas — Lista paginada de las reservas de los espacios del anfitrión autenticado.",
+        "parameters": [
+          {
+            "name": "propietarioId",
+            "in": "query",
+            "description": "<b>propietarioId</b> (string, opcional) — ignorado; el propietario efectivo es siempre el usuario autenticado.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaDesde",
+            "in": "query",
+            "description": "<b>fechaDesde</b> (DateTime, opcional) — filtra reservas con `FechaInicio` mayor o igual a esta fecha.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "fechaHasta",
+            "in": "query",
+            "description": "<b>fechaHasta</b> (DateTime, opcional) — filtra reservas con `FechaInicio` menor o igual a esta fecha.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "description": "<b>estado</b> (string, opcional) — uno de: `pendiente`, `confirmada`, `reagendada`, `cancelada`, `finalizada`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "estadoPago",
+            "in": "query",
+            "description": "<b>estadoPago</b> (string, opcional) — uno de: `pendiente`, `pagado_parcialmente`, `pagado`, `reembolsado`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "codigo",
+            "in": "query",
+            "description": "<b>codigo</b> (string, opcional) — coincidencia parcial contra el código de la reserva.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cliente",
+            "in": "query",
+            "description": "<b>cliente</b> (string, opcional) — coincidencia parcial contra nombre, apellido o email del cliente.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "espacioId",
+            "in": "query",
+            "description": "<b>espacioId</b> (int, opcional) — filtra por un espacio específico.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "<b>sortBy</b> (string, opcional) — uno de: `fechaInicio`, `fechaCreacion`, `total`, `estado`. Default `fechaCreacion`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "description": "<b>sortDir</b> (string, opcional) — `asc` o `desc`. Default `desc`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "<b>page</b> (int, opcional, default 0) — número de página (base 0).",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "<b>size</b> (int, opcional, default 20) — tamaño de página.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`PagedResponse<ReservaResponse>` con las reservas del anfitrión."
+          },
+          "400": {
+            "description": "El valor de `estado` o `estadoPago` no es uno de los permitidos."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas — Crea una nueva reserva para un espacio propio.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ReservaResponse` con los datos de la reserva creada."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/reservas/estadisticas": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "GET /api/reservas/estadisticas — Cruza las reservas activas del día actual de los espacios\r\ndel anfitrión autenticado: ingresos, saldo pendiente y porcentaje de ocupación.",
+        "responses": {
+          "200": {
+            "description": "`ReservasEstadisticasResponse` con las métricas del día.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservasEstadisticasResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservasEstadisticasResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservasEstadisticasResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "GET /api/reservas/{id} — Obtiene el detalle completo de una reserva propia, incluyendo notas\r\ne historial de eventos.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador único de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`ReservaDetalleResponse` con los datos de la reserva."
+          },
+          "403": {
+            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "DELETE /api/reservas/{id} — Anula (cancela) una reserva existente sin motivo ni validación\r\nde estado previo. Ruta legacy: prefiera `POST /{id}/cancelar` para el flujo con motivo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador de la reserva a cancelar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reserva anulada correctamente."
+          },
+          "403": {
+            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/confirmar": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{id}/confirmar — Confirma una reserva. Solo válido si el estado actual es `pendiente`.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`ReservaResponse` con el nuevo estado."
+          },
+          "403": {
+            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          },
+          "409": {
+            "description": "La reserva no está en estado `pendiente`."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/cancelar": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{id}/cancelar — Cancela una reserva. Válido desde `pendiente`,\r\n`confirmada` o `reagendada`.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>Motivo</b> (string, mínimo 5 caracteres) — razón de la cancelación.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaCancelarRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaCancelarRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaCancelarRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ReservaResponse` con el nuevo estado."
+          },
+          "400": {
+            "description": "Motivo faltante o con menos de 5 caracteres."
+          },
+          "403": {
+            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          },
+          "409": {
+            "description": "La reserva está en un estado desde el cual no se puede cancelar."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/reagendar": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{id}/reagendar — Cambia las fechas de una reserva, validando que el\r\nespacio no tenga otra reserva activa que se solape con el nuevo horario.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>FechaInicio</b>/<b>FechaFin</b> (DateTime ISO 8601) — nuevo rango de la reserva.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaReagendarRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaReagendarRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaReagendarRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ReservaResponse` con las nuevas fechas y estado `reagendada`."
+          },
+          "400": {
+            "description": "FechaFin no es posterior a FechaInicio."
+          },
+          "403": {
+            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          },
+          "409": {
+            "description": "La reserva no admite reagendamiento en su estado actual, o hay solapamiento de horario."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/asistencia": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{id}/asistencia — Actualiza el registro de asistencia de la reserva.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>Asistencia</b> — uno de: `no_registrado`, `asistio`, `no_asistio`.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaAsistenciaRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaAsistenciaRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaAsistenciaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ReservaResponse` con la asistencia actualizada."
+          },
+          "403": {
+            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/pago": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{id}/pago — Registra un pago, un abono parcial o un reembolso sobre una reserva.\r\nLa invariante `pagado + pendiente = total` se mantiene en cada operación.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>Monto</b> (decimal, mayor a 0).\r\n<b>Tipo</b> (string) — `parcial` (monto ≤ pendiente), `total` (monto == pendiente exacto),\r\n              o `reembolso` (monto ≤ pagado; pasa EstadoPago a `reembolsado`).\r\n<b>Notas</b> (string, opcional).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaPagoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaPagoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaPagoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ReservaResponse` con el desglose financiero actualizado."
+          },
+          "400": {
+            "description": "Monto ≤ 0, o Tipo no es uno de los permitidos."
+          },
+          "403": {
+            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          },
+          "409": {
+            "description": "La reserva está cancelada, no tiene un total definido, el monto excede el saldo aplicable,\r\no (para `total`) el monto no coincide exactamente con el pendiente."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/tarifas": {
+      "get": {
+        "tags": [
+          "Tarifas"
+        ],
+        "summary": "GET /api/espacios/{espacioId}/tarifas — Obtiene el tarifario de un espacio propio.\r\nSi el espacio aún no tiene Tarifario ni TarifaPorDia configurados, se crean con\r\nvalores por defecto (modalidades inactivas, días 0-4 activos, 5-6 inactivos).",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`EspacioPricingResponse` del espacio."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Tarifas"
+        ],
+        "summary": "PUT /api/espacios/{espacioId}/tarifas — Crea o actualiza el tarifario de un espacio propio.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Modalidades <b>Hora</b>/<b>Jornada</b>/<b>Evento</b> (activa + precio) y\r\n<b>TarifasPorDia</b> con exactamente 7 elementos (0=Lunes a 6=Domingo).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioPricingRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioPricingRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioPricingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`EspacioPricingResponse` creado o actualizado."
+          },
+          "400": {
+            "description": "Faltan días, hay días duplicados, o una modalidad/día está activo con precio nulo o cero."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/tarifas/fechas-especiales": {
+      "post": {
+        "tags": [
+          "Tarifas"
+        ],
+        "summary": "POST /api/espacios/{espacioId}/tarifas/fechas-especiales — Registra una fecha especial\r\n(precio distinto para un día puntual) de un espacio propio.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FechaEspecialRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FechaEspecialRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/FechaEspecialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "`FechaEspecialResponse` creada."
+          },
+          "400": {
+            "description": "Datos inválidos (precio ≤ 0, o modalidad distinta de hora/jornada/evento)."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          },
+          "409": {
+            "description": "Ya existe una fecha especial registrada para ese día en este espacio."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/tarifas/fechas-especiales/{id}": {
+      "delete": {
+        "tags": [
+          "Tarifas"
+        ],
+        "summary": "DELETE /api/espacios/{espacioId}/tarifas/fechas-especiales/{id} — Elimina una fecha especial.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Fecha especial eliminada."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una fecha especial con ese ID para este espacio."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/tarifas/promociones": {
+      "post": {
+        "tags": [
+          "Tarifas"
+        ],
+        "summary": "POST /api/espacios/{espacioId}/tarifas/promociones — Crea una promoción para un espacio propio.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromocionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromocionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromocionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "`PromocionResponse` creada."
+          },
+          "400": {
+            "description": "Datos inválidos (valor ≤ 0, tipo inválido, o porcentaje mayor a 100)."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/tarifas/promociones/{id}": {
+      "patch": {
+        "tags": [
+          "Tarifas"
+        ],
+        "summary": "PATCH /api/espacios/{espacioId}/tarifas/promociones/{id} — Activa o desactiva una promoción existente.\r\nÚnico campo editable por esta vía es <b>Activa</b>.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromocionToggleRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromocionToggleRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromocionToggleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`PromocionResponse` con el nuevo estado."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una promoción con ese ID para este espacio."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tarifas"
+        ],
+        "summary": "DELETE /api/espacios/{espacioId}/tarifas/promociones/{id} — Elimina una promoción.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Promoción eliminada."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una promoción con ese ID para este espacio."
+          }
+        }
+      }
+    },
+    "/api/tipos-espacios": {
+      "get": {
+        "tags": [
+          "TiposEspacios"
+        ],
+        "summary": "GET /api/tipos-espacios — Devuelve el catálogo completo de tipos de espacio disponibles.\r\nÚtil para poblar selectores en el formulario de creación o edición de espacios.\r\nNo requiere parámetros.",
+        "responses": {
+          "200": {
+            "description": "Lista de `TiposEspacios` con los campos: id, codigo, nombre.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TiposEspacios"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TiposEspacios"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TiposEspacios"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error inesperado al consultar la base de datos."
+          }
+        }
+      }
+    },
+    "/api/usuarios": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "GET /api/usuarios — Devuelve la lista de todos los usuarios registrados en el sistema.\r\nNo requiere parámetros.",
+        "responses": {
+          "200": {
+            "description": "Lista de `UsuarioResponse`.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "POST /api/usuarios — Registra un nuevo usuario en el sistema (Fase 1 del onboarding).\r\nHashea la contraseña con PBKDF2 vía Identity y emite tokens inmediatamente (auto-login).",
+        "requestBody": {
+          "description": "<b>Nombre</b> (string, máx. 150, requerido) — nombre del usuario.\r\n<b>Email</b> (string email, máx. 200, requerido) — dirección de correo única.\r\n<b>Username</b> (string, máx. 50, requerido) — nombre de usuario único.\r\n<b>Password</b> (string, mín. 6 caracteres, requerido) — contraseña en texto plano (se hashea antes de guardar).\r\n<b>TipoUsuarioId</b> (int, requerido) — ID del tipo de usuario (ver GET /api/usuarios/tipos).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "{ id, accessToken, refreshToken } — usuario creado y sesión iniciada."
+          },
+          "409": {
+            "description": "Ya existe una cuenta con ese correo o nombre de usuario."
+          },
+          "400": {
+            "description": "Datos inválidos (contraseña muy corta, correo malformado, etc.)."
+          }
+        }
+      }
+    },
+    "/api/usuarios/{id}": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "GET /api/usuarios/{id} — Obtiene los datos de un usuario por su identificador.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (string GUID, ruta, requerido) — identificador único del usuario.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`UsuarioResponse` con los datos del usuario.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe un usuario con ese ID."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "PUT /api/usuarios/{id} — Completa el perfil del usuario autenticado (Fase 2 del onboarding).\r\nSolo el propietario de la cuenta puede actualizar su propio perfil; requiere JWT válido.\r\nLos campos de Identity (correo, username, contraseña) son inmutables desde este endpoint.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (string GUID, ruta, requerido) — debe coincidir con el claim `sub` del JWT.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompletarPerfilRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompletarPerfilRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompletarPerfilRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`UsuarioResponse` con el perfil actualizado."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El JWT no corresponde al usuario indicado en la ruta."
+          },
+          "404": {
+            "description": "Usuario no encontrado o anulado."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "DELETE /api/usuarios/{id} — Anula (desactiva) un usuario del sistema.\r\nEl usuario queda marcado como `Anulado = true` y no puede iniciar sesión.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (string GUID, ruta, requerido) — identificador del usuario a anular.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuario anulado correctamente."
+          },
+          "404": {
+            "description": "No existe un usuario con ese ID."
+          }
+        }
+      }
+    },
+    "/api/usuarios/tipos": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "GET /api/usuarios/tipos — Lista todos los tipos de usuario disponibles (catálogo).\r\nÚtil para poblar selectores en el formulario de registro.\r\nNo requiere parámetros.",
+        "responses": {
+          "200": {
+            "description": "Lista de `TiposUsuarios` (id, nombre).",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TiposUsuarios"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TiposUsuarios"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TiposUsuarios"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/usuarios/check-availability": {
+      "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "POST /api/usuarios/check-availability — Verifica si un correo y/o número de\r\nteléfono ya están en uso. Endpoint público, pensado para validar en tiempo\r\nreal durante el onboarding sin exponer si la cuenta existe vía un error 409.",
+        "requestBody": {
+          "description": "<b>Email</b> (string?) — correo a verificar; se omite la validación si es nulo o vacío.\r\n<b>PhoneNumber</b> (string?) — teléfono a verificar; se omite la validación si es nulo o vacío.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckAvailabilityRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckAvailabilityRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckAvailabilityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ emailInUse, phoneInUse }"
+          }
+        }
+      }
+    },
+    "/api/usuarios/me/onboarding-status": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "GET /api/usuarios/me/onboarding-status — Evalúa el progreso del onboarding\r\ndel usuario autenticado (confirmación de correo, de teléfono y datos personales).",
+        "responses": {
+          "200": {
+            "description": "{ isEmailConfirmed, isPhoneConfirmed, isPersonalInfoComplete }"
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "404": {
+            "description": "El usuario del token ya no existe o fue anulado."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Asistencia": {
+        "enum": [
+          "no_registrado",
+          "asistio",
+          "no_asistio"
+        ],
+        "type": "string"
+      },
+      "BloqueoRequest": {
+        "required": [
+          "estado"
+        ],
+        "type": "object",
+        "properties": {
+          "espacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "hourStart": {
+            "maximum": 23,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "hourEnd": {
+            "maximum": 24,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "estado": {
+            "minLength": 1,
+            "pattern": "blocked|maintenance|reserved",
+            "type": "string"
+          },
+          "notas": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CheckAvailabilityRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CompletarPerfilRequest": {
+        "type": "object",
+        "properties": {
+          "apellido": {
+            "maxLength": 150,
+            "type": "string",
+            "nullable": true
+          },
+          "numeroCedula": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "rutaFotoCedula": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DashboardStatsResponse": {
+        "type": "object",
+        "properties": {
+          "totalEspacios": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reservasHoy": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pendientesPago": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ingresosMes": {
+            "type": "number",
+            "format": "double"
+          },
+          "reservasPorMes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservasPorMesItem"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EspacioPricingRequest": {
+        "type": "object",
+        "properties": {
+          "horaActiva": {
+            "type": "boolean"
+          },
+          "horaPrecio": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "jornadaActiva": {
+            "type": "boolean"
+          },
+          "jornadaPrecio": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "eventoActiva": {
+            "type": "boolean"
+          },
+          "eventoPrecio": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "tarifasPorDia": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TarifaPorDiaRequest"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EspacioRequest": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "propietarioId": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoEspacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincia": {
+            "type": "string",
+            "nullable": true
+          },
+          "linkUbicacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "referencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "validarAforo": {
+            "type": "boolean"
+          },
+          "maxCapacidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "imagenPortada": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenesGaleria": {
+            "maxItems": 7,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EspacioResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "titulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "propietarioId": {
+            "type": "string",
+            "nullable": true
+          },
+          "propietarioNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoEspacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipoEspacioNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincia": {
+            "type": "string",
+            "nullable": true
+          },
+          "linkUbicacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "referencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "validarAforo": {
+            "type": "boolean"
+          },
+          "maxCapacidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "imagenPortada": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenesGaleria": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
+          },
+          "calificacion": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "totalResenas": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExcepcionHorarioRequest": {
+        "required": [
+          "tipo",
+          "titulo"
+        ],
+        "type": "object",
+        "properties": {
+          "espacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "titulo": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "horaInicio": {
+            "type": "string",
+            "format": "date-span",
+            "nullable": true
+          },
+          "horaFin": {
+            "type": "string",
+            "format": "date-span",
+            "nullable": true
+          },
+          "tipo": {
+            "minLength": 1,
+            "pattern": "feriado|mantenimiento|cierre",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExchangeRequest": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FechaEspecialRequest": {
+        "required": [
+          "descripcion",
+          "modalidad"
+        ],
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "descripcion": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "precio": {
+            "minimum": 0.01,
+            "type": "number",
+            "format": "double"
+          },
+          "modalidad": {
+            "minLength": 1,
+            "pattern": "hora|jornada|evento",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HorarioGeneralRequest": {
+        "type": "object",
+        "properties": {
+          "espacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "apertura": {
+            "type": "string",
+            "format": "date-span"
+          },
+          "cierre": {
+            "type": "string",
+            "format": "date-span"
+          },
+          "diasActivos": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PromocionRequest": {
+        "required": [
+          "nombre",
+          "tipo"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "maxLength": 150,
+            "minLength": 1,
+            "type": "string"
+          },
+          "tipo": {
+            "minLength": 1,
+            "pattern": "porcentaje|monto_fijo",
+            "type": "string"
+          },
+          "valor": {
+            "minimum": 0.01,
+            "type": "number",
+            "format": "double"
+          },
+          "activa": {
+            "type": "boolean"
+          },
+          "condicion": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PromocionToggleRequest": {
+        "type": "object",
+        "properties": {
+          "activa": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RefreshRequest": {
+        "required": [
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistroRequest": {
+        "required": [
+          "email",
+          "nombre",
+          "password",
+          "tipoUsuarioId",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "maxLength": 150,
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "username": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 6,
+            "type": "string"
+          },
+          "tipoUsuarioId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservaAsistenciaRequest": {
+        "type": "object",
+        "properties": {
+          "asistencia": {
+            "$ref": "#/components/schemas/Asistencia"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservaCancelarRequest": {
+        "required": [
+          "motivo"
+        ],
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "minLength": 5,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservaPagoRequest": {
+        "required": [
+          "tipo"
+        ],
+        "type": "object",
+        "properties": {
+          "monto": {
+            "minimum": 0.01,
+            "type": "number",
+            "format": "double"
+          },
+          "tipo": {
+            "minLength": 1,
+            "pattern": "parcial|total|reembolso",
+            "type": "string"
+          },
+          "notas": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservaReagendarRequest": {
+        "required": [
+          "fechaFin",
+          "fechaInicio"
+        ],
+        "type": "object",
+        "properties": {
+          "fechaInicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaFin": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservaRequest": {
+        "type": "object",
+        "properties": {
+          "espacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "usuarioId": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaFin": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalHoras": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservasEstadisticasResponse": {
+        "type": "object",
+        "properties": {
+          "totalReservasHoy": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ingresosHoy": {
+            "type": "number",
+            "format": "double"
+          },
+          "pendientesHoy": {
+            "type": "number",
+            "format": "double"
+          },
+          "porcentajeOcupacion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservasPorMesItem": {
+        "type": "object",
+        "properties": {
+          "mes": {
+            "type": "string",
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReseñaRequest": {
+        "type": "object",
+        "properties": {
+          "usuarioId": {
+            "type": "string",
+            "nullable": true
+          },
+          "titulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "calificacion": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReseñaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "usuarioId": {
+            "type": "string",
+            "nullable": true
+          },
+          "usuarioNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "espacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "titulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "calificacion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TarifaPorDiaRequest": {
+        "type": "object",
+        "properties": {
+          "dia": {
+            "maximum": 6,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "precio": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TiposEspacios": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigo": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TiposUsuarios": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigo": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UsuarioResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "apellido": {
+            "type": "string",
+            "nullable": true
+          },
+          "correo": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "numeroCedula": {
+            "type": "string",
+            "nullable": true
+          },
+          "rutaFotoCedula": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoUsuarioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipoUsuarioNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Ingresa tu JWT: Bearer {token}",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}

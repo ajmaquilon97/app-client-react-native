@@ -35,3 +35,18 @@ export interface Espacio {
   normas: string[];
   comentarios: Comentario[];
 }
+
+export interface Usuario {
+  id: string;
+  nombre: string;
+  apellido: string | null;
+  correo: string;
+  username: string;
+  tipoUsuarioId: number;
+  tipoUsuarioNombre: string;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}

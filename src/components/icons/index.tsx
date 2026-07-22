@@ -331,6 +331,66 @@ export const ReservationsIcon: React.FC<IconProps> = ({
   </Svg>
 );
 
+export const EyeIcon: React.FC<IconProps> = ({
+  size = 24,
+  color = '#9CA3AF',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      stroke={color}
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
+    <Path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      stroke={color}
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+  </Svg>
+);
+
+export const EyeOffIcon: React.FC<IconProps> = ({
+  size = 24,
+  color = '#9CA3AF',
+  strokeWidth = 2,
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      stroke={color}
+      d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.83M9.363 5.365A9.466 9.466 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.02 10.02 0 01-4.132 5.411M6.228 6.228A9.965 9.965 0 002.458 12c1.274 4.057 5.065 7 9.542 7a9.965 9.965 0 004.132-.889"
+    />
+  </Svg>
+);
+
+export const GoogleIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
+  <Svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+    <Path
+      fill="#FFC107"
+      d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"
+    />
+    <Path
+      fill="#FF3D00"
+      d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"
+    />
+    <Path
+      fill="#4CAF50"
+      d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"
+    />
+    <Path
+      fill="#1976D2"
+      d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"
+    />
+  </Svg>
+);
+
 export const SadFaceIcon: React.FC<IconProps> = ({
   size = 24,
   color = '#9CA3AF',
