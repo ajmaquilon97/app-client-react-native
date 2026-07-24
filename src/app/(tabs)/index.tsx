@@ -6,16 +6,20 @@ import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
 import { Colors } from '@/constants/colors';
 import { BorderRadius, Spacing } from '@/constants/spacing';
 import { FontSize, FontWeight } from '@/constants/typography';
+import { useAuth } from '@/context/AuthContext';
 import { useFavoritesContext } from '@/context/FavoritesContext';
 import { useFilteredSpaces } from '@/hooks/useFilteredSpaces';
 import QuickFilters from '@/components/home/QuickFilters';
 import SearchScreen from '@/components/home/SearchScreen';
 import { Categoria, Espacio, FiltroRapido } from '@/types';
+import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   FlatList,
   ListRenderItemInfo,
+  Modal,
   Platform,
+  Pressable,
   StatusBar,
   StyleSheet,
   Text,
@@ -28,6 +32,8 @@ const CATEGORIAS: Categoria[] = ['canchas', 'piscinas', 'salones'];
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { user, logout } = useAuth();
 
   const [categoriaSeleccionada, setCategoriaSeleccionada] =
     useState<Categoria | null>(null);
@@ -36,6 +42,7 @@ export default function HomeScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [filtroRapido, setFiltroRapido] = useState<FiltroRapido | null>(null);
   const [pantallaBusqueda, setPantallaBusqueda] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const { isFavorite, toggleFavorite } = useFavoritesContext();
   const { espacios, total } = useFilteredSpaces({
@@ -62,6 +69,12 @@ export default function HomeScreen() {
     setSheetVisible(false);
     setEspacioDetalle(null);
   }, []);
+
+  const handleLogout = useCallback(async () => {
+    setMenuVisible(false);
+    await logout();
+    router.replace('/login');
+  }, [logout, router]);
 
   const handleReset = useCallback(() => {
     setBusqueda('');
@@ -138,13 +151,17 @@ export default function HomeScreen() {
             <Text style={styles.headerTitle}>Busca tu Espacio</Text>
           </View>
 
-          <View style={styles.avatarContainer}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.avatarContainer}
+            onPress={() => setMenuVisible(true)}>
             <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitial}>U</Text>
+              <Text style={styles.avatarInitial}>
+                {user?.nombre?.charAt(0).toUpperCase() ?? 'U'}
+              </Text>
             </View>
             <View style={styles.onlineDot} />
-          </View>
-          
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity
@@ -187,6 +204,31 @@ export default function HomeScreen() {
         onClose={() => setPantallaBusqueda(false)}
         onSelectEspacio={handleCardPress}
       />
+
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}>
+        <Pressable style={styles.menuBackdrop} onPress={() => setMenuVisible(false)}>
+          <View style={[styles.menuCard, { top: insets.top + Spacing.md + 48 }]}>
+            <View style={styles.menuUserRow}>
+              <Text style={styles.menuUserName} numberOfLines={1}>
+                {user ? [user.nombre, user.apellido].filter(Boolean).join(' ') : ''}
+              </Text>
+              <Text style={styles.menuUserEmail} numberOfLines={1}>
+                {user?.correo}
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={styles.menuItem}
+              onPress={handleLogout}>
+              <Text style={styles.menuItemText}>Cerrar sesión</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -306,5 +348,54 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.gray500,
     fontWeight: FontWeight.medium,
+  },
+  menuBackdrop: {
+    flex: 1,
+  },
+  menuCard: {
+    position: 'absolute',
+    right: Spacing.lg,
+    minWidth: 220,
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.black,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  menuUserRow: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  menuUserName: {
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.bold,
+    color: Colors.primaryDark,
+  },
+  menuUserEmail: {
+    fontSize: FontSize.sm,
+    color: Colors.gray500,
+    marginTop: 2,
+  },
+  menuItem: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+  },
+  menuItemText: {
+    fontSize: FontSize.base,
+    fontWeight: FontWeight.semiBold,
+    color: Colors.error,
   },
 });

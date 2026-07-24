@@ -116,6 +116,7 @@ async function registrarUsuario(
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
         nombre: input.nombre,
+        apellido: input.apellido,
         email: input.email,
         username,
         password: input.password,
@@ -138,25 +139,6 @@ async function registrarUsuario(
   throw ultimoError ?? new Error('No se pudo crear la cuenta.');
 }
 
-async function completarApellido(
-  id: string,
-  apellido: string,
-  accessToken: string,
-): Promise<void> {
-  const res = await fetch(`${USUARIOS_URL}/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({ apellido }),
-  });
-  if (!res.ok) {
-    throw new Error(await parseErrorMessage(res, 'No se pudo guardar el apellido.'));
-  }
-}
-
 export async function registro(input: RegistroInput): Promise<AuthTokens & { id: string }> {
   const tipos = await getTiposUsuario();
   const cliente = tipos.find(t => t.codigo === CLIENTE_TIPO_CODIGO);
@@ -164,13 +146,7 @@ export async function registro(input: RegistroInput): Promise<AuthTokens & { id:
     throw new Error('No se encontró el tipo de usuario "Cliente" en el catálogo del backend.');
   }
 
-  const { id, accessToken, refreshToken } = await registrarUsuario(input, cliente.id);
-
-  if (input.apellido) {
-    await completarApellido(id, input.apellido, accessToken);
-  }
-
-  return { id, accessToken, refreshToken };
+  return registrarUsuario(input, cliente.id);
 }
 
 export async function refreshTokens(refreshToken: string): Promise<AuthTokens> {

@@ -113,6 +113,81 @@
         }
       }
     },
+    "/api/auth/send-email-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/send-email-otp — Genera un código de verificación de 6 dígitos\r\npara el correo indicado y lo envía mediante el servicio de correo (IEmailSender).",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo del usuario que solicita la verificación.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailOtpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailOtpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailOtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — el código fue enviado al correo."
+          },
+          "404": {
+            "description": "No existe un usuario con ese correo."
+          }
+        }
+      }
+    },
+    "/api/auth/verify-email-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/verify-email-otp — Valida el código de verificación y confirma\r\nel correo del usuario. Identity actualiza automáticamente EmailConfirmed al validar.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo del usuario a verificar.\r\n<b>Code</b> (string, requerido) — código de 6 dígitos recibido por correo.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailOtpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailOtpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailOtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — correo verificado correctamente."
+          },
+          "400": {
+            "description": "Código inválido o expirado."
+          },
+          "404": {
+            "description": "No existe un usuario con ese correo."
+          }
+        }
+      }
+    },
     "/api/auth/google": {
       "get": {
         "tags": [
@@ -2088,7 +2163,7 @@
         ],
         "summary": "POST /api/usuarios — Registra un nuevo usuario en el sistema (Fase 1 del onboarding).\r\nHashea la contraseña con PBKDF2 vía Identity y emite tokens inmediatamente (auto-login).",
         "requestBody": {
-          "description": "<b>Nombre</b> (string, máx. 150, requerido) — nombre del usuario.\r\n<b>Email</b> (string email, máx. 200, requerido) — dirección de correo única.\r\n<b>Username</b> (string, máx. 50, requerido) — nombre de usuario único.\r\n<b>Password</b> (string, mín. 6 caracteres, requerido) — contraseña en texto plano (se hashea antes de guardar).\r\n<b>TipoUsuarioId</b> (int, requerido) — ID del tipo de usuario (ver GET /api/usuarios/tipos).",
+          "description": "<b>Nombre</b> (string, máx. 150, requerido) — nombre del usuario.\r\n<b>Apellido</b> (string, máx. 150, requerido) — apellido del usuario.\r\n<b>Email</b> (string email, máx. 200, requerido) — dirección de correo única.\r\n<b>Username</b> (string, máx. 50, requerido) — nombre de usuario único.\r\n<b>Password</b> (string, mín. 6 caracteres, requerido) — contraseña en texto plano (se hashea antes de guardar).\r\n<b>TipoUsuarioId</b> (int, requerido) — ID del tipo de usuario (ver GET /api/usuarios/tipos).",
           "content": {
             "application/json": {
               "schema": {
@@ -2401,11 +2476,6 @@
       "CompletarPerfilRequest": {
         "type": "object",
         "properties": {
-          "apellido": {
-            "maxLength": 150,
-            "type": "string",
-            "nullable": true
-          },
           "numeroCedula": {
             "maxLength": 20,
             "type": "string",
@@ -2810,6 +2880,7 @@
       },
       "RegistroRequest": {
         "required": [
+          "apellido",
           "email",
           "nombre",
           "password",
@@ -2819,6 +2890,11 @@
         "type": "object",
         "properties": {
           "nombre": {
+            "maxLength": 150,
+            "minLength": 1,
+            "type": "string"
+          },
+          "apellido": {
             "maxLength": 150,
             "minLength": 1,
             "type": "string"
@@ -3030,6 +3106,20 @@
         },
         "additionalProperties": false
       },
+      "SendEmailOtpRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "additionalProperties": false
+      },
       "TarifaPorDiaRequest": {
         "type": "object",
         "properties": {
@@ -3133,6 +3223,25 @@
           "fechaCreacion": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyEmailOtpRequest": {
+        "required": [
+          "code",
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "code": {
+            "minLength": 1,
+            "type": "string"
           }
         },
         "additionalProperties": false

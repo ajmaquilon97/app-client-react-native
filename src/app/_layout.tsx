@@ -1,10 +1,46 @@
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { Colors } from '@/constants/colors';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { ReservationsProvider } from '@/context/ReservationsContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
 
 const queryClient = new QueryClient();
+
+function SplashLoading() {
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: Colors.background,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      <ActivityIndicator color={Colors.accentTeal} size="large" />
+    </View>
+  );
+}
+
+function RootNavigator() {
+  const { isAuthenticated, isBootstrapping } = useAuth();
+
+  if (isBootstrapping) {
+    return <SplashLoading />;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen name="login" options={{ presentation: 'card' }} />
+        <Stack.Screen name="registro" options={{ presentation: 'card' }} />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   return (
@@ -12,11 +48,7 @@ export default function RootLayout() {
       <AuthProvider>
         <FavoritesProvider>
           <ReservationsProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="login" options={{ presentation: 'card' }} />
-              <Stack.Screen name="registro" options={{ presentation: 'card' }} />
-            </Stack>
+            <RootNavigator />
           </ReservationsProvider>
         </FavoritesProvider>
       </AuthProvider>

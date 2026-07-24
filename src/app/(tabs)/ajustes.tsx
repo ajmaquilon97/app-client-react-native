@@ -41,15 +41,16 @@ function SettingItem({ label, value, onPress, isLast = false }: SettingItemProps
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const nombreCompleto = user
     ? [user.nombre, user.apellido].filter(Boolean).join(' ')
-    : 'Invitado';
+    : '';
   const avatarInitial = user?.nombre?.charAt(0).toUpperCase() ?? 'U';
 
   const handleLogout = async () => {
     await logout();
+    router.replace('/login');
   };
 
   return (
@@ -69,20 +70,15 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
 
-        <TouchableOpacity
-          activeOpacity={isAuthenticated ? 1 : 0.8}
-          onPress={isAuthenticated ? undefined : () => router.push('/login')}
-          style={styles.profileCard}>
+        <View style={styles.profileCard}>
           <View style={styles.profileAvatar}>
             <Text style={styles.profileAvatarText}>{avatarInitial}</Text>
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{nombreCompleto}</Text>
-            <Text style={styles.profileEmail}>
-              {isAuthenticated ? user?.correo : 'Toca para iniciar sesión'}
-            </Text>
+            <Text style={styles.profileEmail}>{user?.correo}</Text>
           </View>
-        </TouchableOpacity>
+        </View>
 
         <Text style={styles.groupLabel}>GENERAL</Text>
         <View style={styles.settingsGroup}>
@@ -111,21 +107,12 @@ export default function SettingsScreen() {
           <SettingItem label="Versión" value="1.0.0" isLast />
         </View>
 
-        {isAuthenticated ? (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={styles.logoutButton}
-            onPress={handleLogout}>
-            <Text style={styles.logoutText}>Cerrar Sesión</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.loginButton}
-            onPress={() => router.push('/login')}>
-            <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={styles.logoutButton}
+          onPress={handleLogout}>
+          <Text style={styles.logoutText}>Cerrar Sesión</Text>
+        </TouchableOpacity>
 
         <View style={{ height: insets.bottom + Spacing.lg }} />
       </ScrollView>
@@ -284,18 +271,6 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: Colors.error,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-  },
-  loginButton: {
-    backgroundColor: Colors.primaryDark,
-    borderRadius: BorderRadius.xl,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  loginButtonText: {
-    color: Colors.accentTeal,
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
   },
