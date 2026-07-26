@@ -36,7 +36,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permite que Espacios use tu ubicación para calcular la distancia a cada espacio."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

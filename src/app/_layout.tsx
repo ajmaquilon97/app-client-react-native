@@ -1,7 +1,6 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/colors';
 import { FavoritesProvider } from '@/context/FavoritesContext';
-import { ReservationsProvider } from '@/context/ReservationsContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
@@ -33,6 +32,7 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="verificar-telefono" options={{ presentation: 'card' }} />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="login" options={{ presentation: 'card' }} />
@@ -47,9 +47,7 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <FavoritesProvider>
-          <ReservationsProvider>
-            <RootNavigator />
-          </ReservationsProvider>
+          <RootNavigator />
         </FavoritesProvider>
       </AuthProvider>
     </QueryClientProvider>

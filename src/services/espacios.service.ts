@@ -1,13 +1,20 @@
 import { Espacio, Categoria } from '@/types';
 import { API_BASE_URL } from '@/config/api';
+import { parseLatLngFromGoogleMapsUrl } from '@/utils/geo';
 
-const API_URL = `${API_BASE_URL}/espacios`;
+const API_URL = `${API_BASE_URL}/mobile/espacios`;
+
+interface TarifaHoyAPI {
+  modalidad: string | null;
+  precio: number;
+  unidad: string | null;
+  esPromocion: boolean;
+}
 
 interface EspacioAPI {
   id: number;
   titulo: string;
   descripcion: string;
-  propietarioId: number;
   propietarioNombre: string;
   tipoEspacioId: number;
   tipoEspacioNombre: string;
@@ -18,7 +25,13 @@ interface EspacioAPI {
   validarAforo: boolean;
   maxCapacidad: number;
   fechaCreacion: string;
+  imagenPortada: string | null;
+  imagenesGaleria: string[] | null;
+  tarifaHoy: TarifaHoyAPI | null;
 }
+
+const IMAGEN_FALLBACK =
+  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80';
 
 function mapTipoToCategoria(tipoNombre: string): Categoria {
   const lower = tipoNombre.toLowerCase();
@@ -29,6 +42,16 @@ function mapTipoToCategoria(tipoNombre: string): Categoria {
 }
 
 function mapApiToEspacio(e: EspacioAPI): Espacio {
+  const coords = parseLatLngFromGoogleMapsUrl(e.linkUbicacion);
+
+  if (__DEV__) {
+    if (coords) {
+      console.log(`[espacios] #${e.id} coords parseadas:`, coords, 'desde', e.linkUbicacion);
+    } else {
+      console.log(`[espacios] #${e.id} NO se pudo parsear linkUbicacion:`, e.linkUbicacion);
+    }
+  }
+
   return {
     id: e.id,
     nombre: e.titulo,
@@ -36,14 +59,16 @@ function mapApiToEspacio(e: EspacioAPI): Espacio {
     categoria: mapTipoToCategoria(e.tipoEspacioNombre),
     subcategoria: e.tipoEspacioNombre,
     ubicacion: `${e.ciudad}, ${e.provincia}`,
+    precio: e.tarifaHoy?.precio ?? 0,
+    unidad: e.tarifaHoy?.unidad ?? 'hora',
+    latitud: coords?.latitude ?? null,
+    longitud: coords?.longitude ?? null,
     // --- campos pendientes de otros endpoints ---
-    precio: 0,
-    unidad: 'hora',
     rating: 0,
     reviews: 0,
     distancia: 0,
     disponibleHoy: false,
-    imagen: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80',
+    imagen: e.imagenPortada ?? IMAGEN_FALLBACK,
     servicios: [],
     anfitrion: {
       nombre: e.propietarioNombre,
@@ -56,9 +81,9 @@ function mapApiToEspacio(e: EspacioAPI): Espacio {
   };
 }
 
-export async function fetchEspacios(): Promise<Espacio[]> {
+export async function fetchEspacios(accessToken: string): Promise<Espacio[]> {
   const res = await fetch(API_URL, {
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error(`Error ${res.status} al obtener espacios`);
   const data: EspacioAPI[] = await res.json();

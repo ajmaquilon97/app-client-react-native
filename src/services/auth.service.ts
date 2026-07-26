@@ -198,13 +198,23 @@ function base64UrlDecode(input: string): string {
   return output;
 }
 
-export function decodeJwtSubject(accessToken: string): string | null {
+export function decodeJwtPayload(accessToken: string): Record<string, unknown> | null {
   try {
     const [, payload] = accessToken.split('.');
     if (!payload) return null;
-    const json = JSON.parse(base64UrlDecode(payload));
-    return json.sub ?? null;
+    return JSON.parse(base64UrlDecode(payload));
   } catch {
     return null;
   }
+}
+
+export function decodeJwtSubject(accessToken: string): string | null {
+  const sub = decodeJwtPayload(accessToken)?.sub;
+  return typeof sub === 'string' ? sub : null;
+}
+
+export function isJwtExpired(accessToken: string, bufferSeconds = 15): boolean {
+  const exp = decodeJwtPayload(accessToken)?.exp;
+  if (typeof exp !== 'number') return true;
+  return Date.now() / 1000 >= exp - bufferSeconds;
 }

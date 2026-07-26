@@ -188,6 +188,81 @@
         }
       }
     },
+    "/api/auth/send-sms-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/send-sms-otp — Simula el envío de un código OTP por SMS al usuario\r\nautenticado. Guarda el teléfono recibido en el perfil y escribe el código simulado\r\nen la consola del servidor (no se integra con ninguna pasarela de SMS real).",
+        "requestBody": {
+          "description": "<b>PhoneNumber</b> (string, requerido) — número de teléfono al que se enviaría el código.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmsMockDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmsMockDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmsMockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — código simulado enviado."
+          },
+          "404": {
+            "description": "El usuario del token no existe o está anulado."
+          }
+        }
+      }
+    },
+    "/api/auth/verify-sms-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/verify-sms-otp — Valida el código OTP simulado del usuario autenticado.\r\nSi el código coincide con el valor fijo de prueba, marca el teléfono como confirmado.",
+        "requestBody": {
+          "description": "<b>Code</b> (string, requerido) — código de verificación recibido (simulado: 123456).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifySmsMockDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifySmsMockDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifySmsMockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — teléfono verificado correctamente."
+          },
+          "400": {
+            "description": "Código inválido."
+          },
+          "404": {
+            "description": "El usuario del token no existe o está anulado."
+          }
+        }
+      }
+    },
     "/api/auth/google": {
       "get": {
         "tags": [
@@ -1239,6 +1314,121 @@
         }
       }
     },
+    "/api/logs": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "GET /api/logs — Devuelve el contenido del archivo de log del día actual\r\n(logs/api-log-YYYYMMDD.txt). Endpoint de prueba para inspeccionar los logs\r\ngenerados por Serilog sin acceder al sistema de archivos del servidor.",
+        "responses": {
+          "200": {
+            "description": "Contenido del log del día en texto plano."
+          },
+          "404": {
+            "description": "No hay un archivo de log para la fecha actual."
+          }
+        }
+      }
+    },
+    "/api/mobile/espacios": {
+      "get": {
+        "tags": [
+          "MobileEspacios"
+        ],
+        "summary": "GET /api/mobile/espacios — Lista los espacios activos con la \"tarifa de hoy\"\r\n(modalidad Hora) calculada en el servidor según la jerarquía\r\npromoción > fecha especial > override por día > precio base.\r\nRequiere JWT válido (cualquier rol); sin restricciones de propiedad.",
+        "responses": {
+          "200": {
+            "description": "Lista de `EspacioMobileResponse` con su `TarifaHoy`.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioMobileResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioMobileResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EspacioMobileResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/mobile/espacios/{espacioId}/disponibilidad": {
+      "get": {
+        "tags": [
+          "MobileEspacios"
+        ],
+        "summary": "GET /api/mobile/espacios/{espacioId}/disponibilidad?fecha=yyyy-MM-dd — Disponibilidad\r\nhoraria (24 horas) y tarifa exacta de un espacio para la fecha dada, calculadas en el\r\nservidor según la misma jerarquía de precios de `TarifaHoy` evaluada contra esa fecha.\r\nRequiere JWT válido (cualquier rol); sin restricciones de propiedad — pensado para que\r\ncualquier cliente autenticado consulte disponibilidad antes de reservar.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "Id del espacio a consultar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fecha",
+            "in": "query",
+            "description": "Fecha a consultar, formato yyyy-MM-dd.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disponibilidad y tarifa del espacio para la fecha solicitada.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisponibilidadMobileResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisponibilidadMobileResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisponibilidadMobileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "404": {
+            "description": "No existe un espacio activo con ese ID."
+          }
+        }
+      }
+    },
     "/api/reservas": {
       "get": {
         "tags": [
@@ -1432,12 +1622,54 @@
         }
       }
     },
+    "/api/reservas/mias": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "GET /api/reservas/mias — Lista todas las reservas hechas por el Cliente autenticado\r\n(`Reserva.UsuarioId` == usuario del JWT), sin importar de quién sea el espacio.",
+        "responses": {
+          "200": {
+            "description": "Lista de `ReservaResponse` del cliente autenticado.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservaResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservaResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservaResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
     "/api/reservas/{id}": {
       "get": {
         "tags": [
           "Reservas"
         ],
-        "summary": "GET /api/reservas/{id} — Obtiene el detalle completo de una reserva propia, incluyendo notas\r\ne historial de eventos.",
+        "summary": "GET /api/reservas/{id} — Obtiene el detalle completo de una reserva, incluyendo notas\r\ne historial de eventos. Doble autorización: accesible para el Anfitrión dueño del espacio\r\no para el Cliente que hizo la reserva.",
         "parameters": [
           {
             "name": "id",
@@ -1455,7 +1687,7 @@
             "description": "`ReservaDetalleResponse` con los datos de la reserva."
           },
           "403": {
-            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+            "description": "El usuario autenticado no es el dueño del espacio ni el cliente de la reserva."
           },
           "404": {
             "description": "No existe una reserva con ese ID."
@@ -1488,6 +1720,47 @@
           },
           "404": {
             "description": "No existe una reserva con ese ID."
+          }
+        }
+      }
+    },
+    "/api/mobile/reservas": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/mobile/reservas — Crea una reserva propia para el Cliente autenticado, sobre\r\ncualquier espacio (sin restricción de propiedad). El usuarioId de la reserva se extrae\r\nsiempre del claim \"sub\" del JWT; cualquier `usuarioId` enviado en el body es ignorado.\r\nValida que el rango `fechaInicio`–`fechaFin` no se solape con otra reserva activa\r\ndel mismo espacio.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ReservaResponse` con los datos de la reserva creada."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          },
+          "409": {
+            "description": "El espacio ya tiene una reserva activa que se solapa con el horario solicitado."
           }
         }
       }
@@ -1530,7 +1803,7 @@
         "tags": [
           "Reservas"
         ],
-        "summary": "POST /api/reservas/{id}/cancelar — Cancela una reserva. Válido desde `pendiente`,\r\n`confirmada` o `reagendada`.",
+        "summary": "POST /api/reservas/{id}/cancelar — Cancela una reserva. Válido desde `pendiente`,\r\n`confirmada` o `reagendada`. Doble autorización: puede cancelar tanto el Anfitrión\r\ndueño del espacio como el Cliente que hizo la reserva.",
         "parameters": [
           {
             "name": "id",
@@ -1570,7 +1843,7 @@
             "description": "Motivo faltante o con menos de 5 caracteres."
           },
           "403": {
-            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+            "description": "El usuario autenticado no es el dueño del espacio ni el cliente de la reserva."
           },
           "404": {
             "description": "No existe una reserva con ese ID."
@@ -1692,7 +1965,7 @@
         "tags": [
           "Reservas"
         ],
-        "summary": "POST /api/reservas/{id}/pago — Registra un pago, un abono parcial o un reembolso sobre una reserva.\r\nLa invariante `pagado + pendiente = total` se mantiene en cada operación.",
+        "summary": "POST /api/reservas/{id}/pago — Registra un pago, un abono parcial o un reembolso sobre una reserva.\r\nLa invariante `pagado + pendiente = total` se mantiene en cada operación. Doble autorización:\r\npuede registrar el pago tanto el Anfitrión dueño del espacio como el Cliente que hizo la reserva.",
         "parameters": [
           {
             "name": "id",
@@ -1732,7 +2005,7 @@
             "description": "Monto ≤ 0, o Tipo no es uno de los permitidos."
           },
           "403": {
-            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+            "description": "El usuario autenticado no es el dueño del espacio ni el cliente de la reserva."
           },
           "404": {
             "description": "No existe una reserva con ese ID."
@@ -2258,7 +2531,7 @@
           }
         ],
         "requestBody": {
-          "description": "<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.",
+          "description": "<b>Nombre</b> (string, máx. 150) — nombre del usuario.\r\n<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.",
           "content": {
             "application/json": {
               "schema": {
@@ -2476,6 +2749,16 @@
       "CompletarPerfilRequest": {
         "type": "object",
         "properties": {
+          "nombre": {
+            "maxLength": 150,
+            "type": "string",
+            "nullable": true
+          },
+          "apellido": {
+            "maxLength": 150,
+            "type": "string",
+            "nullable": true
+          },
           "numeroCedula": {
             "maxLength": 20,
             "type": "string",
@@ -2519,6 +2802,115 @@
               "$ref": "#/components/schemas/ReservasPorMesItem"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DisponibilidadMobileResponse": {
+        "type": "object",
+        "properties": {
+          "espacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fecha": {
+            "type": "string",
+            "nullable": true
+          },
+          "tarifa": {
+            "$ref": "#/components/schemas/TarifaHoyDto"
+          },
+          "horas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HoraEstadoDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EspacioMobileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "titulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "propietarioNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoEspacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipoEspacioNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "provincia": {
+            "type": "string",
+            "nullable": true
+          },
+          "linkUbicacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "referencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "validarAforo": {
+            "type": "boolean"
+          },
+          "maxCapacidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "imagenPortada": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenesGaleria": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
+          },
+          "calificacion": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "totalResenas": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "tarifaHoy": {
+            "$ref": "#/components/schemas/TarifaHoyDto"
           }
         },
         "additionalProperties": false
@@ -2703,6 +3095,25 @@
         },
         "additionalProperties": false
       },
+      "EstadoPago": {
+        "enum": [
+          "pendiente",
+          "pagado_parcialmente",
+          "pagado",
+          "reembolsado"
+        ],
+        "type": "string"
+      },
+      "EstadoReserva": {
+        "enum": [
+          "pendiente",
+          "confirmada",
+          "reagendada",
+          "cancelada",
+          "finalizada"
+        ],
+        "type": "string"
+      },
       "ExcepcionHorarioRequest": {
         "required": [
           "tipo",
@@ -2779,6 +3190,20 @@
             "minLength": 1,
             "pattern": "hora|jornada|evento",
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HoraEstadoDto": {
+        "type": "object",
+        "properties": {
+          "hora": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2943,6 +3368,28 @@
         },
         "additionalProperties": false
       },
+      "ReservaClienteResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "telefono": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ReservaPagoRequest": {
         "required": [
           "tipo"
@@ -2961,6 +3408,30 @@
           },
           "notas": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservaPagoResponse": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "pagado": {
+            "type": "number",
+            "format": "double"
+          },
+          "pendiente": {
+            "type": "number",
+            "format": "double"
+          },
+          "fechaUltimoPago": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },
@@ -3006,6 +3477,59 @@
           "totalHoras": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "espacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "espacioTitulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "cliente": {
+            "$ref": "#/components/schemas/ReservaClienteResponse"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaFin": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalHoras": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pax": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "estado": {
+            "$ref": "#/components/schemas/EstadoReserva"
+          },
+          "estadoPago": {
+            "$ref": "#/components/schemas/EstadoPago"
+          },
+          "asistencia": {
+            "$ref": "#/components/schemas/Asistencia"
+          },
+          "pago": {
+            "$ref": "#/components/schemas/ReservaPagoResponse"
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -3116,6 +3640,41 @@
             "minLength": 1,
             "type": "string",
             "format": "email"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendSmsMockDto": {
+        "required": [
+          "phoneNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "minLength": 1,
+            "type": "string",
+            "format": "tel"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TarifaHoyDto": {
+        "type": "object",
+        "properties": {
+          "modalidad": {
+            "type": "string",
+            "nullable": true
+          },
+          "precio": {
+            "type": "number",
+            "format": "double"
+          },
+          "unidad": {
+            "type": "string",
+            "nullable": true
+          },
+          "esPromocion": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -3239,6 +3798,19 @@
             "type": "string",
             "format": "email"
           },
+          "code": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifySmsMockDto": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
           "code": {
             "minLength": 1,
             "type": "string"

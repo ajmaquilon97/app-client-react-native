@@ -12,6 +12,8 @@ export const ESPACIOS_DATA: Espacio[] = [
     rating: 4.8,
     reviews: 124,
     distancia: 1.2,
+    latitud: null,
+    longitud: null,
     disponibleHoy: true,
     imagen:
       'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80',
@@ -45,6 +47,8 @@ export const ESPACIOS_DATA: Espacio[] = [
     rating: 4.9,
     reviews: 86,
     distancia: 4.5,
+    latitud: null,
+    longitud: null,
     disponibleHoy: false,
     imagen:
       'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?auto=format&fit=crop&w=600&q=80',
@@ -77,6 +81,8 @@ export const ESPACIOS_DATA: Espacio[] = [
     rating: 4.7,
     reviews: 98,
     distancia: 0.8,
+    latitud: null,
+    longitud: null,
     disponibleHoy: true,
     imagen:
       'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=600&q=80',
@@ -110,6 +116,8 @@ export const ESPACIOS_DATA: Espacio[] = [
     rating: 4.9,
     reviews: 142,
     distancia: 8.3,
+    latitud: null,
+    longitud: null,
     disponibleHoy: true,
     imagen:
       'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=600&q=80',
@@ -142,6 +150,8 @@ export const ESPACIOS_DATA: Espacio[] = [
     rating: 4.9,
     reviews: 210,
     distancia: 2.1,
+    latitud: null,
+    longitud: null,
     disponibleHoy: false,
     imagen:
       'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=600&q=80',
@@ -174,6 +184,8 @@ export const ESPACIOS_DATA: Espacio[] = [
     rating: 4.6,
     reviews: 74,
     distancia: 5.2,
+    latitud: null,
+    longitud: null,
     disponibleHoy: true,
     imagen:
       'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=600&q=80',

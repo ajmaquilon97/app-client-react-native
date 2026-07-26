@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,22 +6,39 @@ import {
   StyleSheet,
   Platform,
   KeyboardAvoidingView,
-  TextInput,
   ScrollView,
+  ActivityIndicator,
   Alert,
   Modal,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
-import { Espacio } from '@/types';
+import { Disponibilidad, Espacio, Reserva } from '@/types';
 import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/components/icons';
 import PaymentModal from '@/components/payment/PaymentModal';
-import { useReservationsContext } from '@/context/ReservationsContext';
+import { useAuth } from '@/context/AuthContext';
+import { useUserLocation } from '@/hooks/useUserLocation';
+import { haversineDistanceKm, formatDistanceKm } from '@/utils/geo';
+import {
+  esMismoDia,
+  formatFecha,
+  formatHora,
+  toDateOnlyString,
+  toLocalDateTimeString,
+} from '@/utils/fechas';
+import {
+  fetchDisponibilidad,
+  crearReserva,
+  registrarPago,
+  cancelarReserva,
+} from '@/services/reservas.service';
+import LocationMap from '@/components/space/LocationMap';
+import DaySelector from '@/components/space/DaySelector';
+import HourRangeSelector from '@/components/space/HourRangeSelector';
 
 interface SpaceDetailSheetProps {
   visible: boolean;
@@ -40,57 +57,178 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { addReserva } = useReservationsContext();
-  const [fechaReserva, setFechaReserva] = useState('');
-  const [cantidad, setCantidad] = useState(1);
+  const { getAccessToken, user } = useAuth();
+  const hoy = useMemo(() => new Date(), [visible]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [horaDesde, setHoraDesde] = useState<number | null>(null);
+  const [horaHasta, setHoraHasta] = useState<number | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [creandoReserva, setCreandoReserva] = useState(false);
+  const [reservaCreada, setReservaCreada] = useState<Reserva | null>(null);
+
+  const [disponibilidad, setDisponibilidad] = useState<Disponibilidad | null>(null);
+  const [disponibilidadLoading, setDisponibilidadLoading] = useState(false);
+  const [disponibilidadError, setDisponibilidadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!visible) {
-      setFechaReserva('');
-      setCantidad(1);
+      setSelectedDate(null);
+      setHoraDesde(null);
+      setHoraHasta(null);
       setShowPayment(false);
+      setReservaCreada(null);
+      setDisponibilidad(null);
+      setDisponibilidadError(null);
     }
   }, [visible]);
+
+  useEffect(() => {
+    if (!visible || !espacio || !selectedDate) {
+      setDisponibilidad(null);
+      return;
+    }
+    let cancelled = false;
+    setDisponibilidadLoading(true);
+    setDisponibilidadError(null);
+
+    (async () => {
+      try {
+        const accessToken = await getAccessToken();
+        const data = await fetchDisponibilidad(
+          espacio.id,
+          toDateOnlyString(selectedDate),
+          accessToken,
+        );
+        if (!cancelled) setDisponibilidad(data);
+      } catch (err) {
+        if (!cancelled) {
+          setDisponibilidadError(
+            err instanceof Error ? err.message : 'No se pudo obtener la disponibilidad.',
+          );
+        }
+      } finally {
+        if (!cancelled) setDisponibilidadLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, espacio, selectedDate, getAccessToken]);
+
+  const handleChangeHoraDesde = useCallback((hora: number) => {
+    setHoraDesde(hora);
+    setHoraHasta(prev => (prev != null && prev > hora ? prev : null));
+  }, []);
+
+  const cantidadHoras = horaDesde != null && horaHasta != null ? horaHasta - horaDesde : 0;
+  const esHoy = !!selectedDate && esMismoDia(selectedDate, hoy);
+
+  const userLocation = useUserLocation(visible && !!espacio);
+
+  const espacioCoords = useMemo(() => {
+    if (!espacio || espacio.latitud == null || espacio.longitud == null) return null;
+    return { latitude: espacio.latitud, longitude: espacio.longitud };
+  }, [espacio]);
+
+  const distanciaKm = useMemo(() => {
+    if (!userLocation.coords || !espacioCoords) return null;
+    return haversineDistanceKm(userLocation.coords, espacioCoords);
+  }, [userLocation.coords, espacioCoords]);
 
   const handleFavoritePress = useCallback(() => {
     if (espacio) onToggleFavorite(espacio.id);
   }, [espacio, onToggleFavorite]);
 
-  const handleReservar = useCallback(() => {
-    if (!fechaReserva.trim()) {
-      Alert.alert('Fecha requerida', 'Por favor ingresa la fecha para tu reserva.', [{ text: 'Entendido' }]);
+  const handleReservar = useCallback(async () => {
+    if (!espacio) return;
+    if (!selectedDate || horaDesde == null || horaHasta == null) {
+      Alert.alert(
+        'Faltan datos',
+        'Elige el día y el rango de horas (desde–hasta) para tu reserva.',
+        [{ text: 'Entendido' }],
+      );
       return;
     }
-    setShowPayment(true);
-  }, [fechaReserva]);
+    if (!disponibilidad?.tarifa) {
+      Alert.alert(
+        'Tarifa no disponible',
+        'Este espacio no tiene una tarifa configurada para el día elegido. Prueba con otro día.',
+        [{ text: 'Entendido' }],
+      );
+      return;
+    }
 
-  const handlePaymentSuccess = useCallback(
-    (result: { transactionId: string; amount: string }) => {
-      if (espacio) {
-        const totalReserva = espacio.precio * cantidad * 1.1;
-        addReserva({
-          espacio,
-          fecha: fechaReserva,
-          cantidad,
-          total: totalReserva,
-          codigo: result.transactionId,
-        });
+    setCreandoReserva(true);
+    try {
+      const accessToken = await getAccessToken();
+      const nueva = await crearReserva(
+        {
+          espacioId: espacio.id,
+          fechaInicio: toLocalDateTimeString(selectedDate, horaDesde),
+          fechaFin: toLocalDateTimeString(selectedDate, horaHasta),
+          totalHoras: cantidadHoras,
+        },
+        user?.id ?? '',
+        accessToken,
+      );
+      setReservaCreada(nueva);
+      setShowPayment(true);
+    } catch (err) {
+      Alert.alert(
+        'No se pudo crear la reserva',
+        err instanceof Error ? err.message : 'Intenta de nuevo.',
+        [{ text: 'Entendido' }],
+      );
+    } finally {
+      setCreandoReserva(false);
+    }
+  }, [espacio, selectedDate, horaDesde, horaHasta, disponibilidad, cantidadHoras, user, getAccessToken]);
+
+  const fechaHoraTexto =
+    selectedDate && horaDesde != null && horaHasta != null
+      ? `${formatFecha(selectedDate)} · ${formatHora(horaDesde)}–${formatHora(horaHasta)}`
+      : '';
+
+  const handlePaymentSuccess = useCallback(async () => {
+    if (reservaCreada) {
+      try {
+        const accessToken = await getAccessToken();
+        await registrarPago(reservaCreada.id, reservaCreada.pago.total ?? 0, accessToken);
+      } catch (err) {
+        Alert.alert(
+          'Pago procesado, pero no se pudo registrar',
+          err instanceof Error ? err.message : 'Contacta soporte con tu comprobante.',
+          [{ text: 'Entendido' }],
+        );
       }
-      setShowPayment(false);
-      setFechaReserva('');
-      setCantidad(1);
-      onClose();
-      router.navigate('/calendario');
-    },
-    [espacio, cantidad, fechaReserva, addReserva, onClose, router],
-  );
+    }
+    setShowPayment(false);
+    setSelectedDate(null);
+    setHoraDesde(null);
+    setHoraHasta(null);
+    setReservaCreada(null);
+    onClose();
+    router.navigate('/calendario');
+  }, [reservaCreada, getAccessToken, onClose, router]);
+
+  const handleClosePayment = useCallback(async () => {
+    setShowPayment(false);
+    if (reservaCreada) {
+      try {
+        const accessToken = await getAccessToken();
+        await cancelarReserva(reservaCreada.id, 'Cliente canceló el pago', accessToken);
+      } catch {
+        // best effort: no bloqueamos la UI si la cancelación silenciosa falla
+      }
+      setReservaCreada(null);
+    }
+  }, [reservaCreada, getAccessToken]);
 
   if (!espacio) return null;
 
-  const subtotal = espacio.precio * cantidad;
-  const tarifaServicio = subtotal * 0.1;
-  const total = subtotal + tarifaServicio;
+  const precioDelDia = disponibilidad?.tarifa?.precio ?? espacio.precio;
+  const totalReserva = cantidadHoras > 0 ? precioDelDia * cantidadHoras : 0;
 
   return (
     <Modal
@@ -143,7 +281,14 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                 <Text style={styles.metaDot}>•</Text>
                 <Text style={styles.reviewsLink}>{espacio.reviews} reseñas verificadas</Text>
                 <Text style={styles.metaDot}>•</Text>
-                <Text style={styles.distancia}>📍 a {espacio.distancia} km</Text>
+                <Text style={styles.distancia}>
+                  📍{' '}
+                  {distanciaKm != null
+                    ? `a ${formatDistanceKm(distanciaKm)}`
+                    : userLocation.loading
+                      ? 'Calculando distancia…'
+                      : 'Ubicación no disponible'}
+                </Text>
               </View>
 
               <View style={styles.divider} />
@@ -187,16 +332,20 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                 ))}
               </View>
 
-              {/* Mapa placeholder */}
+              {/* Mapa de ubicación */}
               <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Ubicación aproximada</Text>
               <View style={styles.mapContainer}>
-                <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <Path d="M0 20 L100 10 M0 50 L100 70 M30 0 L50 100 M70 0 L80 100" stroke="#CBD5E1" strokeWidth="2" fill="none" />
-                  <Rect x="15" y="15" width="20" height="20" fill="#E2E8F0" rx="3" />
-                  <Rect x="55" y="45" width="25" height="15" fill="#E2E8F0" rx="3" />
-                  <Circle cx="50" cy="50" r="10" fill="#14B8A6" fillOpacity="0.15" />
-                  <Circle cx="50" cy="50" r="3" fill="#14B8A6" />
-                </Svg>
+                {espacioCoords ? (
+                  <LocationMap
+                    latitude={espacioCoords.latitude}
+                    longitude={espacioCoords.longitude}
+                  />
+                ) : (
+                  <View style={styles.mapUnavailable}>
+                    <LocationIcon size={20} color={Colors.gray400} />
+                    <Text style={styles.mapUnavailableText}>Ubicación no disponible</Text>
+                  </View>
+                )}
                 <View style={styles.mapLabel}>
                   <LocationIcon size={10} color={Colors.white} />
                   <Text style={styles.mapLabelText}>{espacio.ubicacion}</Text>
@@ -223,55 +372,69 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   </Text>
                 </View>
 
-                <Text style={styles.inputLabel}>Fecha del Evento</Text>
-                <TextInput
-                  value={fechaReserva}
-                  onChangeText={setFechaReserva}
-                  placeholder="DD/MM/AAAA"
-                  placeholderTextColor={Colors.gray400}
-                  style={styles.dateInput}
-                  keyboardType="numeric"
-                  maxLength={10}
-                  returnKeyType="done"
-                  selectionColor={Colors.accentTeal}
+                <Text style={styles.inputLabel}>Día</Text>
+                <DaySelector hoy={hoy} selectedDate={selectedDate} onSelect={setSelectedDate} />
+
+                {selectedDate && (
+                  <>
+                    {disponibilidadLoading && (
+                      <View style={styles.infoBanner}>
+                        <ActivityIndicator size="small" color={Colors.gray500} />
+                        <Text style={styles.infoBannerText}>Consultando tarifa y disponibilidad…</Text>
+                      </View>
+                    )}
+                    {!disponibilidadLoading && disponibilidadError && (
+                      <View style={styles.warningBanner}>
+                        <Text style={styles.warningBannerText}>⚠️ {disponibilidadError}</Text>
+                      </View>
+                    )}
+                    {!disponibilidadLoading && !disponibilidadError && disponibilidad && !disponibilidad.tarifa && (
+                      <View style={styles.warningBanner}>
+                        <Text style={styles.warningBannerText}>
+                          ⚠️ Este espacio no tiene una tarifa configurada para el {esHoy ? 'día de hoy' : 'día elegido'}.
+                        </Text>
+                      </View>
+                    )}
+                  </>
+                )}
+
+                <Text style={[styles.inputLabel, styles.inputLabelSpaced]}>Horario</Text>
+                <HourRangeSelector
+                  horaDesde={horaDesde}
+                  horaHasta={horaHasta}
+                  onChangeDesde={handleChangeHoraDesde}
+                  onChangeHasta={setHoraHasta}
+                  horasEstado={disponibilidad?.horas}
                 />
 
-                <Text style={styles.inputLabel}>Cantidad de {espacio.unidad}s</Text>
-                <View style={styles.quantityRow}>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.quantityBtn}
-                    onPress={() => setCantidad(prev => Math.max(1, prev - 1))}>
-                    <Text style={styles.quantityBtnText}>−</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.quantityValue}>{cantidad}</Text>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    style={styles.quantityBtn}
-                    onPress={() => setCantidad(prev => prev + 1)}>
-                    <Text style={styles.quantityBtnText}>+</Text>
-                  </TouchableOpacity>
-                </View>
-
                 {/* Desglose de costos */}
-                <View style={styles.costBreakdown}>
-                  <View style={styles.costRow}>
-                    <Text style={styles.costLabel}>Costo por {cantidad} {espacio.unidad}{cantidad > 1 ? 's' : ''}:</Text>
-                    <Text style={styles.costValue}>${subtotal}</Text>
+                {cantidadHoras > 0 && disponibilidad?.tarifa && (
+                  <View style={[styles.costBreakdown, styles.costBreakdownSpaced]}>
+                    <View style={styles.costRow}>
+                      <Text style={styles.costLabel}>
+                        Costo por {cantidadHoras} {espacio.unidad}
+                        {cantidadHoras !== 1 ? 's' : ''}:
+                      </Text>
+                      <Text style={styles.costValue}>${precioDelDia} c/u</Text>
+                    </View>
+                    <View style={styles.costDivider} />
+                    <View style={styles.costRow}>
+                      <Text style={styles.costTotal}>Total a pagar:</Text>
+                      <Text style={styles.costTotalValue}>${totalReserva.toFixed(2)}</Text>
+                    </View>
                   </View>
-                  <View style={styles.costRow}>
-                    <Text style={styles.costLabelSub}>Tarifa de servicio (10%):</Text>
-                    <Text style={styles.costValueSub}>${tarifaServicio.toFixed(2)}</Text>
-                  </View>
-                  <View style={styles.costDivider} />
-                  <View style={styles.costRow}>
-                    <Text style={styles.costTotal}>Total estimado:</Text>
-                    <Text style={styles.costTotalValue}>${total.toFixed(2)}</Text>
-                  </View>
-                </View>
+                )}
 
-                <TouchableOpacity activeOpacity={0.85} onPress={handleReservar} style={styles.reserveButton}>
-                  <Text style={styles.reserveButtonText}>CONTINUAR AL PAGO →</Text>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleReservar}
+                  disabled={creandoReserva}
+                  style={[styles.reserveButton, creandoReserva && styles.reserveButtonDisabled]}>
+                  {creandoReserva ? (
+                    <ActivityIndicator size="small" color={Colors.accentTeal} />
+                  ) : (
+                    <Text style={styles.reserveButtonText}>CONTINUAR AL PAGO →</Text>
+                  )}
                 </TouchableOpacity>
               </View>
 
@@ -305,10 +468,10 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
         <PaymentModal
           visible={showPayment}
           espacio={espacio}
-          fecha={fechaReserva}
-          cantidad={cantidad}
-          total={total.toFixed(2)}
-          onClose={() => setShowPayment(false)}
+          fecha={fechaHoraTexto}
+          cantidad={cantidadHoras}
+          total={(reservaCreada?.pago.total ?? totalReserva).toFixed(2)}
+          onClose={handleClosePayment}
           onSuccess={handlePaymentSuccess}
         />
       )}
@@ -558,6 +721,17 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: FontWeight.bold,
   },
+  mapUnavailable: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xxs,
+  },
+  mapUnavailableText: {
+    fontSize: FontSize.xs,
+    color: Colors.gray400,
+    fontWeight: FontWeight.semiBold,
+  },
   normasCard: {
     backgroundColor: Colors.white,
     borderRadius: BorderRadius.xl,
@@ -624,49 +798,33 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     marginBottom: -Spacing.xs,
   },
-  dateInput: {
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Platform.OS === 'ios' ? Spacing.sm : Spacing.xs,
-    fontSize: FontSize.sm,
-    color: Colors.textPrimary,
-    fontWeight: FontWeight.semiBold,
+  inputLabelSpaced: {
+    marginTop: Spacing.sm,
   },
-  quantityRow: {
+  infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: Spacing.xs,
     backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: BorderRadius.md,
-    padding: Spacing.xs,
+    padding: Spacing.sm,
+    marginTop: Spacing.xs,
   },
-  quantityBtn: {
-    width: 36,
-    height: 36,
+  infoBannerText: {
+    fontSize: FontSize.xs,
+    color: Colors.gray500,
+    fontWeight: FontWeight.medium,
+  },
+  warningBanner: {
+    backgroundColor: Colors.errorLight,
     borderRadius: BorderRadius.md,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
-      android: { elevation: 1 },
-    }),
+    padding: Spacing.sm,
+    marginTop: Spacing.xs,
   },
-  quantityBtnText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    lineHeight: 22,
-  },
-  quantityValue: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+  warningBannerText: {
+    fontSize: FontSize.xs,
+    color: Colors.error,
+    fontWeight: FontWeight.medium,
   },
   costBreakdown: {
     backgroundColor: Colors.background,
@@ -675,6 +833,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     gap: 6,
+  },
+  costBreakdownSpaced: {
+    marginTop: Spacing.sm,
   },
   costRow: {
     flexDirection: 'row',
@@ -689,14 +850,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: FontWeight.semiBold,
     color: Colors.gray700,
-  },
-  costLabelSub: {
-    fontSize: 9,
-    color: Colors.gray400,
-  },
-  costValueSub: {
-    fontSize: 9,
-    color: Colors.gray400,
   },
   costDivider: {
     height: 1,
@@ -717,10 +870,15 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     paddingVertical: Spacing.sm,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 40,
     ...Platform.select({
       ios: { shadowColor: Colors.primaryDark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
       android: { elevation: 4 },
     }),
+  },
+  reserveButtonDisabled: {
+    opacity: 0.7,
   },
   reserveButtonText: {
     color: Colors.accentTeal,

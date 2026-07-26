@@ -66,7 +66,7 @@ export default function RegistroScreen() {
         email: trimmedEmail,
         password,
       });
-      router.replace('/');
+      router.replace('/verificar-telefono');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo crear la cuenta.';
       if (message.toLowerCase().includes('correo')) {
@@ -95,7 +95,7 @@ export default function RegistroScreen() {
           <TouchableOpacity
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.backButton}
-            onPress={() => router.back()}>
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))}>
             <ArrowLeftIcon size={20} color={Colors.primaryDark} strokeWidth={2.5} />
           </TouchableOpacity>
 
@@ -178,7 +178,7 @@ export default function RegistroScreen() {
 
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
-            <TouchableOpacity onPress={() => router.replace('/login')}>
+            <TouchableOpacity onPress={() => router.push('/login')}>
               <Text style={styles.footerLink}>Inicia sesión</Text>
             </TouchableOpacity>
           </View>

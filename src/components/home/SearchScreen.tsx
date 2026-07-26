@@ -16,7 +16,7 @@ import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
-import { ESPACIOS_DATA } from '@/data/espacios';
+import { useEspacios } from '@/hooks/useEspacios';
 import { ArrowLeftIcon, SearchIcon, CloseCircleIcon, StarIcon, LocationIcon } from '@/components/icons';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -33,18 +33,18 @@ interface ResultadoBusqueda {
 
 // ─── Algoritmo fuzzy ─────────────────────────────────────────────────────────
 
-function calcularCoincidenciasFuzzy(query: string): ResultadoBusqueda {
+function calcularCoincidenciasFuzzy(query: string, espacios: Espacio[]): ResultadoBusqueda {
   if (!query.trim()) return { exactas: [], aproximadas: [], esFuzzyMode: false };
 
   const queryLimpia = query.toLowerCase().trim();
   const tokens = queryLimpia.split(/\s+/).filter(w => w.length > 1);
 
-  const exactas = ESPACIOS_DATA.filter(e => {
+  const exactas = espacios.filter(e => {
     const campo = `${e.nombre} ${e.subcategoria} ${e.ubicacion} ${e.descripcion}`.toLowerCase();
     return campo.includes(queryLimpia);
   });
 
-  const aproximadas: EspacioConCoincidencia[] = ESPACIOS_DATA.map(e => {
+  const aproximadas: EspacioConCoincidencia[] = espacios.map(e => {
     let score = 0;
     const campo = `${e.nombre} ${e.categoria} ${e.subcategoria} ${e.ubicacion} ${e.descripcion}`.toLowerCase();
 
@@ -93,10 +93,11 @@ export default function SearchScreen({
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const [pantallaSugeridos, setPantallaSugeridos] = useState(false);
+  const { data: espacios = [] } = useEspacios();
 
   const { exactas, aproximadas, esFuzzyMode } = useMemo(
-    () => calcularCoincidenciasFuzzy(busqueda),
-    [busqueda],
+    () => calcularCoincidenciasFuzzy(busqueda, espacios),
+    [busqueda, espacios],
   );
 
   // Lista principal: resultados exactos si los hay, fuzzy si no

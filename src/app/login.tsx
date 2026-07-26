@@ -82,7 +82,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.backButton}
-            onPress={() => router.back()}>
+            onPress={() => router.canGoBack() && router.back()}>
             <ArrowLeftIcon size={20} color={Colors.primaryDark} strokeWidth={2.5} />
           </TouchableOpacity>
 
@@ -133,7 +133,7 @@ export default function LoginScreen() {
 
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>¿No tienes cuenta? </Text>
-            <TouchableOpacity onPress={() => router.replace('/registro')}>
+            <TouchableOpacity onPress={() => router.push('/registro')}>
               <Text style={styles.footerLink}>Crear cuenta</Text>
             </TouchableOpacity>
           </View>

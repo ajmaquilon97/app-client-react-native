@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Platform,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
   ListRenderItemInfo,
 } from 'react-native';
 import { Image } from 'expo-image';
@@ -16,48 +18,124 @@ import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
 import { CalendarIcon } from '@/components/icons';
-import { useReservationsContext, Reserva } from '@/context/ReservationsContext';
+import { useMisReservas } from '@/hooks/useMisReservas';
+import { useEspacios } from '@/hooks/useEspacios';
+import { useAuth } from '@/context/AuthContext';
+import { cancelarReserva } from '@/services/reservas.service';
+import { formatRangoReserva } from '@/utils/fechas';
+import { EstadoReserva, Reserva } from '@/types';
+
+const ESTADOS_CANCELABLES: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];
+const ESTADOS_ACTIVOS: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];
+
+const ESTADO_LABEL: Record<EstadoReserva, string> = {
+  pendiente: 'Pendiente',
+  confirmada: 'Confirmada',
+  reagendada: 'Reagendada',
+  cancelada: 'Cancelada',
+  finalizada: 'Finalizada',
+};
+
+const ESTADO_COLOR: Record<EstadoReserva, string> = {
+  pendiente: Colors.amber,
+  confirmada: Colors.accentTeal,
+  reagendada: Colors.accentTeal,
+  cancelada: Colors.gray400,
+  finalizada: Colors.gray400,
+};
+
+const IMAGEN_FALLBACK =
+  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80';
 
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { reservas, reservasCount, cancelReserva } = useReservationsContext();
+  const { getAccessToken } = useAuth();
+  const { data: reservas = [], isLoading, isError, refetch } = useMisReservas();
+  const { data: espacios = [] } = useEspacios();
 
-  const renderReserva = ({ item }: ListRenderItemInfo<Reserva>) => (
-    <View style={styles.card}>
-      <Image
-        source={{ uri: item.espacio.imagen }}
-        style={styles.cardImage}
-        contentFit="cover"
-      />
-      <View style={styles.cardBody}>
-        <View>
-          <Text style={styles.cardSubcat}>{item.espacio.subcategoria}</Text>
-          <Text style={styles.cardName} numberOfLines={1}>
-            {item.espacio.nombre}
-          </Text>
-          <View style={styles.cardMetaRow}>
-            <CalendarIcon size={13} color={Colors.gray400} strokeWidth={2} />
-            <Text style={styles.cardFecha}>{item.fecha}</Text>
+  const espaciosPorId = useMemo(() => {
+    const map = new Map<number, (typeof espacios)[number]>();
+    espacios.forEach(e => map.set(e.id, e));
+    return map;
+  }, [espacios]);
+
+  const reservasActivas = reservas.filter(r => ESTADOS_ACTIVOS.includes(r.estado)).length;
+
+  const handleCancelar = (reserva: Reserva) => {
+    Alert.alert(
+      'Cancelar reserva',
+      `¿Seguro que quieres cancelar tu reserva en ${reserva.espacioTitulo}?`,
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Sí, cancelar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const accessToken = await getAccessToken();
+              await cancelarReserva(reserva.id, 'Cancelado por el cliente desde la app', accessToken);
+              refetch();
+            } catch (err) {
+              Alert.alert(
+                'No se pudo cancelar',
+                err instanceof Error ? err.message : 'Intenta de nuevo.',
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const renderReserva = ({ item }: ListRenderItemInfo<Reserva>) => {
+    const espacio = espaciosPorId.get(item.espacioId);
+    const esCancelable = ESTADOS_CANCELABLES.includes(item.estado);
+
+    return (
+      <View style={styles.card}>
+        <Image
+          source={{ uri: espacio?.imagen ?? IMAGEN_FALLBACK }}
+          style={styles.cardImage}
+          contentFit="cover"
+        />
+        <View style={styles.cardBody}>
+          <View>
+            {!!espacio?.subcategoria && (
+              <Text style={styles.cardSubcat}>{espacio.subcategoria}</Text>
+            )}
+            <Text style={styles.cardName} numberOfLines={1}>
+              {item.espacioTitulo}
+            </Text>
+            <View style={styles.cardMetaRow}>
+              <CalendarIcon size={13} color={Colors.gray400} strokeWidth={2} />
+              <Text style={styles.cardFecha}>
+                {formatRangoReserva(item.fechaInicio, item.fechaFin)}
+              </Text>
+            </View>
+            <Text style={styles.cardDetail}>
+              {item.totalHoras} hora{item.totalHoras !== 1 ? 's' : ''}
+              {'   |   '}Total:{' '}
+              <Text style={styles.cardDetailBold}>
+                ${(item.pago.total ?? 0).toFixed(2)}
+              </Text>
+            </Text>
           </View>
-          <Text style={styles.cardDetail}>
-            Cantidad: <Text style={styles.cardDetailBold}>{item.cantidad}</Text>
-            {'   |   '}Total:{' '}
-            <Text style={styles.cardDetailBold}>${item.total.toFixed(2)}</Text>
-          </Text>
-        </View>
 
-        <View style={styles.cardFooter}>
-          <Text style={styles.cardCodigo}>{item.codigo}</Text>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => cancelReserva(item.id)}>
-            <Text style={styles.cardCancel}>Cancelar</Text>
-          </TouchableOpacity>
+          <View style={styles.cardFooter}>
+            <Text style={[styles.cardEstado, { color: ESTADO_COLOR[item.estado] }]}>
+              {ESTADO_LABEL[item.estado]}
+            </Text>
+            {esCancelable && (
+              <TouchableOpacity activeOpacity={0.7} onPress={() => handleCancelar(item)}>
+                <Text style={styles.cardCancel}>Cancelar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -73,15 +151,26 @@ export default function CalendarScreen() {
             <Text style={styles.headerTitle}>Mis Reservas</Text>
             <Text style={styles.headerSubtitle}>Tus reservas y disponibilidad</Text>
           </View>
-          {reservasCount > 0 && (
+          {reservasActivas > 0 && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{reservasCount} Activas</Text>
+              <Text style={styles.badgeText}>{reservasActivas} Activas</Text>
             </View>
           )}
         </View>
       </View>
 
-      {reservasCount > 0 ? (
+      {isLoading ? (
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color={Colors.accentTeal} />
+        </View>
+      ) : isError ? (
+        <View style={styles.content}>
+          <Text style={styles.title}>No se pudieron cargar tus reservas</Text>
+          <TouchableOpacity activeOpacity={0.85} style={styles.exploreBtn} onPress={() => refetch()}>
+            <Text style={styles.exploreBtnText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : reservas.length > 0 ? (
         <FlatList
           data={reservas}
           renderItem={renderReserva}
@@ -235,10 +324,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
   },
-  cardCodigo: {
+  cardEstado: {
     fontSize: FontSize.xs,
-    color: Colors.gray400,
-    fontWeight: FontWeight.medium,
+    fontWeight: FontWeight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   cardCancel: {
     fontSize: FontSize.xs,

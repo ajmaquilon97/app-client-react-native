@@ -27,6 +27,8 @@ export interface Espacio {
   rating: number;
   reviews: number;
   distancia: number;
+  latitud: number | null;
+  longitud: number | null;
   disponibleHoy: boolean;
   imagen: string;
   descripcion: string;
@@ -49,4 +51,59 @@ export interface Usuario {
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
+}
+
+export interface TarifaDelDia {
+  modalidad: string | null;
+  precio: number;
+  unidad: string | null;
+  esPromocion: boolean;
+}
+
+export type EstadoHora = 'available' | 'blocked' | 'reserved' | 'closed' | 'maintenance';
+
+export interface HoraEstado {
+  hora: number;
+  estado: EstadoHora | string;
+}
+
+export interface Disponibilidad {
+  espacioId: number;
+  fecha: string;
+  tarifa: TarifaDelDia | null;
+  horas: HoraEstado[];
+}
+
+export type EstadoReserva = 'pendiente' | 'confirmada' | 'reagendada' | 'cancelada' | 'finalizada';
+export type EstadoPago = 'pendiente' | 'pagado_parcialmente' | 'pagado' | 'reembolsado';
+export type Asistencia = 'no_registrado' | 'asistio' | 'no_asistio';
+
+export interface ReservaCliente {
+  id: string;
+  nombre: string;
+  email: string | null;
+  telefono: string | null;
+}
+
+export interface ReservaPago {
+  total: number | null;
+  pagado: number;
+  pendiente: number;
+  fechaUltimoPago: string | null;
+}
+
+export interface Reserva {
+  id: number;
+  espacioId: number;
+  espacioTitulo: string;
+  cliente: ReservaCliente;
+  fechaInicio: string;
+  fechaFin: string;
+  totalHoras: number;
+  pax: number;
+  estado: EstadoReserva;
+  estadoPago: EstadoPago;
+  asistencia: Asistencia;
+  pago: ReservaPago;
+  fechaCreacion: string;
 }

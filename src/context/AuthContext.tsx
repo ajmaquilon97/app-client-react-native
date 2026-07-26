@@ -27,6 +27,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   registro: (input: RegistroInput) => Promise<void>;
   logout: () => Promise<void>;
+  getAccessToken: () => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -37,13 +38,15 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<Usuario | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
 
   const persistSession = useCallback(
-    async (accessToken: string, newRefreshToken: string, usuario: Usuario) => {
-      await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
+    async (newAccessToken: string, newRefreshToken: string, usuario: Usuario) => {
+      await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, newAccessToken);
       await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, newRefreshToken);
+      setAccessToken(newAccessToken);
       setRefreshToken(newRefreshToken);
       setUser(usuario);
     },
@@ -53,6 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const clearSession = useCallback(async () => {
     await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    setAccessToken(null);
     setRefreshToken(null);
     setUser(null);
   }, []);
@@ -74,6 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (!userId) throw new Error('token sin sub');
           const usuario = await authService.fetchUsuario(userId, accessToken);
           setUser(usuario);
+          setAccessToken(accessToken);
           setRefreshToken(storedRefreshToken);
           return;
         } catch {
@@ -124,6 +129,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await clearSession();
   }, [refreshToken, clearSession]);
 
+  const getAccessToken = useCallback(async (): Promise<string> => {
+    if (accessToken && !authService.isJwtExpired(accessToken)) {
+      return accessToken;
+    }
+    if (!refreshToken || !user) {
+      throw new Error('No hay una sesión activa.');
+    }
+    const tokens = await authService.refreshTokens(refreshToken);
+    await persistSession(tokens.accessToken, tokens.refreshToken, user);
+    return tokens.accessToken;
+  }, [accessToken, refreshToken, user, persistSession]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -133,6 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         registro,
         logout,
+        getAccessToken,
       }}>
       {children}
     </AuthContext.Provider>
