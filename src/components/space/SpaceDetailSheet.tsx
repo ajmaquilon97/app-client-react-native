@@ -196,8 +196,11 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       ? `${formatFecha(selectedDate)} · ${formatHora(horaDesde)}–${formatHora(horaHasta)}`
       : '';
 
-  const handlePaymentSuccess = useCallback(async () => {
-    if (reservaCreada) {
+  const handlePaymentSuccess = useCallback(async (result?: { pagoYaRegistrado?: boolean }) => {
+    // Datafast ya registra el pago en el backend al verificar la transacción
+    // (ver datafast.service.ts); solo hace falta este registro manual para
+    // pasarelas que todavía no confirman el pago del lado del servidor (Kushki).
+    if (reservaCreada && !result?.pagoYaRegistrado) {
       try {
         await fetchAuthorized(accessToken =>
           registrarPago(reservaCreada.id, reservaCreada.pago.total ?? 0, accessToken),
@@ -479,6 +482,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
           fecha={fechaHoraTexto}
           cantidad={cantidadHoras}
           total={(reservaCreada?.pago.total ?? totalReserva).toFixed(2)}
+          reservaId={reservaCreada?.id ?? null}
           onClose={handleClosePayment}
           onSuccess={handlePaymentSuccess}
         />

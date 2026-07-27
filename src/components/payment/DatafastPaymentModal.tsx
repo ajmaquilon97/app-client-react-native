@@ -7,21 +7,21 @@ import {
   Platform,
   Modal,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
-import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { WebView } from 'react-native-webview';
+import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { ArrowLeftIcon } from '@/components/icons';
+import { useAuth } from '@/context/AuthContext';
+import { DATAFAST_CONFIG } from '@/config/paymentConfig';
+import { crearCheckoutDatafast, verificarPagoDatafast } from '@/services/datafast.service';
 import PaymentResult from './PaymentResult';
 
-/** Tarjeta de prueba que fuerza un rechazo (para probar el flujo de error). */
-const DECLINE_TEST_CARD = '4000000000000002';
-
-type PaymentStatus = 'form' | 'processing' | 'success' | 'error';
+type PaymentStatus = 'loading-checkout' | 'widget' | 'verifying' | 'success' | 'error';
 
 export interface DatafastPaymentModalProps {
   visible: boolean;
@@ -29,353 +29,164 @@ export interface DatafastPaymentModalProps {
   fecha: string;
   cantidad: number;
   total: string;
+  reservaId: number | null;
   onClose: () => void;
-  onSuccess: (result: { transactionId: string; amount: string }) => void;
+  onSuccess: (result: { transactionId: string; amount: string; pagoYaRegistrado?: boolean }) => void;
+}
+
+function extractResourcePath(url: string): string | null {
+  const match = url.match(/[?&]resourcePath=([^&]+)/);
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
 }
 
 const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
   visible,
   espacio,
   fecha,
-  cantidad,
   total,
+  reservaId,
   onClose,
   onSuccess,
 }) => {
   const insets = useSafeAreaInsets();
-  const webViewRef = useRef<WebView>(null);
-  const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<PaymentStatus>('form');
-  const [transactionId, setTransactionId] = useState<string>('');
+  const { fetchAuthorized } = useAuth();
+  const requestIdRef = useRef(0);
 
-  const procesando = status === 'processing';
-  const canClose = status === 'form' || status === 'error';
+  const [status, setStatus] = useState<PaymentStatus>('loading-checkout');
+  const [checkoutId, setCheckoutId] = useState<string | null>(null);
+  const [webViewLoading, setWebViewLoading] = useState(true);
+  const [transactionId, setTransactionId] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
 
-  // Reinicia el estado cada vez que se abre/cierra el modal
-  useEffect(() => {
-    if (!visible) {
-      setStatus('form');
-      setTransactionId('');
-      setLoading(true);
+  const canClose = status === 'widget' || status === 'error';
+
+  const iniciarCheckout = useCallback(async () => {
+    if (!espacio || reservaId == null) return;
+    const requestId = ++requestIdRef.current;
+    setStatus('loading-checkout');
+    setErrorMessage(undefined);
+    setCheckoutId(null);
+
+    try {
+      const { checkoutId: nuevoCheckoutId } = await fetchAuthorized(accessToken =>
+        crearCheckoutDatafast(reservaId, accessToken),
+      );
+      if (requestIdRef.current !== requestId) return;
+      setCheckoutId(nuevoCheckoutId);
+      setWebViewLoading(true);
+      setStatus('widget');
+    } catch (err) {
+      if (requestIdRef.current !== requestId) return;
+      setErrorMessage(err instanceof Error ? err.message : 'No se pudo iniciar el pago con Datafast.');
+      setStatus('error');
     }
+  }, [espacio, reservaId, fetchAuthorized]);
+
+  // Al abrir el modal, crea un checkout nuevo. Al cerrarlo, invalida cualquier
+  // request en vuelo para que no pise el estado si se reabre con otra reserva.
+  useEffect(() => {
+    if (visible) {
+      iniciarCheckout();
+    } else {
+      requestIdRef.current += 1;
+      setStatus('loading-checkout');
+      setCheckoutId(null);
+      setTransactionId('');
+      setErrorMessage(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  if (!espacio) return null;
-
-  // ─── Genera el HTML con formulario de pago (similar a Kushki) ───
-  const generatePaymentHTML = () => {
-    return `
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Pago Seguro Datafast</title>
-        <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fa;
-            padding: 20px;
-          }
-          .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          }
-          h1 {
-            font-size: 18px;
-            color: #1e3a5f;
-            margin-bottom: 16px;
-            font-weight: 700;
-          }
-          .badge {
-            display: inline-block;
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 700;
-            margin-left: 8px;
-            text-transform: uppercase;
-          }
-          .resumen {
-            background: #f9fafb;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: #6b7280;
-          }
-          .resumen-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-          }
-          .resumen-row:last-child {
-            margin-bottom: 0;
-            color: #1e3a5f;
-            font-weight: 600;
-          }
-          .form-group {
-            margin-bottom: 16px;
-          }
-          label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-          }
-          input[type="text"],
-          input[type="email"],
-          input[type="tel"] {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #1f2937;
-          }
-          input:focus {
-            outline: none;
-            border-color: #14b8a6;
-            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
-          }
-          .btn {
-            width: 100%;
-            padding: 12px;
-            background: #1e3a5f;
-            color: #14b8a6;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-            margin-top: 16px;
-          }
-          .btn:hover {
-            background: #1a2f4a;
-          }
-          .btn:disabled {
-            background: #d1d5db;
-            color: #9ca3af;
-            cursor: not-allowed;
-          }
-          .error {
-            color: #ef4444;
-            font-size: 12px;
-            margin-top: 8px;
-          }
-          .success {
-            color: #10b981;
-            font-size: 12px;
-            margin-top: 8px;
-          }
-          .info-box {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #92400e;
-            margin-bottom: 16px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>Pago Seguro <span class="badge">Datafast</span></h1>
-
-          <div class="info-box">
-            <strong>⚠️ Entorno de prueba:</strong> Usa las tarjetas de prueba proporcionadas
-          </div>
-
-          <div class="resumen">
-            <div class="resumen-row">
-              <span>Espacio:</span>
-              <span>${espacio.nombre}</span>
-            </div>
-            <div class="resumen-row">
-              <span>Fecha:</span>
-              <span>${fecha}</span>
-            </div>
-            <div class="resumen-row">
-              <span>Cantidad:</span>
-              <span>${cantidad} ${espacio.unidad}(s)</span>
-            </div>
-            <div class="resumen-row">
-              <span>Total a pagar:</span>
-              <span>$${total}</span>
-            </div>
-          </div>
-
-          <form id="paymentForm">
-            <div class="form-group">
-              <label for="cardNumber">Número de Tarjeta</label>
-              <input
-                type="text"
-                id="cardNumber"
-                placeholder="4200 0000 0000 0000"
-                maxlength="19"
-              >
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label for="expiryDate">Vencimiento</label>
-                <input
-                  type="text"
-                  id="expiryDate"
-                  placeholder="MM/AA"
-                  maxlength="5"
-                >
-              </div>
-              <div class="form-group">
-                <label for="cvv">CVV</label>
-                <input
-                  type="password"
-                  id="cvv"
-                  placeholder="***"
-                  maxlength="3"
-                >
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="cardholderName">Titular</label>
-              <input
-                type="text"
-                id="cardholderName"
-                placeholder="Nombre tal como aparece en la tarjeta"
-              >
-            </div>
-
-            <div class="form-group">
-              <label for="email">Correo Electrónico</label>
-              <input
-                type="email"
-                id="email"
-                placeholder="correo@ejemplo.com"
-              >
-            </div>
-
-            <button type="submit" class="btn">
-              Pagar $${total} con Datafast
-            </button>
-
-            <div id="message"></div>
-          </form>
-        </div>
-
-        <script>
-          const form = document.getElementById('paymentForm');
-          const messageDiv = document.getElementById('message');
-
-          form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const cardNumber = document.getElementById('cardNumber').value;
-            const expiryDate = document.getElementById('expiryDate').value;
-            const cvv = document.getElementById('cvv').value;
-            const cardholderName = document.getElementById('cardholderName').value;
-            const email = document.getElementById('email').value;
-
-            // Validación básica
-            if (!cardNumber || !expiryDate || !cvv || !cardholderName || !email) {
-              showMessage('Por favor completa todos los campos', 'error');
-              return;
-            }
-
-            try {
-              messageDiv.innerHTML = '<div class="success">Procesando pago con Datafast...</div>';
-
-              // Enviar datos al app nativa
-              const paymentData = {
-                cardNumber: cardNumber.replace(/\\s/g, ''),
-                expiryMonth: expiryDate.split('/')[0],
-                expiryYear: expiryDate.split('/')[1],
-                cvv,
-                cardholderName,
-                email,
-                amount: '${total}',
-                currency: 'USD'
-              };
-
-              // Enviar mensaje a React Native
-              window.ReactNativeWebView.postMessage(
-                JSON.stringify({
-                  type: 'PROCESS_PAYMENT',
-                  data: paymentData
-                })
-              );
-
-            } catch (error) {
-              showMessage('Error al procesar el pago: ' + error.message, 'error');
-            }
-          });
-
-          function showMessage(msg, type) {
-            messageDiv.innerHTML = \`<div class="\${type}">\${msg}</div>\`;
-          }
-        </script>
-      </body>
-      </html>
-    `;
-  };
-
-  // ─── Maneja mensajes del WebView ───
-  const handleWebViewMessage = useCallback(
-    (event: WebViewMessageEvent) => {
+  const verificarPago = useCallback(
+    async (resourcePath: string) => {
+      if (reservaId == null) return;
+      setStatus('verifying');
       try {
-        const data = JSON.parse(event.nativeEvent.data);
-
-        if (data.type === 'PROCESS_PAYMENT') {
-          setStatus('processing');
-
-          // SIMULACIÓN: aquí tu backend procesaría el pago real con Datafast.
-          // Por ahora decidimos éxito/fallo según la tarjeta de prueba usada.
-          const cardNumber: string = data.data?.cardNumber || '';
-          const isDeclined = cardNumber === DECLINE_TEST_CARD;
-
-          setTimeout(() => {
-            if (isDeclined) {
-              setStatus('error');
-            } else {
-              setTransactionId(`RES-${Math.floor(100000 + Math.random() * 900000)}`);
-              setStatus('success');
-            }
-          }, 2000);
+        const resultado = await fetchAuthorized(accessToken =>
+          verificarPagoDatafast(reservaId, resourcePath, accessToken),
+        );
+        if (resultado.aprobado) {
+          setTransactionId(resultado.transactionId);
+          setStatus('success');
+        } else {
+          setErrorMessage(resultado.mensaje || 'El pago fue rechazado.');
+          setStatus('error');
         }
-      } catch (error) {
-        console.error('Error procesando mensaje del WebView:', error);
+      } catch (err) {
+        setErrorMessage(err instanceof Error ? err.message : 'No se pudo verificar el pago.');
+        setStatus('error');
       }
     },
-    []
+    [reservaId, fetchAuthorized],
   );
 
-  // Confirma el pago exitoso → el padre cierra el modal y navega a reservas
+  // El widget de Datafast intenta "navegar" a shopperResultUrl al terminar. Nunca
+  // dejamos que esa navegación ocurra de verdad (es una URL con nuestro scheme
+  // custom, no una página real) — solo la usamos para leer el resourcePath.
+  const handleShouldStartLoad = useCallback(
+    (request: ShouldStartLoadRequest): boolean => {
+      if (request.url.startsWith(DATAFAST_CONFIG.shopperResultUrl)) {
+        const resourcePath = extractResourcePath(request.url);
+        if (resourcePath) {
+          verificarPago(resourcePath);
+        } else {
+          setErrorMessage('No se recibió una respuesta válida de Datafast.');
+          setStatus('error');
+        }
+        return false;
+      }
+      return true;
+    },
+    [verificarPago],
+  );
+
+  if (!espacio || reservaId == null) return null;
+
+  const generateWidgetHTML = (id: string) => `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Pago Seguro Datafast</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #f5f7fa;
+          padding: 16px;
+        }
+        .wpwl-form {
+          background: white;
+          border-radius: 12px;
+          padding: 16px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .wpwl-button-pay {
+          background: #1e3a5f !important;
+          color: #14b8a6 !important;
+        }
+      </style>
+      <script src="${DATAFAST_CONFIG.widgetBaseUrl}/v1/paymentWidgets.js?checkoutId=${id}"></script>
+    </head>
+    <body>
+      <form action="${DATAFAST_CONFIG.shopperResultUrl}" class="paymentWidgets" data-brands="VISA MASTER"></form>
+    </body>
+    </html>
+  `;
+
   const handleContinue = useCallback(() => {
-    onSuccess({ transactionId, amount: total });
+    onSuccess({ transactionId, amount: total, pagoYaRegistrado: true });
   }, [onSuccess, transactionId, total]);
 
-  // Vuelve al formulario de pago para reintentar
   const handleRetry = useCallback(() => {
-    setStatus('form');
-  }, []);
+    iniciarCheckout();
+  }, [iniciarCheckout]);
 
   return (
     <Modal
@@ -398,47 +209,50 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
               strokeWidth={2.5}
             />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Pago Datafast</Text>
+          <Text style={styles.headerTitle}>Pago Datafast (UAT)</Text>
           <View style={{ width: 36 }} />
         </View>
 
-        {/* WebView con formulario de pago */}
-        {loading && (
+        {(status === 'loading-checkout' || (status === 'widget' && webViewLoading)) && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.accentTeal} />
-            <Text style={styles.loadingText}>Cargando formulario de pago...</Text>
+            <Text style={styles.loadingText}>
+              {status === 'loading-checkout'
+                ? 'Iniciando pago con Datafast…'
+                : 'Cargando formulario de pago…'}
+            </Text>
           </View>
         )}
 
-        <WebView
-          ref={webViewRef}
-          source={{ html: generatePaymentHTML() }}
-          onMessage={handleWebViewMessage}
-          onLoad={() => setLoading(false)}
-          onLoadStart={() => setLoading(true)}
-          style={{ flex: 1 }}
-          startInLoadingState
-          javaScriptEnabled
-          domStorageEnabled
-          scalesPageToFit={Platform.OS === 'android'}
-          showsVerticalScrollIndicator={false}
-        />
+        {checkoutId && (status === 'widget' || status === 'verifying') && (
+          <WebView
+            source={{ html: generateWidgetHTML(checkoutId) }}
+            onShouldStartLoadWithRequest={handleShouldStartLoad}
+            onLoad={() => setWebViewLoading(false)}
+            onLoadStart={() => setWebViewLoading(true)}
+            style={{ flex: 1 }}
+            startInLoadingState
+            javaScriptEnabled
+            domStorageEnabled
+            scalesPageToFit={Platform.OS === 'android'}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
 
-        {/* Overlay de procesamiento */}
-        {procesando && (
+        {status === 'verifying' && (
           <View style={styles.processingOverlay}>
             <ActivityIndicator size="large" color={Colors.accentTeal} />
-            <Text style={styles.processingText}>Procesando con Datafast...</Text>
+            <Text style={styles.processingText}>Verificando el pago con Datafast…</Text>
           </View>
         )}
 
-        {/* Pantalla de resultado: éxito o fallo */}
         {(status === 'success' || status === 'error') && (
           <PaymentResult
             status={status}
             amount={total}
             fecha={fecha}
             transactionId={transactionId}
+            errorMessage={errorMessage}
             onContinue={handleContinue}
             onRetry={handleRetry}
             onCancel={onClose}

@@ -29,17 +29,26 @@ export const KUSHKI_CONFIG = {
 };
 
 // ─── Configuración Datafast ───
+//
+// IMPORTANTE: entityId y accessToken son credenciales secretas del comercio.
+// NUNCA deben vivir en el cliente (se podrían extraer del APK/IPA y usarse para
+// cargos fraudulentos). Crear el checkout (POST /v1/checkouts) y verificar el
+// pago (GET /v1/checkouts/{id}/payment) son operaciones que solo el backend
+// puede hacer — ver FEEDBACK_BACKEND_DATAFAST.md para el contrato exacto que
+// necesitamos que exponga.
+//
+// Lo único que el cliente necesita es el dominio público del widget de pago
+// (Copy&Pay) y a dónde debe "redirigir" tras el pago.
 export const DATAFAST_CONFIG = {
   environment: 'uat', // 'uat' o 'prod'
-  entityId: 'ENTITY_ID_REPLACE_WITH_YOURS', // Obtén de Datafast
-  accessToken: 'TOKEN_REPLACE_WITH_YOURS', // Obtén de Datafast
 
-  // URLs según entorno
-  checkoutUrl: 'https://test.oppwa.com/checkout', // UAT
-  // checkoutUrl: 'https://oppwa.com/checkout', // PROD
+  widgetBaseUrl: 'https://test.oppwa.com', // UAT
+  // widgetBaseUrl: 'https://oppwa.com', // PROD
 
-  apiUrl: 'https://test.oppwa.com/v1', // UAT
-  // apiUrl: 'https://oppwa.com/v1', // PROD
+  // Debe coincidir con el "scheme" definido en app.json. El WebView intercepta
+  // la navegación a esta URL (nunca llega a cargarla de verdad) para extraer
+  // el `resourcePath` que Datafast agrega como query param.
+  shopperResultUrl: 'appclientreactnative://payment-result',
 
   testCards: {
     visa: {
@@ -52,22 +61,6 @@ export const DATAFAST_CONFIG = {
       expiry: '12/29',
       cvv: '123',
     },
-  },
-};
-
-// ─── Configuración Backend ───
-export const BACKEND_CONFIG = {
-  // Cambia estas URLs a tu backend real cuando lo tengas
-  baseUrl: 'https://tu-api.com', // Reemplaza con tu backend
-
-  endpoints: {
-    // Para Kushki
-    kushkiCheckout: '/api/payment/kushki/checkout',
-    kushkiCharge: '/api/payment/kushki/charge',
-
-    // Para Datafast
-    datafastCheckout: '/api/payment/datafast/checkout',
-    datafastCharge: '/api/payment/datafast/charge',
   },
 };
 

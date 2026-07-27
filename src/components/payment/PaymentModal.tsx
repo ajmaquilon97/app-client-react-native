@@ -10,8 +10,9 @@ export interface PaymentModalProps {
   fecha: string;
   cantidad: number;
   total: string;
+  reservaId: number | null;
   onClose: () => void;
-  onSuccess: (result: { transactionId: string; amount: string }) => void;
+  onSuccess: (result: { transactionId: string; amount: string; pagoYaRegistrado?: boolean }) => void;
 }
 
 /**

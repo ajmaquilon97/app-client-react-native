@@ -22,6 +22,8 @@ import { useMisReservas } from '@/hooks/useMisReservas';
 import { useEspacios } from '@/hooks/useEspacios';
 import { useAuth } from '@/context/AuthContext';
 import { cancelarReserva } from '@/services/reservas.service';
+import { reversarPagoDatafast } from '@/services/datafast.service';
+import { PAYMENT_PROVIDER } from '@/config/paymentConfig';
 import { formatRangoReserva } from '@/utils/fechas';
 import { EstadoReserva, Reserva } from '@/types';
 
@@ -72,9 +74,18 @@ export default function CalendarScreen() {
           text: 'Sí, cancelar',
           style: 'destructive',
           onPress: async () => {
+            const motivo = 'Cancelado por el cliente desde la app';
             try {
+              // Si ya se pagó vía Datafast, reversamos el cargo primero: si el
+              // reverso falla, la reserva se mantiene activa en vez de quedar
+              // cancelada sin devolver el dinero.
+              if (reserva.estadoPago === 'pagado' && PAYMENT_PROVIDER === 'datafast') {
+                await fetchAuthorized(accessToken =>
+                  reversarPagoDatafast(reserva.id, motivo, accessToken),
+                );
+              }
               await fetchAuthorized(accessToken =>
-                cancelarReserva(reserva.id, 'Cancelado por el cliente desde la app', accessToken),
+                cancelarReserva(reserva.id, motivo, accessToken),
               );
               refetch();
             } catch (err) {
