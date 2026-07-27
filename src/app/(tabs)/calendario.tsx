@@ -50,7 +50,7 @@ const IMAGEN_FALLBACK =
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { getAccessToken } = useAuth();
+  const { fetchAuthorized } = useAuth();
   const { data: reservas = [], isLoading, isError, refetch } = useMisReservas();
   const { data: espacios = [] } = useEspacios();
 
@@ -73,8 +73,9 @@ export default function CalendarScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const accessToken = await getAccessToken();
-              await cancelarReserva(reserva.id, 'Cancelado por el cliente desde la app', accessToken);
+              await fetchAuthorized(accessToken =>
+                cancelarReserva(reserva.id, 'Cancelado por el cliente desde la app', accessToken),
+              );
               refetch();
             } catch (err) {
               Alert.alert(

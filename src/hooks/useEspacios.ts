@@ -6,11 +6,11 @@ import { Espacio } from '@/types';
 export const ESPACIOS_QUERY_KEY = ['espacios'] as const;
 
 export function useEspacios() {
-  const { getAccessToken, isAuthenticated } = useAuth();
+  const { fetchAuthorized, isAuthenticated } = useAuth();
 
   return useQuery<Espacio[]>({
     queryKey: ESPACIOS_QUERY_KEY,
-    queryFn: async () => fetchEspacios(await getAccessToken()),
+    queryFn: () => fetchAuthorized(fetchEspacios),
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 min
   });

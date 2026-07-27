@@ -21,7 +21,7 @@ import { Disponibilidad, Espacio, Reserva } from '@/types';
 import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/components/icons';
 import PaymentModal from '@/components/payment/PaymentModal';
 import { useAuth } from '@/context/AuthContext';
-import { useUserLocation } from '@/hooks/useUserLocation';
+import { useLocationContext } from '@/context/LocationContext';
 import { haversineDistanceKm, formatDistanceKm } from '@/utils/geo';
 import {
   esMismoDia,
@@ -57,7 +57,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { getAccessToken, user } = useAuth();
+  const { fetchAuthorized, user } = useAuth();
   const hoy = useMemo(() => new Date(), [visible]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [horaDesde, setHoraDesde] = useState<number | null>(null);
@@ -93,11 +93,8 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 
     (async () => {
       try {
-        const accessToken = await getAccessToken();
-        const data = await fetchDisponibilidad(
-          espacio.id,
-          toDateOnlyString(selectedDate),
-          accessToken,
+        const data = await fetchAuthorized(accessToken =>
+          fetchDisponibilidad(espacio.id, toDateOnlyString(selectedDate), accessToken),
         );
         if (!cancelled) setDisponibilidad(data);
       } catch (err) {
@@ -114,7 +111,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [visible, espacio, selectedDate, getAccessToken]);
+  }, [visible, espacio, selectedDate, fetchAuthorized]);
 
   const handleChangeHoraDesde = useCallback((hora: number) => {
     setHoraDesde(hora);
@@ -124,7 +121,15 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   const cantidadHoras = horaDesde != null && horaHasta != null ? horaHasta - horaDesde : 0;
   const esHoy = !!selectedDate && esMismoDia(selectedDate, hoy);
 
-  const userLocation = useUserLocation(visible && !!espacio);
+  const { coords: userCoords, loading: userLocationLoading, refresh: refreshLocation } = useLocationContext();
+
+  // La ubicación ya se captura al abrir la app; si aún no la tenemos (permiso
+  // recién concedido, primer intento fallido, etc.) la reintentamos al abrir el detalle.
+  useEffect(() => {
+    if (visible && espacio && !userCoords) {
+      refreshLocation();
+    }
+  }, [visible, espacio, userCoords, refreshLocation]);
 
   const espacioCoords = useMemo(() => {
     if (!espacio || espacio.latitud == null || espacio.longitud == null) return null;
@@ -132,9 +137,9 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   }, [espacio]);
 
   const distanciaKm = useMemo(() => {
-    if (!userLocation.coords || !espacioCoords) return null;
-    return haversineDistanceKm(userLocation.coords, espacioCoords);
-  }, [userLocation.coords, espacioCoords]);
+    if (!userCoords || !espacioCoords) return null;
+    return haversineDistanceKm(userCoords, espacioCoords);
+  }, [userCoords, espacioCoords]);
 
   const handleFavoritePress = useCallback(() => {
     if (espacio) onToggleFavorite(espacio.id);
@@ -161,16 +166,17 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 
     setCreandoReserva(true);
     try {
-      const accessToken = await getAccessToken();
-      const nueva = await crearReserva(
-        {
-          espacioId: espacio.id,
-          fechaInicio: toLocalDateTimeString(selectedDate, horaDesde),
-          fechaFin: toLocalDateTimeString(selectedDate, horaHasta),
-          totalHoras: cantidadHoras,
-        },
-        user?.id ?? '',
-        accessToken,
+      const nueva = await fetchAuthorized(accessToken =>
+        crearReserva(
+          {
+            espacioId: espacio.id,
+            fechaInicio: toLocalDateTimeString(selectedDate, horaDesde),
+            fechaFin: toLocalDateTimeString(selectedDate, horaHasta),
+            totalHoras: cantidadHoras,
+          },
+          user?.id ?? '',
+          accessToken,
+        ),
       );
       setReservaCreada(nueva);
       setShowPayment(true);
@@ -183,7 +189,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     } finally {
       setCreandoReserva(false);
     }
-  }, [espacio, selectedDate, horaDesde, horaHasta, disponibilidad, cantidadHoras, user, getAccessToken]);
+  }, [espacio, selectedDate, horaDesde, horaHasta, disponibilidad, cantidadHoras, user, fetchAuthorized]);
 
   const fechaHoraTexto =
     selectedDate && horaDesde != null && horaHasta != null
@@ -193,8 +199,9 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   const handlePaymentSuccess = useCallback(async () => {
     if (reservaCreada) {
       try {
-        const accessToken = await getAccessToken();
-        await registrarPago(reservaCreada.id, reservaCreada.pago.total ?? 0, accessToken);
+        await fetchAuthorized(accessToken =>
+          registrarPago(reservaCreada.id, reservaCreada.pago.total ?? 0, accessToken),
+        );
       } catch (err) {
         Alert.alert(
           'Pago procesado, pero no se pudo registrar',
@@ -210,20 +217,21 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     setReservaCreada(null);
     onClose();
     router.navigate('/calendario');
-  }, [reservaCreada, getAccessToken, onClose, router]);
+  }, [reservaCreada, fetchAuthorized, onClose, router]);
 
   const handleClosePayment = useCallback(async () => {
     setShowPayment(false);
     if (reservaCreada) {
       try {
-        const accessToken = await getAccessToken();
-        await cancelarReserva(reservaCreada.id, 'Cliente canceló el pago', accessToken);
+        await fetchAuthorized(accessToken =>
+          cancelarReserva(reservaCreada.id, 'Cliente canceló el pago', accessToken),
+        );
       } catch {
         // best effort: no bloqueamos la UI si la cancelación silenciosa falla
       }
       setReservaCreada(null);
     }
-  }, [reservaCreada, getAccessToken]);
+  }, [reservaCreada, fetchAuthorized]);
 
   if (!espacio) return null;
 
@@ -285,7 +293,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   📍{' '}
                   {distanciaKm != null
                     ? `a ${formatDistanceKm(distanciaKm)}`
-                    : userLocation.loading
+                    : userLocationLoading
                       ? 'Calculando distancia…'
                       : 'Ubicación no disponible'}
                 </Text>

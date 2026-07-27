@@ -9,6 +9,7 @@ import React, {
 import * as SecureStore from 'expo-secure-store';
 import { Usuario } from '@/types';
 import * as authService from '@/services/auth.service';
+import { ApiError } from '@/services/apiError';
 
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -28,6 +29,7 @@ interface AuthContextValue {
   registro: (input: RegistroInput) => Promise<void>;
   logout: () => Promise<void>;
   getAccessToken: () => Promise<string>;
+  fetchAuthorized: <T>(request: (accessToken: string) => Promise<T>) => Promise<T>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -44,6 +46,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const persistSession = useCallback(
     async (newAccessToken: string, newRefreshToken: string, usuario: Usuario) => {
+      if (__DEV__) {
+        console.log('[Auth] Sesión establecida', {
+          usuarioId: usuario.id,
+          correo: usuario.correo,
+          accessToken: newAccessToken,
+        });
+      }
       await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, newAccessToken);
       await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, newRefreshToken);
       setAccessToken(newAccessToken);
@@ -129,17 +138,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await clearSession();
   }, [refreshToken, clearSession]);
 
-  const getAccessToken = useCallback(async (): Promise<string> => {
-    if (accessToken && !authService.isJwtExpired(accessToken)) {
-      return accessToken;
-    }
+  // Fuerza un refresh contra el backend, sin importar lo que diga el JWT localmente.
+  // Si el refresh token también es inválido, no hay forma de recuperar la sesión.
+  const refreshSession = useCallback(async (): Promise<string> => {
     if (!refreshToken || !user) {
       throw new Error('No hay una sesión activa.');
     }
     const tokens = await authService.refreshTokens(refreshToken);
     await persistSession(tokens.accessToken, tokens.refreshToken, user);
     return tokens.accessToken;
-  }, [accessToken, refreshToken, user, persistSession]);
+  }, [refreshToken, user, persistSession]);
+
+  const getAccessToken = useCallback(async (): Promise<string> => {
+    if (accessToken && !authService.isJwtExpired(accessToken)) {
+      return accessToken;
+    }
+    try {
+      return await refreshSession();
+    } catch (err) {
+      // El refresh token expiró o fue revocado: no hay sesión que salvar, cerramos sesión.
+      await clearSession();
+      throw err;
+    }
+  }, [accessToken, refreshSession, clearSession]);
+
+  // Ejecuta `request` con un access token válido. Si el backend responde 401 pese a que el
+  // token parecía vigente localmente (reloj desincronizado, token revocado, etc.), fuerza un
+  // refresh y reintenta una sola vez. Si el refresh también falla, cierra la sesión en vez de
+  // dejar la UI en un estado autenticado "roto" que nunca puede recuperar datos.
+  const fetchAuthorized = useCallback(
+    async <T,>(request: (accessToken: string) => Promise<T>): Promise<T> => {
+      const token = await getAccessToken();
+      try {
+        return await request(token);
+      } catch (err) {
+        if (!(err instanceof ApiError) || err.status !== 401) {
+          throw err;
+        }
+        try {
+          const freshToken = await refreshSession();
+          return await request(freshToken);
+        } catch {
+          await clearSession();
+          throw err;
+        }
+      }
+    },
+    [getAccessToken, refreshSession, clearSession],
+  );
 
   return (
     <AuthContext.Provider
@@ -151,6 +197,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         registro,
         logout,
         getAccessToken,
+        fetchAuthorized,
       }}>
       {children}
     </AuthContext.Provider>

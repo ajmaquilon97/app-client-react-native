@@ -19,11 +19,9 @@ import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
 import { ArrowLeftIcon } from '@/components/icons';
 import AuthButton from '@/components/auth/AuthButton';
+import { useAuth } from '@/context/AuthContext';
+import { enviarSmsOtp, verificarSmsOtp } from '@/services/auth.service';
 
-// SIMULACIÓN: por ahora no existe un endpoint de envío/verificación de SMS OTP.
-// El único código válido es MOCK_OTP. Cuando el backend exponga el API real,
-// reemplazar handleEnviarCodigo/handleVerificar por las llamadas correspondientes.
-const MOCK_OTP = '123456';
 const RESEND_COOLDOWN_SECONDS = 30;
 const OTP_LENGTH = 6;
 const PHONE_REGEX = /^9\d{8}$/;
@@ -33,6 +31,7 @@ type Paso = 'telefono' | 'otp';
 export default function VerificarTelefonoScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { fetchAuthorized } = useAuth();
 
   const [paso, setPaso] = useState<Paso>('telefono');
   const [telefono, setTelefono] = useState('');
@@ -51,43 +50,58 @@ export default function VerificarTelefonoScreen() {
     return () => clearTimeout(timer);
   }, [paso, resendSeconds]);
 
-  const handleEnviarCodigo = () => {
+  const handleEnviarCodigo = async () => {
     if (!PHONE_REGEX.test(telefono)) {
       setTelefonoError('Ingresa un número celular ecuatoriano válido (9 dígitos, empieza con 9).');
       return;
     }
     setTelefonoError('');
     setEnviando(true);
-    setTimeout(() => {
-      setEnviando(false);
+    try {
+      await fetchAuthorized(accessToken => enviarSmsOtp(`+593${telefono}`, accessToken));
       setDigitos(Array(OTP_LENGTH).fill(''));
       setOtpError('');
       setResendSeconds(RESEND_COOLDOWN_SECONDS);
       setPaso('otp');
       requestAnimationFrame(() => inputRefs.current[0]?.focus());
-    }, 700);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'No se pudo enviar el código.';
+      setTelefonoError(message);
+    } finally {
+      setEnviando(false);
+    }
   };
 
-  const handleReenviar = () => {
-    if (resendSeconds > 0) return;
-    setDigitos(Array(OTP_LENGTH).fill(''));
-    setOtpError('');
-    setResendSeconds(RESEND_COOLDOWN_SECONDS);
-    inputRefs.current[0]?.focus();
+  const handleReenviar = async () => {
+    if (resendSeconds > 0 || enviando) return;
+    setEnviando(true);
+    try {
+      await fetchAuthorized(accessToken => enviarSmsOtp(`+593${telefono}`, accessToken));
+      setDigitos(Array(OTP_LENGTH).fill(''));
+      setOtpError('');
+      setResendSeconds(RESEND_COOLDOWN_SECONDS);
+      inputRefs.current[0]?.focus();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'No se pudo reenviar el código.';
+      setOtpError(message);
+    } finally {
+      setEnviando(false);
+    }
   };
 
-  const verificarCodigo = (codigo: string) => {
+  const verificarCodigo = async (codigo: string) => {
     setVerificando(true);
-    setTimeout(() => {
-      setVerificando(false);
-      if (codigo === MOCK_OTP) {
-        router.replace('/');
-        return;
-      }
-      setOtpError('Código incorrecto. Intenta de nuevo.');
+    try {
+      await fetchAuthorized(accessToken => verificarSmsOtp(codigo, accessToken));
+      router.replace('/');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Código incorrecto. Intenta de nuevo.';
+      setOtpError(message);
       setDigitos(Array(OTP_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
-    }, 600);
+    } finally {
+      setVerificando(false);
+    }
   };
 
   const handleDigitChange = (text: string, index: number) => {

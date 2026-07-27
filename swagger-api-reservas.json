@@ -1965,7 +1965,7 @@
         "tags": [
           "Reservas"
         ],
-        "summary": "POST /api/reservas/{id}/pago — Registra un pago, un abono parcial o un reembolso sobre una reserva.\r\nLa invariante `pagado + pendiente = total` se mantiene en cada operación. Doble autorización:\r\npuede registrar el pago tanto el Anfitrión dueño del espacio como el Cliente que hizo la reserva.",
+        "summary": "POST /api/reservas/{id}/pago — Registra un pago, un abono parcial o un reembolso sobre una reserva.\r\nLa invariante `pagado + pendiente = total` se mantiene en cada operación. Doble autorización:\r\npuede registrar el pago tanto el Anfitrión dueño del espacio como el Cliente que hizo la reserva.\r\nSi el pago deja `EstadoPago` en `pagado` y la reserva estaba `pendiente`, se confirma\r\nautomáticamente (pasa a `confirmada`) sin intervención manual del anfitrión.",
         "parameters": [
           {
             "name": "id",

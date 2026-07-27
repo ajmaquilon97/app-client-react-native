@@ -6,11 +6,11 @@ import { Reserva } from '@/types';
 export const MIS_RESERVAS_QUERY_KEY = ['reservas', 'mias'] as const;
 
 export function useMisReservas() {
-  const { getAccessToken, isAuthenticated } = useAuth();
+  const { fetchAuthorized, isAuthenticated } = useAuth();
 
   return useQuery<Reserva[]>({
     queryKey: MIS_RESERVAS_QUERY_KEY,
-    queryFn: async () => misReservas(await getAccessToken()),
+    queryFn: () => fetchAuthorized(misReservas),
     enabled: isAuthenticated,
     staleTime: 60 * 1000,
   });

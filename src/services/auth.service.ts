@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@/config/api';
 import { AuthTokens, Usuario } from '@/types';
+import { throwIfNotOk } from '@/services/apiError';
 
 const AUTH_URL = `${API_BASE_URL}/auth`;
 const USUARIOS_URL = `${API_BASE_URL}/usuarios`;
@@ -171,7 +172,7 @@ export async function fetchUsuario(id: string, accessToken: string): Promise<Usu
   const res = await fetch(`${USUARIOS_URL}/${id}`, {
     headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
   });
-  if (!res.ok) throw new Error('No se pudo obtener el perfil del usuario.');
+  await throwIfNotOk(res, 'No se pudo obtener el perfil del usuario.');
   const data: UsuarioAPI = await res.json();
   return mapApiToUsuario(data);
 }
@@ -217,4 +218,30 @@ export function isJwtExpired(accessToken: string, bufferSeconds = 15): boolean {
   const exp = decodeJwtPayload(accessToken)?.exp;
   if (typeof exp !== 'number') return true;
   return Date.now() / 1000 >= exp - bufferSeconds;
+}
+
+export async function enviarSmsOtp(phoneNumber: string, accessToken: string): Promise<void> {
+  const res = await fetch(`${AUTH_URL}/send-sms-otp`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ phoneNumber }),
+  });
+  await throwIfNotOk(res, 'No se pudo enviar el código de verificación.');
+}
+
+export async function verificarSmsOtp(code: string, accessToken: string): Promise<void> {
+  const res = await fetch(`${AUTH_URL}/verify-sms-otp`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ code }),
+  });
+  await throwIfNotOk(res, 'Código inválido.');
 }

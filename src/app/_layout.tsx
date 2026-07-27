@@ -1,6 +1,7 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/colors';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+import { LocationProvider } from '@/context/LocationContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
@@ -47,7 +48,9 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <FavoritesProvider>
-          <RootNavigator />
+          <LocationProvider>
+            <RootNavigator />
+          </LocationProvider>
         </FavoritesProvider>
       </AuthProvider>
     </QueryClientProvider>

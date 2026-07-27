@@ -1,6 +1,7 @@
 import { Espacio, Categoria } from '@/types';
 import { API_BASE_URL } from '@/config/api';
 import { parseLatLngFromGoogleMapsUrl } from '@/utils/geo';
+import { throwIfNotOk } from '@/services/apiError';
 
 const API_URL = `${API_BASE_URL}/mobile/espacios`;
 
@@ -85,7 +86,7 @@ export async function fetchEspacios(accessToken: string): Promise<Espacio[]> {
   const res = await fetch(API_URL, {
     headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
   });
-  if (!res.ok) throw new Error(`Error ${res.status} al obtener espacios`);
+  await throwIfNotOk(res, 'No se pudieron obtener los espacios.');
   const data: EspacioAPI[] = await res.json();
   return data.map(mapApiToEspacio);
 }
