@@ -45,10 +45,15 @@ export const DATAFAST_CONFIG = {
   widgetBaseUrl: 'https://test.oppwa.com', // UAT
   // widgetBaseUrl: 'https://oppwa.com', // PROD
 
-  // Debe coincidir con el "scheme" definido en app.json. El WebView intercepta
-  // la navegación a esta URL (nunca llega a cargarla de verdad) para extraer
-  // el `resourcePath` que Datafast agrega como query param.
-  shopperResultUrl: 'appclientreactnative://payment-result',
+  // IMPORTANTE: este scheme NO debe coincidir con el "scheme" de app.json
+  // ("appclientreactnative"). Si coincide, Android/iOS lo resuelven como deep
+  // link real del sistema operativo *antes* de que el WebView pueda
+  // interceptarlo — abre la app de nuevo por fuera del modal de pago y
+  // expo-router muestra "Unmatched Route" porque no existe esa ruta. Usando un
+  // scheme inventado que la app no tiene registrado, el sistema no sabe qué
+  // hacer con la URL y se la pasa al WebView, que es quien la intercepta en
+  // `onShouldStartLoadWithRequest` para leer el `resourcePath`.
+  shopperResultUrl: 'datafast-checkout://payment-result',
 
   testCards: {
     visa: {

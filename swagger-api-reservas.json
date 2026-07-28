@@ -747,6 +747,45 @@
         }
       }
     },
+    "/api/catalogos/ubicaciones": {
+      "get": {
+        "tags": [
+          "Catalogos"
+        ],
+        "summary": "GET /api/catalogos/ubicaciones — Lista todas las provincias de Ecuador con sus ciudades\r\n(cantones). Endpoint público: no requiere JWT.",
+        "responses": {
+          "200": {
+            "description": "Lista de `ProvinciaResponse`, cada una con su `Ciudades`.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProvinciaResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProvinciaResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProvinciaResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dashboard/stats": {
       "get": {
         "tags": [
@@ -827,7 +866,7 @@
         ],
         "summary": "POST /api/espacios — Crea un nuevo espacio en el sistema.",
         "requestBody": {
-          "description": "<b>Titulo</b> (string) — nombre descriptivo del espacio.\r\n<b>Descripcion</b> (string) — detalle del espacio.\r\n<b>PropietarioId</b> (string GUID) — ID del usuario propietario.\r\n<b>TipoEspacioId</b> (int) — ID del tipo de espacio (catálogo).\r\n<b>Ciudad</b> (string) — ciudad donde se ubica el espacio.\r\n<b>Provincia</b> (string) — provincia del espacio.\r\n<b>LinkUbicacion</b> (string) — URL de Google Maps u otro servicio de ubicación.\r\n<b>Referencia</b> (string) — referencia física o dirección complementaria.\r\n<b>ValidarAforo</b> (bool) — indica si se debe controlar el aforo máximo.\r\n<b>MaxCapacidad</b> (int) — número máximo de personas permitidas.",
+          "description": "<b>Titulo</b> (string) — nombre descriptivo del espacio.\r\n<b>Descripcion</b> (string) — detalle del espacio.\r\n<b>PropietarioId</b> (string GUID) — ID del usuario propietario.\r\n<b>TipoEspacioId</b> (int) — ID del tipo de espacio (catálogo).\r\n<b>ProvinciaId</b> (int, opcional) — ID de la provincia (catálogo).\r\n<b>CiudadId</b> (int, opcional) — ID de la ciudad (catálogo).\r\n<b>LinkUbicacion</b> (string) — URL de Google Maps u otro servicio de ubicación.\r\n<b>Referencia</b> (string) — referencia física o dirección complementaria.\r\n<b>ValidarAforo</b> (bool) — indica si se debe controlar el aforo máximo.\r\n<b>MaxCapacidad</b> (int) — número máximo de personas permitidas.",
           "content": {
             "application/json": {
               "schema": {
@@ -1336,6 +1375,26 @@
           "MobileEspacios"
         ],
         "summary": "GET /api/mobile/espacios — Lista los espacios activos con la \"tarifa de hoy\"\r\n(modalidad Hora) calculada en el servidor según la jerarquía\r\npromoción > fecha especial > override por día > precio base.\r\nRequiere JWT válido (cualquier rol); sin restricciones de propiedad.",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Latitud del punto de referencia, opcional. Debe estar entre -90 y 90.",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "description": "Longitud del punto de referencia, opcional. Debe estar entre -180 y 180.",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Lista de `EspacioMobileResponse` con su `TarifaHoy`.",
@@ -1365,6 +1424,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Coordenadas fuera de rango."
           },
           "401": {
             "description": "No autenticado (falta o expiró el JWT)."
@@ -2012,6 +2074,71 @@
           },
           "409": {
             "description": "La reserva está cancelada, no tiene un total definido, el monto excede el saldo aplicable,\r\no (para `total`) el monto no coincide exactamente con el pendiente."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/pago/datafast/checkout": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/pago/datafast/status": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "GET /api/reservas/{id}/pago/datafast/status — Verifica contra la API de Datafast el\r\nresultado final de un checkout ya procesado por el widget. Si fue aprobado, marca la\r\nreserva como pagada y confirmada. Solo el cliente que hizo la reserva puede consultarlo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador de la reserva pagada.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "resourcePath",
+            "in": "query",
+            "description": "<b>resourcePath</b> (string, query, requerido) — ruta que Datafast\r\n            entrega al finalizar el pago (ej. \"/v1/checkouts/{id}/payment\").",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`DatafastStatusResponse` con el resultado y la reserva actualizada."
+          },
+          "400": {
+            "description": "`resourcePath` ausente o con un formato inválido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el cliente que hizo la reserva."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
           }
         }
       }
@@ -2746,6 +2873,20 @@
         },
         "additionalProperties": false
       },
+      "CiudadResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CompletarPerfilRequest": {
         "type": "object",
         "properties": {
@@ -2857,11 +2998,21 @@
             "type": "string",
             "nullable": true
           },
-          "ciudad": {
+          "provinciaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "provinciaNombre": {
             "type": "string",
             "nullable": true
           },
-          "provincia": {
+          "ciudadId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ciudadNombre": {
             "type": "string",
             "nullable": true
           },
@@ -2911,6 +3062,11 @@
           },
           "tarifaHoy": {
             "$ref": "#/components/schemas/TarifaHoyDto"
+          },
+          "distanciaKm": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2971,12 +3127,14 @@
             "type": "integer",
             "format": "int32"
           },
-          "ciudad": {
-            "type": "string",
+          "provinciaId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           },
-          "provincia": {
-            "type": "string",
+          "ciudadId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           },
           "linkUbicacion": {
@@ -2985,6 +3143,16 @@
           },
           "referencia": {
             "type": "string",
+            "nullable": true
+          },
+          "latitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitud": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           },
           "validarAforo": {
@@ -3040,11 +3208,21 @@
             "type": "string",
             "nullable": true
           },
-          "ciudad": {
+          "provinciaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "provinciaNombre": {
             "type": "string",
             "nullable": true
           },
-          "provincia": {
+          "ciudadId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ciudadNombre": {
             "type": "string",
             "nullable": true
           },
@@ -3054,6 +3232,16 @@
           },
           "referencia": {
             "type": "string",
+            "nullable": true
+          },
+          "latitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitud": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           },
           "validarAforo": {
@@ -3286,6 +3474,27 @@
         "properties": {
           "activa": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProvinciaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "ciudades": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CiudadResponse"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false

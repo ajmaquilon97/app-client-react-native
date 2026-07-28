@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
-import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes';
+import type { ShouldStartLoadRequest, WebViewNavigation } from 'react-native-webview/lib/WebViewTypes';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
@@ -56,6 +56,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
   const insets = useSafeAreaInsets();
   const { fetchAuthorized } = useAuth();
   const requestIdRef = useRef(0);
+  const resultHandledRef = useRef(false);
 
   const [status, setStatus] = useState<PaymentStatus>('loading-checkout');
   const [checkoutId, setCheckoutId] = useState<string | null>(null);
@@ -77,6 +78,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         crearCheckoutDatafast(reservaId, accessToken),
       );
       if (requestIdRef.current !== requestId) return;
+      resultHandledRef.current = false;
       setCheckoutId(nuevoCheckoutId);
       setWebViewLoading(true);
       setStatus('widget');
@@ -125,25 +127,56 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
     [reservaId, fetchAuthorized],
   );
 
-  // El widget de Datafast intenta "navegar" a shopperResultUrl al terminar. Nunca
-  // dejamos que esa navegación ocurra de verdad (es una URL con nuestro scheme
-  // custom, no una página real) — solo la usamos para leer el resourcePath.
+  // El widget de Datafast intenta "navegar" a shopperResultUrl al terminar.
+  // Nunca dejamos que esa navegación ocurra de verdad (es una URL con un scheme
+  // inventado, no una página real) — solo la usamos para leer el resourcePath.
+  // `resultHandledRef` evita procesarla dos veces: en Android, tras un POST/
+  // redirect del formulario del widget, `onShouldStartLoadWithRequest` no
+  // siempre dispara de forma confiable, así que además escuchamos
+  // `onNavigationStateChange` como respaldo — cualquiera de los dos que llegue
+  // primero gana.
+  const handleResultUrl = useCallback(
+    (url: string) => {
+      if (!url.startsWith(DATAFAST_CONFIG.shopperResultUrl) || resultHandledRef.current) {
+        return;
+      }
+      resultHandledRef.current = true;
+      const resourcePath = extractResourcePath(url);
+      if (resourcePath) {
+        verificarPago(resourcePath);
+      } else {
+        setErrorMessage('No se recibió una respuesta válida de Datafast.');
+        setStatus('error');
+      }
+    },
+    [verificarPago],
+  );
+
   const handleShouldStartLoad = useCallback(
     (request: ShouldStartLoadRequest): boolean => {
       if (request.url.startsWith(DATAFAST_CONFIG.shopperResultUrl)) {
-        const resourcePath = extractResourcePath(request.url);
-        if (resourcePath) {
-          verificarPago(resourcePath);
-        } else {
-          setErrorMessage('No se recibió una respuesta válida de Datafast.');
-          setStatus('error');
-        }
+        handleResultUrl(request.url);
         return false;
       }
       return true;
     },
-    [verificarPago],
+    [handleResultUrl],
   );
+
+  const handleNavigationStateChange = useCallback(
+    (navState: WebViewNavigation) => {
+      if (navState.url) handleResultUrl(navState.url);
+    },
+    [handleResultUrl],
+  );
+
+  const handleContinue = useCallback(() => {
+    onSuccess({ transactionId, amount: total, pagoYaRegistrado: true });
+  }, [onSuccess, transactionId, total]);
+
+  const handleRetry = useCallback(() => {
+    iniciarCheckout();
+  }, [iniciarCheckout]);
 
   if (!espacio || reservaId == null) return null;
 
@@ -179,14 +212,6 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
     </body>
     </html>
   `;
-
-  const handleContinue = useCallback(() => {
-    onSuccess({ transactionId, amount: total, pagoYaRegistrado: true });
-  }, [onSuccess, transactionId, total]);
-
-  const handleRetry = useCallback(() => {
-    iniciarCheckout();
-  }, [iniciarCheckout]);
 
   return (
     <Modal
@@ -227,7 +252,9 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         {checkoutId && (status === 'widget' || status === 'verifying') && (
           <WebView
             source={{ html: generateWidgetHTML(checkoutId) }}
+            originWhitelist={['https://*', `${DATAFAST_CONFIG.shopperResultUrl.split('://')[0]}://*`]}
             onShouldStartLoadWithRequest={handleShouldStartLoad}
+            onNavigationStateChange={handleNavigationStateChange}
             onLoad={() => setWebViewLoading(false)}
             onLoadStart={() => setWebViewLoading(true)}
             style={{ flex: 1 }}

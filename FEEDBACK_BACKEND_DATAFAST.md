@@ -13,7 +13,40 @@ cuenta. Por eso necesitamos que el backend actúe de intermediario: la app nunca
 para crear/verificar el pago, solo carga el *widget* visual de Datafast (que si es público, no requiere
 secretos) dentro de un `WebView`.
 
-## Credenciales para esta etapa (UAT / Fase 1)
+## 🐛 Bug encontrado probando en UAT (bloqueante)
+
+Ya implementaron `checkout` y `status` (¡gracias!) y probamos el flujo real de punta a punta. El paso 1
+(crear checkout) funciona perfecto. El paso 2 (verificar) **rechaza siempre con 400**, sin llegar a llamar a
+Datafast — o sea, se está rechazando en la validación propia del backend, antes de la llamada saliente.
+
+### Repro exacto
+
+1. `POST /api/reservas/18/pago/datafast/checkout` → `200 OK`:
+   ```json
+   { "checkoutId": "5119B172E049C5D3864AC79B6AF9956C.uat01-vm-tx01" }
+   ```
+2. El widget de Datafast, tras completar el pago, redirige con ese mismo checkoutId embebido en el
+   `resourcePath` (esto lo genera Datafast, no lo tocamos nosotros).
+3. `GET /api/reservas/18/pago/datafast/status?resourcePath=%2Fv1%2Fcheckouts%2F5119B172E049C5D3864AC79B6AF9956C.uat01-vm-tx01%2Fpayment`
+   → `400 Bad Request`, body: `"resourcePath inválido."`
+
+Noten que el `checkoutId` del paso 1 y el que viene dentro del `resourcePath` del paso 3 son **idénticos**
+(`5119B172E049C5D3864AC79B6AF9956C.uat01-vm-tx01`) — no es un problema de que el cliente esté mandando un
+valor corrupto o de otra transacción. El log del backend confirma que nunca sale el request hacia
+`https://test.oppwa.com` en este paso, o sea que el 400 lo tira la validación propia de `resourcePath` antes
+de intentar la llamada.
+
+### Hipótesis
+
+Los `checkoutId`/`resourcePath` reales que devuelve el ambiente UAT de Datafast traen un sufijo con punto y
+guiones (`.uat01-vm-tx01` — parece ser un identificador de nodo/balanceador del cluster de sandbox de
+Datafast). Si la validación de `resourcePath` usa una regex que solo admite caracteres alfanuméricos en el
+ID (algo como `^/v1/checkouts/[A-Za-z0-9]+/payment$`), va a rechazar **cualquier** resourcePath real de UAT,
+siempre, sin excepción — el flujo completo queda bloqueado hasta que se ajuste esa validación para aceptar
+`.` y `-` en el segmento del ID (o, más simple, no validar el formato del ID en sí y solo confirmar que el
+path tiene la forma `/v1/checkouts/{algo}/payment`).
+
+
 
 Para no bloquear la implementación esperando el alta como comercio, Datafast publica en su propia
 documentación (https://developers.datafast.com.ec/index.aspx) un `entityId` + token de prueba **compartido**

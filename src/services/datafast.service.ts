@@ -32,7 +32,11 @@ export async function crearCheckoutDatafast(
     headers: authHeaders(accessToken),
   });
   await throwIfNotOk(res, 'No se pudo iniciar el pago con Datafast.');
-  return res.json();
+  const data = await res.json();
+  // El swagger no documenta el shape exacto de esta respuesta todavía — logueamos
+  // el crudo para poder confirmar/corregir el parseo contra el backend real.
+  if (__DEV__) console.log('[Datafast] checkout creado, respuesta cruda:', data);
+  return data;
 }
 
 export interface DatafastVerificacion {
@@ -60,7 +64,9 @@ export async function verificarPagoDatafast(
     { headers: authHeaders(accessToken) },
   );
   await throwIfNotOk(res, 'No se pudo verificar el pago con Datafast.');
-  return res.json();
+  const data = await res.json();
+  if (__DEV__) console.log('[Datafast] verificación de pago, respuesta cruda:', data);
+  return data;
 }
 
 export interface DatafastReverso {
