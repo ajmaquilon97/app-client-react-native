@@ -68,33 +68,3 @@ export async function verificarPagoDatafast(
   if (__DEV__) console.log('[Datafast] verificación de pago, respuesta cruda:', data);
   return data;
 }
-
-export interface DatafastReverso {
-  aprobado: boolean;
-  transactionId: string;
-  resultCode: string;
-  mensaje: string;
-  reserva: Reserva;
-}
-
-/**
- * Pide al backend que reverse/reembolse el cargo de Datafast de una reserva ya
- * pagada (POST /v1/payments/{id} con paymentType=RF contra la transacción
- * original). Se llama antes de cancelar la reserva: si el reverso falla, la
- * reserva se mantiene activa en vez de quedar cancelada sin devolver el dinero.
- *
- * Contrato pendiente en el backend — ver FEEDBACK_BACKEND_DATAFAST.md.
- */
-export async function reversarPagoDatafast(
-  reservaId: number,
-  motivo: string,
-  accessToken: string,
-): Promise<DatafastReverso> {
-  const res = await fetch(`${RESERVAS_URL}/${reservaId}/pago/datafast/reverso`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify({ motivo }),
-  });
-  await throwIfNotOk(res, 'No se pudo reversar el pago con Datafast.');
-  return res.json();
-}

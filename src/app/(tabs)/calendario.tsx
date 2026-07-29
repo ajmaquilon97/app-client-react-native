@@ -22,8 +22,8 @@ import { useMisReservas } from '@/hooks/useMisReservas';
 import { useEspacios } from '@/hooks/useEspacios';
 import { useAuth } from '@/context/AuthContext';
 import { cancelarReserva } from '@/services/reservas.service';
-import { reversarPagoDatafast } from '@/services/datafast.service';
-import { PAYMENT_PROVIDER } from '@/config/paymentConfig';
+import { reversarPagoDatafastDirecto, obtenerTransaccionDirecta } from '@/services/datafastDirectUat';
+import { DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/config/paymentConfig';
 import { formatRangoReserva } from '@/utils/fechas';
 import { EstadoReserva, Reserva } from '@/types';
 
@@ -76,13 +76,28 @@ export default function CalendarScreen() {
           onPress: async () => {
             const motivo = 'Cancelado por el cliente desde la app';
             try {
-              // Si ya se pagó vía Datafast, reversamos el cargo primero: si el
-              // reverso falla, la reserva se mantiene activa en vez de quedar
-              // cancelada sin devolver el dinero.
-              if (reserva.estadoPago === 'pagado' && PAYMENT_PROVIDER === 'datafast') {
-                await fetchAuthorized(accessToken =>
-                  reversarPagoDatafast(reserva.id, motivo, accessToken),
+              // El reverso del pago (si la reserva ya estaba paga) lo hace
+              // backend automáticamente dentro de POST /{id}/cancelar — no es
+              // un endpoint aparte, así que el cliente no tiene que orquestar
+              // nada para el flujo real.
+              //
+              // ⚠️ Diagnóstico temporal: si el pago se hizo con
+              // DATAFAST_DIAGNOSTICO_DIRECTO_UAT activo, nunca pasó por backend
+              // (no hay nada que backend pueda reversar) — reversamos directo
+              // contra Datafast con la transacción que quedó registrada en
+              // memoria al pagar. Ver datafastDirectUat.ts.
+              const transaccionDirecta = DATAFAST_DIAGNOSTICO_DIRECTO_UAT
+                ? obtenerTransaccionDirecta(reserva.id)
+                : undefined;
+
+              if (transaccionDirecta) {
+                const resultado = await reversarPagoDatafastDirecto(
+                  transaccionDirecta.transactionId,
+                  transaccionDirecta.amount,
                 );
+                if (!resultado.aprobado) {
+                  throw new Error(resultado.mensaje || 'Datafast rechazó el reverso.');
+                }
               }
               await fetchAuthorized(accessToken =>
                 cancelarReserva(reserva.id, motivo, accessToken),

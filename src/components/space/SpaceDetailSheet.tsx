@@ -1,4 +1,5 @@
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   View,
   Text,
@@ -39,6 +40,7 @@ import {
 import LocationMap from '@/components/space/LocationMap';
 import DaySelector from '@/components/space/DaySelector';
 import HourRangeSelector from '@/components/space/HourRangeSelector';
+import { MIS_RESERVAS_QUERY_KEY } from '@/hooks/useMisReservas';
 
 interface SpaceDetailSheetProps {
   visible: boolean;
@@ -57,6 +59,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { fetchAuthorized, user } = useAuth();
   const hoy = useMemo(() => new Date(), [visible]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -180,6 +183,9 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       );
       setReservaCreada(nueva);
       setShowPayment(true);
+      // La reserva (aunque sea 'pendiente') ya existe en backend — si el
+      // usuario mira Calendario ahora, que la vea sin esperar el staleTime.
+      queryClient.invalidateQueries({ queryKey: MIS_RESERVAS_QUERY_KEY });
     } catch (err) {
       Alert.alert(
         'No se pudo crear la reserva',
@@ -189,7 +195,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     } finally {
       setCreandoReserva(false);
     }
-  }, [espacio, selectedDate, horaDesde, horaHasta, disponibilidad, cantidadHoras, user, fetchAuthorized]);
+  }, [espacio, selectedDate, horaDesde, horaHasta, disponibilidad, cantidadHoras, user, fetchAuthorized, queryClient]);
 
   const fechaHoraTexto =
     selectedDate && horaDesde != null && horaHasta != null
@@ -218,9 +224,12 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     setHoraDesde(null);
     setHoraHasta(null);
     setReservaCreada(null);
+    // El pago cambió el estado de la reserva en backend — que Calendario
+    // muestre el estado fresco ("pagado") en vez de la caché de hace un rato.
+    queryClient.invalidateQueries({ queryKey: MIS_RESERVAS_QUERY_KEY });
     onClose();
     router.navigate('/calendario');
-  }, [reservaCreada, fetchAuthorized, onClose, router]);
+  }, [reservaCreada, fetchAuthorized, onClose, router, queryClient]);
 
   const handleClosePayment = useCallback(async () => {
     setShowPayment(false);
@@ -229,6 +238,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
         await fetchAuthorized(accessToken =>
           cancelarReserva(reservaCreada.id, 'Cliente canceló el pago', accessToken),
         );
+        queryClient.invalidateQueries({ queryKey: MIS_RESERVAS_QUERY_KEY });
       } catch {
         // best effort: no bloqueamos la UI si la cancelación silenciosa falla
       }

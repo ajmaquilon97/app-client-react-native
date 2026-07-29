@@ -69,6 +69,23 @@ export const DATAFAST_CONFIG = {
   },
 };
 
+// ─── ⚠️ Diagnóstico temporal: bypass del backend para Datafast ───
+//
+// Mientras backend arregla la validación de `resourcePath` (ver
+// FEEDBACK_BACKEND_DATAFAST.md → "Bug encontrado probando en UAT"), este
+// toggle hace que la app llame DIRECTO a Datafast (con el entityId/token
+// público de Fase 1) en vez de pasar por nuestro backend — sirve para
+// confirmar que Datafast en sí funciona bien.
+//
+// La reserva NO queda marcada como pagada en nuestra base mientras esto esté
+// activo (justamente porque se salta al backend). Es solo para probar.
+//
+// El `&& __DEV__` es a propósito: aunque alguien cambie el flag a `true` y se
+// olvide de revertirlo, en un build de producción (__DEV__ === false) este
+// modo queda desactivado igual.
+const DATAFAST_DIAGNOSTICO_DIRECTO_UAT_FLAG = true; // ← cambiar a true para probar
+export const DATAFAST_DIAGNOSTICO_DIRECTO_UAT = __DEV__ && DATAFAST_DIAGNOSTICO_DIRECTO_UAT_FLAG;
+
 // ─── Helper para obtener config según proveedor ───
 export const getPaymentConfig = () => {
   if (PAYMENT_PROVIDER === 'kushki') {

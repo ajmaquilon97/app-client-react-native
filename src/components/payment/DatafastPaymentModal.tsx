@@ -17,8 +17,14 @@ import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { ArrowLeftIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
-import { DATAFAST_CONFIG } from '@/config/paymentConfig';
+import { DATAFAST_CONFIG, DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/config/paymentConfig';
 import { crearCheckoutDatafast, verificarPagoDatafast } from '@/services/datafast.service';
+import {
+  crearCheckoutDatafastDirecto,
+  verificarPagoDatafastDirecto,
+  registrarTransaccionDirecta,
+  UAT_DIRECT_WIDGET_BASE_URL,
+} from '@/services/datafastDirectUat';
 import PaymentResult from './PaymentResult';
 
 type PaymentStatus = 'loading-checkout' | 'widget' | 'verifying' | 'success' | 'error';
@@ -74,9 +80,9 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
     setCheckoutId(null);
 
     try {
-      const { checkoutId: nuevoCheckoutId } = await fetchAuthorized(accessToken =>
-        crearCheckoutDatafast(reservaId, accessToken),
-      );
+      const { checkoutId: nuevoCheckoutId } = DATAFAST_DIAGNOSTICO_DIRECTO_UAT
+        ? await crearCheckoutDatafastDirecto(total)
+        : await fetchAuthorized(accessToken => crearCheckoutDatafast(reservaId, accessToken));
       if (requestIdRef.current !== requestId) return;
       resultHandledRef.current = false;
       setCheckoutId(nuevoCheckoutId);
@@ -87,7 +93,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
       setErrorMessage(err instanceof Error ? err.message : 'No se pudo iniciar el pago con Datafast.');
       setStatus('error');
     }
-  }, [espacio, reservaId, fetchAuthorized]);
+  }, [espacio, reservaId, total, fetchAuthorized]);
 
   // Al abrir el modal, crea un checkout nuevo. Al cerrarlo, invalida cualquier
   // request en vuelo para que no pise el estado si se reabre con otra reserva.
@@ -109,11 +115,16 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
       if (reservaId == null) return;
       setStatus('verifying');
       try {
-        const resultado = await fetchAuthorized(accessToken =>
-          verificarPagoDatafast(reservaId, resourcePath, accessToken),
-        );
+        const resultado = DATAFAST_DIAGNOSTICO_DIRECTO_UAT
+          ? await verificarPagoDatafastDirecto(resourcePath)
+          : await fetchAuthorized(accessToken =>
+              verificarPagoDatafast(reservaId, resourcePath, accessToken),
+            );
         if (resultado.aprobado) {
           setTransactionId(resultado.transactionId);
+          if (DATAFAST_DIAGNOSTICO_DIRECTO_UAT) {
+            registrarTransaccionDirecta(reservaId, resultado.transactionId, total);
+          }
           setStatus('success');
         } else {
           setErrorMessage(resultado.mensaje || 'El pago fue rechazado.');
@@ -124,7 +135,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         setStatus('error');
       }
     },
-    [reservaId, fetchAuthorized],
+    [reservaId, total, fetchAuthorized],
   );
 
   // El widget de Datafast intenta "navegar" a shopperResultUrl al terminar.
@@ -171,7 +182,13 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
   );
 
   const handleContinue = useCallback(() => {
-    onSuccess({ transactionId, amount: total, pagoYaRegistrado: true });
+    // En modo diagnóstico directo nos saltamos el backend, así que la reserva
+    // NO quedó registrada como pagada ahí — no podemos afirmar lo contrario.
+    onSuccess({
+      transactionId,
+      amount: total,
+      pagoYaRegistrado: !DATAFAST_DIAGNOSTICO_DIRECTO_UAT,
+    });
   }, [onSuccess, transactionId, total]);
 
   const handleRetry = useCallback(() => {
@@ -179,6 +196,10 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
   }, [iniciarCheckout]);
 
   if (!espacio || reservaId == null) return null;
+
+  const widgetBaseUrl = DATAFAST_DIAGNOSTICO_DIRECTO_UAT
+    ? UAT_DIRECT_WIDGET_BASE_URL
+    : DATAFAST_CONFIG.widgetBaseUrl;
 
   const generateWidgetHTML = (id: string) => `
     <!DOCTYPE html>
@@ -205,7 +226,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
           color: #14b8a6 !important;
         }
       </style>
-      <script src="${DATAFAST_CONFIG.widgetBaseUrl}/v1/paymentWidgets.js?checkoutId=${id}"></script>
+      <script src="${widgetBaseUrl}/v1/paymentWidgets.js?checkoutId=${id}"></script>
     </head>
     <body>
       <form action="${DATAFAST_CONFIG.shopperResultUrl}" class="paymentWidgets" data-brands="VISA MASTER"></form>
@@ -237,6 +258,15 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
           <Text style={styles.headerTitle}>Pago Datafast (UAT)</Text>
           <View style={{ width: 36 }} />
         </View>
+
+        {DATAFAST_DIAGNOSTICO_DIRECTO_UAT && (
+          <View style={styles.diagnosticoBanner}>
+            <Text style={styles.diagnosticoBannerText}>
+              ⚠️ MODO DIAGNÓSTICO — Datafast directo, sin backend. La reserva NO va a quedar pagada en el
+              sistema.
+            </Text>
+          </View>
+        )}
 
         {(status === 'loading-checkout' || (status === 'widget' && webViewLoading)) && (
           <View style={styles.loadingContainer}>
@@ -294,6 +324,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  diagnosticoBanner: {
+    backgroundColor: Colors.warning,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  diagnosticoBannerText: {
+    color: Colors.black,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+    textAlign: 'center',
   },
   header: {
     backgroundColor: Colors.primaryDark,
