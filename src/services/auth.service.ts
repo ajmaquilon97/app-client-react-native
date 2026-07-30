@@ -59,6 +59,18 @@ export async function login(email: string, password: string): Promise<AuthTokens
   return res.json();
 }
 
+export async function loginWithGoogle(idToken: string): Promise<AuthTokens> {
+  const res = await fetch(`${AUTH_URL}/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!res.ok) {
+    throw new Error(await parseErrorMessage(res, 'No se pudo iniciar sesión con Google.'));
+  }
+  return res.json();
+}
+
 export async function getTiposUsuario(): Promise<TipoUsuario[]> {
   const res = await fetch(`${USUARIOS_URL}/tipos`, {
     headers: { Accept: 'application/json' },

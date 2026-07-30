@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.appclientreactnative"
+      "package": "com.obsidiantechlab.agora"
     },
     "web": {
       "output": "static",
@@ -41,7 +41,8 @@
         {
           "locationWhenInUsePermission": "Permite que Espacios use tu ubicación para calcular la distancia a cada espacio."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

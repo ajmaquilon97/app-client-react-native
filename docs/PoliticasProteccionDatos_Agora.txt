@@ -1,0 +1,178 @@
+POLÍTICA DE PRIVACIDAD Y PROTECCIÓN DE DATOS PERSONALES
+PLATAFORMA AGORA — OBSIDIANTECHLAB S.A.S.
+República del Ecuador
+Versión: 1.0
+Última actualización: 30/07/2026
+
+ANTECEDENTES PRELIMINARES
+
+La presente Política de Privacidad y Protección de Datos Personales (en adelante, la "Política") describe las prácticas de recolección, uso, almacenamiento y transferencia de datos personales que OBSIDIANTECHLAB S.A.S. (en adelante, "AGORA", "nosotros" o "la Plataforma"), sociedad domiciliada en la ciudad de Guayaquil, República del Ecuador, aplica respecto de los Usuarios que acceden y utilizan la aplicación móvil y/o el portal web AGORA, destinados a la búsqueda, consulta y reserva de espacios privados (canchas, piscinas, salones y demás instalaciones publicadas por los Clientes/Anfitriones).
+
+Le recomendamos leer esta Política con detenimiento antes de registrar una cuenta o utilizar la Plataforma. Al marcar la casilla de aceptación durante el proceso de registro, usted otorga su consentimiento libre, previo, expreso, informado e inequívoco para el tratamiento de sus datos personales conforme a lo aquí descrito.
+
+Esta Política se rige por la Ley Orgánica de Protección de Datos Personales del Ecuador (LOPDP), su Reglamento General y las resoluciones que emita la Autoridad de Protección de Datos Personales, así como por la Constitución de la República del Ecuador, cuyo artículo 66, numeral 19, reconoce el derecho a la protección de datos de carácter personal como un derecho fundamental.
+
+La Plataforma puede contener enlaces a sitios web o servicios de terceros (por ejemplo, la pasarela de pago o servicios de mapas). Dichos terceros cuentan con sus propias políticas de privacidad, por lo que AGORA no asume responsabilidad por el tratamiento de datos que dichos terceros realicen fuera de la Plataforma.
+
+1. RESPONSABLE DEL TRATAMIENTO
+
+El responsable del tratamiento de los datos personales recolectados a través de la Plataforma AGORA es:
+
+OBSIDIANTECHLAB S.A.S.
+Domicilio: Guayaquil, República del Ecuador.
+Correo de contacto para temas de protección de datos: datos.privacidad@agoraapp.ec
+
+En caso de designarse un Delegado de Protección de Datos Personales, su identidad y datos de contacto (dirección, teléfono y correo electrónico) serán publicados en esta misma sección y comunicados a los Usuarios a través de la Plataforma.
+
+2. PRINCIPIOS QUE ORIENTAN ESTA POLÍTICA
+
+En el tratamiento de los datos personales de sus Usuarios, AGORA aplica y garantiza los principios establecidos en la LOPDP:
+
+Principio de Juridicidad: el tratamiento de datos personales se realiza conforme a las disposiciones legales vigentes y a los compromisos contractuales asumidos con el Usuario.
+
+Principio de Licitud, Lealtad y Legitimidad: los datos se recaban de forma lícita, leal y transparente, sin engañar al titular sobre la finalidad de la recolección.
+
+Principio de Finalidad: los datos personales se tratan únicamente para las finalidades determinadas, explícitas y legítimas descritas en esta Política, comunicadas al Usuario antes o al momento de la recolección.
+
+Principio de Proporcionalidad y Minimización: solo se recopilan los datos estrictamente necesarios y pertinentes para cumplir con las finalidades del servicio.
+
+Principio de Calidad y Exactitud: los datos deben ser exactos, completos y actualizados. El Usuario puede solicitar en cualquier momento la corrección de datos inexactos.
+
+Principio de Transparencia: toda información relativa al tratamiento de datos se comunica en lenguaje claro, sencillo y accesible.
+
+Principio de Seguridad: AGORA adopta medidas técnicas, administrativas y organizativas razonables para proteger los datos personales frente a pérdida, alteración, acceso o uso no autorizado.
+
+Principio de Confidencialidad: los datos personales no se comunican ni se utilizan para fines distintos de aquellos para los cuales fueron recolectados, salvo autorización del titular o mandato legal.
+
+Principio de Responsabilidad Demostrada: AGORA adopta medidas para garantizar y poder demostrar el cumplimiento de la Normativa aplicable.
+
+Principio de Conservación: los datos personales se conservan únicamente durante el tiempo necesario para cumplir con la finalidad de su tratamiento y con las obligaciones legales y tributarias aplicables (incluyendo el plazo de prescripción de acciones civiles y tributarias en Ecuador).
+
+3. DATOS PERSONALES QUE RECOLECTAMOS
+
+3.1. Datos proporcionados directamente por el Usuario
+
+Al crear una cuenta y utilizar la Plataforma, recolectamos:
+
+- Datos identificativos y de contacto: nombres, apellidos, correo electrónico y número de teléfono móvil.
+- Credenciales de acceso: nombre de usuario y contraseña (almacenada de forma cifrada; AGORA no tiene acceso a su contraseña en texto plano).
+- Verificación telefónica: el número de teléfono y el código de verificación (OTP) enviado por SMS, utilizado para confirmar la titularidad de la línea telefónica.
+- Información de Reservas: espacios consultados, favoritos guardados, historial de reservas, fechas, horarios, comentarios y calificaciones que el Usuario decida publicar.
+- Comunicaciones con soporte: el contenido de los mensajes que el Usuario envíe a nuestros canales de atención al cliente.
+
+3.2. Datos recolectados de forma automática
+
+- Datos del dispositivo: modelo, sistema operativo, identificadores únicos de la aplicación e información técnica necesaria para el funcionamiento del servicio y la prevención de fraude.
+- Datos de uso: pantallas visitadas, búsquedas realizadas, tiempo de uso e interacciones dentro de la Plataforma, con fines de mejora del servicio y soporte.
+- Datos de geolocalización: si el Usuario lo autoriza expresamente desde los permisos de su dispositivo, recolectamos su ubicación aproximada o precisa (GPS/Wi-Fi/IP) para mostrarle espacios disponibles cercanos a su ubicación. Este permiso es opcional y puede revocarse en cualquier momento desde la configuración del dispositivo, sin que ello impida el uso general de la Plataforma (aunque limitará la búsqueda por cercanía).
+
+3.3. Datos relacionados con el pago
+
+Para procesar el pago de sus reservas, la Plataforma utiliza una pasarela de pago de un proveedor tercero autorizado (actualmente, Datafast/OPPWA), la cual recolecta directamente los datos de su tarjeta de crédito o débito (número, fecha de expiración y código de seguridad) bajo protocolos de seguridad PCI-DSS.
+
+AGORA NO recolecta ni almacena en sus propios servidores el número completo de su tarjeta, la fecha de expiración ni el código de seguridad (CVV). AGORA únicamente recibe de la pasarela de pago la confirmación del resultado de la transacción (aprobada/rechazada), un identificador de transacción y, cuando corresponda, los últimos dígitos de la tarjeta para fines de referencia en el historial de pagos del Usuario.
+
+3.4. Datos que NO solicitamos
+
+AGORA no solicita ni tiene como finalidad recolectar datos sensibles tales como datos de salud, origen étnico, afiliación política, religiosa o sindical, orientación sexual o datos biométricos. Si excepcionalmente algún dato de esta naturaleza llegara a ser proporcionado voluntariamente por el Usuario (por ejemplo, dentro del texto libre de un mensaje a soporte), este será tratado únicamente para atender dicho requerimiento puntual y no será utilizado para ningún otro fin.
+
+4. FINALIDADES DEL TRATAMIENTO
+
+Tratamos los datos personales del Usuario para las siguientes finalidades, todas ellas necesarias para la ejecución del contrato de prestación de servicios de intermediación de AGORA o basadas en su consentimiento:
+
+a) Crear, verificar y administrar su cuenta de Usuario.
+b) Gestionar la búsqueda, reserva y confirmación de Espacios.
+c) Procesar el pago de sus reservas a través de la pasarela de pago integrada y emitir el comprobante fiscal correspondiente a la Tarifa de Servicio de AGORA.
+d) Comunicarnos con usted respecto de sus reservas (confirmaciones, recordatorios, cambios, cancelaciones).
+e) Brindar soporte y atención de consultas, quejas o reclamos.
+f) Prevenir el fraude, usos indebidos de la Plataforma y proteger la seguridad de los Usuarios y de los Clientes/Anfitriones.
+g) Cumplir con obligaciones legales, tributarias y regulatorias aplicables en Ecuador.
+h) Con su consentimiento adicional, enviarle comunicaciones comerciales, promociones, descuentos y novedades sobre la Plataforma (puede oponerse a este tratamiento en cualquier momento, sin que ello afecte el uso de las funcionalidades esenciales del servicio).
+i) Mejorar la Plataforma mediante análisis estadísticos y agregados de uso.
+
+5. BASE DE LEGITIMACIÓN DEL TRATAMIENTO
+
+El tratamiento de sus datos personales se sustenta, según corresponda, en:
+
+- Su consentimiento libre, previo, expreso e informado, otorgado al aceptar esta Política y los Términos y Condiciones al momento del registro.
+- La necesidad de ejecutar el contrato de prestación de servicios de intermediación celebrado entre usted y AGORA.
+- El cumplimiento de obligaciones legales y tributarias a las que se encuentra sujeta AGORA en Ecuador.
+- El interés legítimo de AGORA en prevenir fraudes y proteger la seguridad de la Plataforma, siempre que dicho interés no vulnere sus derechos y libertades fundamentales.
+
+6. CON QUIÉN COMPARTIMOS SUS DATOS PERSONALES
+
+AGORA no vende sus datos personales. Únicamente compartimos los datos estrictamente necesarios con:
+
+- Clientes/Anfitriones: compartimos los datos indispensables (nombre, datos de contacto y detalle de la reserva) para que el Cliente pueda gestionar la prestación del servicio de uso del Espacio reservado.
+- Proveedores de servicios de pago: para procesar el cobro de sus reservas (actualmente, Datafast/OPPWA), bajo estándares PCI-DSS.
+- Proveedores de infraestructura tecnológica: servicios de alojamiento en la nube, mensajería SMS (para el envío del código de verificación OTP) y herramientas de analítica, quienes tratan los datos por cuenta y bajo instrucciones de AGORA, sujetos a acuerdos de confidencialidad y tratamiento de datos.
+- Autoridades competentes: cuando exista un requerimiento judicial, administrativo o legal válido que nos obligue a ello.
+- Terceros en caso de reorganización societaria: en el evento de una fusión, adquisición, venta de activos o reorganización de AGORA, sus datos personales podrán transferirse a la entidad resultante, garantizando siempre el cumplimiento de los principios de esta Política.
+
+7. TRANSFERENCIA INTERNACIONAL DE DATOS
+
+Algunos de nuestros proveedores tecnológicos (por ejemplo, servicios de alojamiento en la nube o la pasarela de pago) pueden procesar datos personales fuera del territorio ecuatoriano. En estos casos, AGORA garantiza que dicha transferencia se realiza cumpliendo con los requisitos que exige la LOPDP para transferencias internacionales de datos (existencia de niveles adecuados de protección, cláusulas contractuales u otros mecanismos idóneos reconocidos por la Autoridad de Protección de Datos Personales del Ecuador).
+
+Si desea más información sobre las transferencias internacionales que realizamos, puede escribirnos a los Canales de Contacto indicados en la Sección 11.
+
+8. PLAZO DE CONSERVACIÓN
+
+Conservamos sus datos personales mientras mantenga una cuenta activa en la Plataforma y, posteriormente, durante el plazo adicional que sea necesario para el cumplimiento de obligaciones legales, tributarias, contables y de prevención de fraude, así como para la atención de eventuales reclamos derivados del uso del servicio, de conformidad con los plazos de prescripción previstos en la legislación ecuatoriana.
+
+Una vez cumplidos dichos plazos, sus datos personales serán eliminados o anonimizados de forma que no sea posible asociarlos a su identidad.
+
+9. SEGURIDAD DE LA INFORMACIÓN
+
+AGORA implementa medidas técnicas y organizativas razonables para proteger sus datos personales frente al acceso, uso, alteración o divulgación no autorizados, tales como cifrado de contraseñas, controles de acceso a nuestros sistemas y el uso de proveedores de pago certificados bajo PCI-DSS.
+
+Sin perjuicio de lo anterior, ningún sistema de transmisión o almacenamiento de datos es completamente infalible. El Usuario reconoce esta circunstancia y se compromete a mantener sus credenciales de acceso en estricta confidencialidad, notificando de inmediato a AGORA cualquier uso no autorizado de su cuenta.
+
+10. DERECHOS DEL TITULAR DE LOS DATOS
+
+De conformidad con la LOPDP, usted tiene derecho a:
+
+a) Acceso: conocer si tratamos sus datos personales y obtener información detallada sobre dicho tratamiento.
+b) Rectificación y actualización: solicitar la corrección de datos inexactos, incompletos o desactualizados.
+c) Eliminación (cancelación): solicitar la eliminación de sus datos personales cuando ya no exista fundamento legal para su tratamiento.
+d) Oposición: oponerse al tratamiento de sus datos para fines específicos, incluyendo el mercadeo directo, en cuyo caso dejaremos de tratarlos para dicho fin.
+e) Revocatoria del consentimiento: revocar en cualquier momento el consentimiento otorgado, sin efectos retroactivos.
+f) Portabilidad: solicitar la entrega de sus datos personales en un formato estructurado, de uso común y lectura mecánica, o su transmisión directa a otro responsable, cuando sea técnicamente posible.
+g) Limitación del tratamiento: solicitar la suspensión temporal del tratamiento en los supuestos previstos por la LOPDP (por ejemplo, mientras se verifica la exactitud de un dato impugnado).
+h) No ser objeto de decisiones automatizadas: no ser sujeto de decisiones basadas únicamente en tratamiento automatizado, incluida la elaboración de perfiles, que produzcan efectos jurídicos sobre usted o le afecten significativamente.
+
+Para ejercer estos derechos, puede escribirnos a través de los Canales de Contacto indicados en la Sección 11. Verificaremos la legitimidad de su solicitud y le daremos respuesta dentro de los plazos que establece la LOPDP (hasta quince días hábiles, prorrogables conforme a la ley cuando la complejidad del caso lo justifique).
+
+Si no está conforme con la respuesta recibida, tiene derecho a presentar su reclamo ante la Autoridad de Protección de Datos Personales del Ecuador.
+
+11. CANALES DE CONTACTO
+
+Para consultas, solicitudes relacionadas con sus datos personales o ejercicio de derechos, puede contactarnos a través de:
+
+- Correo electrónico: datos.privacidad@agoraapp.ec
+- Sección de soporte disponible dentro de la Plataforma AGORA.
+
+12. USO DE COOKIES Y TECNOLOGÍAS SIMILARES
+
+Nuestro portal web y aplicación móvil pueden utilizar cookies, identificadores de dispositivo y tecnologías similares con fines de funcionamiento del servicio (por ejemplo, mantener su sesión iniciada) y de analítica agregada del uso de la Plataforma, para mejorar su desempeño y experiencia de usuario. Usted puede gestionar las cookies desde la configuración de su navegador; deshabilitarlas podría afectar la funcionalidad del portal web.
+
+13. MENORES DE EDAD
+
+La Plataforma AGORA está dirigida exclusivamente a personas mayores de dieciocho (18) años. No recolectamos intencionalmente datos personales de menores de edad. Si tomamos conocimiento de que una cuenta fue creada por una persona menor de 18 años, procederemos a suspenderla y eliminar los datos personales asociados. Los padres, madres o representantes legales que adviertan que un menor de edad ha proporcionado datos personales a AGORA pueden contactarnos a través de los Canales de Contacto indicados en la Sección 11 para solicitar su eliminación.
+
+14. CAMBIOS A ESTA POLÍTICA
+
+AGORA podrá modificar la presente Política en cualquier momento para reflejar cambios normativos, operativos o tecnológicos. Los cambios materiales serán notificados a través de la Plataforma y/o por correo electrónico, y se solicitará, cuando corresponda, un nuevo consentimiento expreso del Usuario. La fecha de "Última actualización" indicada al inicio de este documento refleja la versión vigente.
+
+15. LEY APLICABLE Y JURISDICCIÓN
+
+La presente Política se rige e interpreta de conformidad con la Constitución de la República del Ecuador, la Ley Orgánica de Protección de Datos Personales, su Reglamento General y demás normativa concordante. Cualquier controversia derivada de esta Política se someterá a los jueces y tribunales competentes de la ciudad de Guayaquil, República del Ecuador.
+
+16. CONSENTIMIENTO
+
+Al marcar la casilla de aceptación durante el proceso de registro en la Plataforma AGORA, usted declara haber leído y comprendido esta Política de Privacidad y Protección de Datos Personales, y otorga su consentimiento libre, previo, expreso, informado e inequívoco para que OBSIDIANTECHLAB S.A.S. trate sus datos personales conforme a lo aquí descrito, incluyendo su eventual transferencia nacional e internacional a los terceros indicados en la Sección 6 y 7 de esta Política.
+
+Usted podrá revocar este consentimiento en cualquier momento, sin efectos retroactivos, contactándonos a través de los Canales de Contacto indicados en la Sección 11, entendiendo que ello podrá implicar la imposibilidad de continuar utilizando determinadas funcionalidades de la Plataforma.
+
+— Fin del Documento —
+OBSIDIANTECHLAB S.A.S. — Plataforma AGORA
+Guayaquil, Ecuador — Versión 1.0 — 30/07/2026

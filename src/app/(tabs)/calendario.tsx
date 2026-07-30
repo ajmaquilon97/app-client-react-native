@@ -90,11 +90,21 @@ export default function CalendarScreen() {
                 ? obtenerTransaccionDirecta(reserva.id)
                 : undefined;
 
+              if (__DEV__) {
+                console.log('[Reversa] reserva.id:', reserva.id, 'estadoPago actual:', reserva.estadoPago);
+                console.log(
+                  transaccionDirecta
+                    ? '[Reversa][BYPASS] reversando directo contra Datafast (pago se hizo sin backend)'
+                    : '[Reversa][BACKEND] el reverso (si aplica) lo hace backend dentro de /cancelar',
+                );
+              }
+
               if (transaccionDirecta) {
                 const resultado = await reversarPagoDatafastDirecto(
                   transaccionDirecta.transactionId,
                   transaccionDirecta.amount,
                 );
+                if (__DEV__) console.log('[Reversa][BYPASS] resultado:', resultado);
                 if (!resultado.aprobado) {
                   throw new Error(resultado.mensaje || 'Datafast rechazó el reverso.');
                 }
@@ -140,6 +150,7 @@ export default function CalendarScreen() {
                 {formatRangoReserva(item.fechaInicio, item.fechaFin)}
               </Text>
             </View>
+            <Text style={styles.cardCodigo}>Reserva #{String(item.id).padStart(6, '0')}</Text>
             <Text style={styles.cardDetail}>
               {item.totalHoras} hora{item.totalHoras !== 1 ? 's' : ''}
               {'   |   '}Total:{' '}
@@ -321,6 +332,12 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
     color: Colors.primaryDark,
     marginTop: 1,
+  },
+  cardCodigo: {
+    fontSize: FontSize.xs,
+    color: Colors.gray500,
+    fontWeight: FontWeight.medium,
+    marginTop: 2,
   },
   cardMetaRow: {
     flexDirection: 'row',

@@ -26,6 +26,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isBootstrapping: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   registro: (input: RegistroInput) => Promise<void>;
   logout: () => Promise<void>;
   getAccessToken: () => Promise<string>;
@@ -120,6 +121,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     [persistSession],
   );
 
+  const loginWithGoogle = useCallback(
+    async (idToken: string) => {
+      const { accessToken, refreshToken: newRefreshToken } =
+        await authService.loginWithGoogle(idToken);
+      const userId = authService.decodeJwtSubject(accessToken);
+      if (!userId) throw new Error('No se pudo interpretar la sesión recibida.');
+      const usuario = await authService.fetchUsuario(userId, accessToken);
+      await persistSession(accessToken, newRefreshToken, usuario);
+    },
+    [persistSession],
+  );
+
   const registro = useCallback(
     async (input: RegistroInput) => {
       const { id, accessToken, refreshToken: newRefreshToken } = await authService.registro(
@@ -194,6 +207,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAuthenticated: !!user,
         isBootstrapping,
         login,
+        loginWithGoogle,
         registro,
         logout,
         getAccessToken,

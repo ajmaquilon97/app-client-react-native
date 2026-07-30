@@ -26,11 +26,24 @@ export async function fetchDisponibilidad(
   return res.json();
 }
 
+export interface FacturacionInput {
+  identificacion: string;
+  nombre: string;
+  correo: string;
+}
+
 interface CrearReservaInput {
   espacioId: number;
   fechaInicio: string;
   fechaFin: string;
   totalHoras: number;
+  // Opcional — si el cliente no completa estos datos, se manda "consumidor
+  // final" (ver DEFAULT_FACTURACION en SpaceDetailSheet.tsx). Pendiente de
+  // contrato en backend — ver FEEDBACK_BACKEND_FACTURACION.md. `ReservaRequest`
+  // hoy tiene `additionalProperties: false`, así que hasta que backend lo
+  // acepte explícitamente, es posible que este campo se rechace o se ignore
+  // silenciosamente.
+  facturacion?: FacturacionInput;
 }
 
 export async function crearReserva(
@@ -70,13 +83,20 @@ export async function cancelarReserva(
   motivo: string,
   accessToken: string,
 ): Promise<Reserva> {
-  const res = await fetch(`${RESERVAS_URL}/${id}/cancelar`, {
+  const url = `${RESERVAS_URL}/${id}/cancelar`;
+  if (__DEV__) console.log('[Reversa][BACKEND] POST', url, { motivo });
+  const res = await fetch(url, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ motivo }),
   });
   await throwIfNotOk(res, 'No se pudo cancelar la reserva.');
-  return res.json();
+  const data = await res.json();
+  if (__DEV__) {
+    console.log('[Reversa][BACKEND] respuesta cruda:', data);
+    console.log('[Reversa][BACKEND] estadoPago tras cancelar:', data?.estadoPago);
+  }
+  return data;
 }
 
 export async function registrarPago(

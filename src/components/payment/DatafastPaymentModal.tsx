@@ -80,6 +80,13 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
     setCheckoutId(null);
 
     try {
+      if (__DEV__) {
+        console.log(
+          DATAFAST_DIAGNOSTICO_DIRECTO_UAT
+            ? '[Datafast][BYPASS] creando checkout directo, sin pasar por el backend'
+            : '[Datafast][BACKEND] creando checkout vía backend',
+        );
+      }
       const { checkoutId: nuevoCheckoutId } = DATAFAST_DIAGNOSTICO_DIRECTO_UAT
         ? await crearCheckoutDatafastDirecto(total)
         : await fetchAuthorized(accessToken => crearCheckoutDatafast(reservaId, accessToken));
@@ -115,6 +122,13 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
       if (reservaId == null) return;
       setStatus('verifying');
       try {
+        if (__DEV__) {
+          console.log(
+            DATAFAST_DIAGNOSTICO_DIRECTO_UAT
+              ? '[Datafast][BYPASS] verificando pago directo, sin pasar por el backend'
+              : '[Datafast][BACKEND] verificando pago vía backend',
+          );
+        }
         const resultado = DATAFAST_DIAGNOSTICO_DIRECTO_UAT
           ? await verificarPagoDatafastDirecto(resourcePath)
           : await fetchAuthorized(accessToken =>
@@ -212,20 +226,105 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: #f5f7fa;
-          padding: 16px;
+          background: ${Colors.background};
+          padding: ${Spacing.md}px;
         }
+
+        /* Estilo "plano" (style=plain): el widget deja de traer su propio look
+           y estas reglas son las que realmente definen la apariencia. */
         .wpwl-form {
-          background: white;
-          border-radius: 12px;
-          padding: 16px;
+          background: ${Colors.white};
+          border-radius: ${BorderRadius.lg}px;
+          padding: ${Spacing.md}px;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+
+        .wpwl-label {
+          font-size: ${FontSize.sm}px;
+          font-weight: ${FontWeight.semiBold};
+          color: ${Colors.gray700};
+          margin-bottom: ${Spacing.xxs}px;
+        }
+
+        .wpwl-group {
+          margin-bottom: ${Spacing.sm}px;
+        }
+
+        /* Campos de texto (cardHolder/expiry, inputs normales) e iframes de
+           cardNumber/cvv a 44px de alto — el mínimo recomendado para que el
+           toque sea cómodo. La caja visible es SIEMPRE el wrapper de afuera:
+           cardNumber/cvv son <iframe> de Datafast que además cargan la clase
+           .wpwl-control, así que hay que anular su propio borde/padding para
+           no terminar con una caja dentro de otra. */
+        .wpwl-control,
+        .wpwl-wrapper-cardNumber,
+        .wpwl-wrapper-cvv {
+          height: 44px;
+          width: 100%;
+          border: 1px solid ${Colors.border};
+          border-radius: ${BorderRadius.sm}px;
+          padding: 0 ${Spacing.sm}px;
+          font-size: ${FontSize.md}px;
+        }
+
+        .wpwl-wrapper-cardNumber .wpwl-control,
+        .wpwl-wrapper-cvv .wpwl-control {
+          height: 100%;
+          border: none;
+          border-radius: 0;
+          padding: 0;
+        }
+
+        .wpwl-control:focus,
+        .wpwl-wrapper-cardNumber:focus-within,
+        .wpwl-wrapper-cvv:focus-within {
+          border-color: ${Colors.accentTeal};
+        }
+
+        .wpwl-hint,
+        .wpwl-copyright {
+          font-size: ${FontSize.xs}px;
+          color: ${Colors.gray500};
+        }
+
         .wpwl-button-pay {
-          background: #1e3a5f !important;
-          color: #14b8a6 !important;
+          height: 44px;
+          width: 100%;
+          border-radius: ${BorderRadius.sm}px;
+          background: ${Colors.primaryDark} !important;
+          color: ${Colors.white} !important;
+          font-size: ${FontSize.md}px;
+          font-weight: ${FontWeight.bold};
+          border: none;
+        }
+
+        /* Tablets y pantallas más anchas: el formulario no necesita ocupar
+           todo el ancho disponible. */
+        @media (min-width: 480px) {
+          .wpwl-form {
+            max-width: 420px;
+            margin: 0 auto;
+          }
         }
       </style>
+      <script>
+        var wpwlOptions = {
+          style: 'plain',
+          locale: 'es',
+          iframeStyles: {
+            'card-number-placeholder': {
+              'color': '${Colors.gray400}',
+              'font-size': '${FontSize.md}px',
+              'font-family': '-apple-system, BlinkMacSystemFont, Roboto, sans-serif'
+            },
+            'cvv-placeholder': {
+              'color': '${Colors.gray400}',
+              'font-size': '${FontSize.md}px',
+              'font-family': '-apple-system, BlinkMacSystemFont, Roboto, sans-serif'
+            }
+          }
+        };
+      </script>
       <script src="${widgetBaseUrl}/v1/paymentWidgets.js?checkoutId=${id}"></script>
     </head>
     <body>

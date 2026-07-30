@@ -98,8 +98,15 @@ export default function SettingsScreen() {
         <Text style={styles.groupLabel}>SOPORTE</Text>
         <View style={styles.settingsGroup}>
           <SettingItem label="Centro de ayuda" onPress={() => {}} />
-          <SettingItem label="Términos y condiciones" onPress={() => {}} />
-          <SettingItem label="Política de privacidad" onPress={() => {}} isLast />
+          <SettingItem
+            label="Términos y condiciones"
+            onPress={() => router.push('/terminos-condiciones')}
+          />
+          <SettingItem
+            label="Política de privacidad"
+            onPress={() => router.push('/politica-privacidad')}
+            isLast
+          />
         </View>
 
         <Text style={styles.groupLabel}>APLICACIÓN</Text>

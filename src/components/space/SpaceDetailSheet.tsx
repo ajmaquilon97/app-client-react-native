@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   Platform,
@@ -36,11 +37,22 @@ import {
   crearReserva,
   registrarPago,
   cancelarReserva,
+  FacturacionInput,
 } from '@/services/reservas.service';
+import { SERVICE_FEE_RATE } from '@/config/paymentConfig';
 import LocationMap from '@/components/space/LocationMap';
 import DaySelector from '@/components/space/DaySelector';
 import HourRangeSelector from '@/components/space/HourRangeSelector';
 import { MIS_RESERVAS_QUERY_KEY } from '@/hooks/useMisReservas';
+
+// Si el cliente no completa los datos de facturación, se manda como
+// "consumidor final" (identificación genérica estándar en Ecuador para
+// facturas sin RUC/cédula real del comprador).
+const FACTURACION_CONSUMIDOR_FINAL: FacturacionInput = {
+  identificacion: '9999999999999',
+  nombre: 'Consumidor Final',
+  correo: '',
+};
 
 interface SpaceDetailSheetProps {
   visible: boolean;
@@ -69,6 +81,10 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   const [creandoReserva, setCreandoReserva] = useState(false);
   const [reservaCreada, setReservaCreada] = useState<Reserva | null>(null);
 
+  const [identificacionFacturacion, setIdentificacionFacturacion] = useState('');
+  const [razonSocialFacturacion, setRazonSocialFacturacion] = useState('');
+  const [correoFacturacion, setCorreoFacturacion] = useState('');
+
   const [disponibilidad, setDisponibilidad] = useState<Disponibilidad | null>(null);
   const [disponibilidadLoading, setDisponibilidadLoading] = useState(false);
   const [disponibilidadError, setDisponibilidadError] = useState<string | null>(null);
@@ -80,6 +96,9 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       setHoraHasta(null);
       setShowPayment(false);
       setReservaCreada(null);
+      setIdentificacionFacturacion('');
+      setRazonSocialFacturacion('');
+      setCorreoFacturacion('');
       setDisponibilidad(null);
       setDisponibilidadError(null);
     }
@@ -167,6 +186,16 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       return;
     }
 
+    const facturacionCompletada =
+      identificacionFacturacion.trim() || razonSocialFacturacion.trim() || correoFacturacion.trim();
+    const facturacion: FacturacionInput = facturacionCompletada
+      ? {
+          identificacion: identificacionFacturacion.trim(),
+          nombre: razonSocialFacturacion.trim(),
+          correo: correoFacturacion.trim(),
+        }
+      : FACTURACION_CONSUMIDOR_FINAL;
+
     setCreandoReserva(true);
     try {
       const nueva = await fetchAuthorized(accessToken =>
@@ -176,6 +205,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
             fechaInicio: toLocalDateTimeString(selectedDate, horaDesde),
             fechaFin: toLocalDateTimeString(selectedDate, horaHasta),
             totalHoras: cantidadHoras,
+            facturacion,
           },
           user?.id ?? '',
           accessToken,
@@ -195,7 +225,20 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     } finally {
       setCreandoReserva(false);
     }
-  }, [espacio, selectedDate, horaDesde, horaHasta, disponibilidad, cantidadHoras, user, fetchAuthorized, queryClient]);
+  }, [
+    espacio,
+    selectedDate,
+    horaDesde,
+    horaHasta,
+    disponibilidad,
+    cantidadHoras,
+    user,
+    fetchAuthorized,
+    queryClient,
+    identificacionFacturacion,
+    razonSocialFacturacion,
+    correoFacturacion,
+  ]);
 
   const fechaHoraTexto =
     selectedDate && horaDesde != null && horaHasta != null
@@ -249,7 +292,9 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   if (!espacio) return null;
 
   const precioDelDia = disponibilidad?.tarifa?.precio ?? espacio.precio;
-  const totalReserva = cantidadHoras > 0 ? precioDelDia * cantidadHoras : 0;
+  const subtotalReserva = cantidadHoras > 0 ? precioDelDia * cantidadHoras : 0;
+  const comisionServicio = subtotalReserva * SERVICE_FEE_RATE;
+  const totalReserva = subtotalReserva + comisionServicio;
 
   return (
     <Modal
@@ -438,11 +483,58 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                       </Text>
                       <Text style={styles.costValue}>${precioDelDia} c/u</Text>
                     </View>
+                    <View style={styles.costRow}>
+                      <Text style={styles.costLabel}>Subtotal:</Text>
+                      <Text style={styles.costValue}>${subtotalReserva.toFixed(2)}</Text>
+                    </View>
+                    <View style={styles.costRow}>
+                      <Text style={styles.costLabel}>
+                        Comisión de servicio ({(SERVICE_FEE_RATE * 100).toFixed(0)}%):
+                      </Text>
+                      <Text style={styles.costValue}>${comisionServicio.toFixed(2)}</Text>
+                    </View>
                     <View style={styles.costDivider} />
                     <View style={styles.costRow}>
                       <Text style={styles.costTotal}>Total a pagar:</Text>
                       <Text style={styles.costTotalValue}>${totalReserva.toFixed(2)}</Text>
                     </View>
+
+                    <View style={styles.facturacionDivider} />
+                    <Text style={styles.facturacionTitle}>Datos de facturación (opcional)</Text>
+                    <Text style={styles.facturacionHelper}>
+                      Si no los completas, la factura se emite a "Consumidor Final".
+                    </Text>
+
+                    <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Cédula o RUC</Text>
+                    <TextInput
+                      value={identificacionFacturacion}
+                      onChangeText={setIdentificacionFacturacion}
+                      placeholder="Ej. 0102030405"
+                      placeholderTextColor={Colors.gray400}
+                      keyboardType="number-pad"
+                      maxLength={13}
+                      style={styles.facturacionInput}
+                    />
+
+                    <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Razón social / Nombre</Text>
+                    <TextInput
+                      value={razonSocialFacturacion}
+                      onChangeText={setRazonSocialFacturacion}
+                      placeholder="Nombre o empresa a facturar"
+                      placeholderTextColor={Colors.gray400}
+                      style={styles.facturacionInput}
+                    />
+
+                    <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Correo electrónico</Text>
+                    <TextInput
+                      value={correoFacturacion}
+                      onChangeText={setCorreoFacturacion}
+                      placeholder="correo@ejemplo.com"
+                      placeholderTextColor={Colors.gray400}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      style={styles.facturacionInput}
+                    />
                   </View>
                 )}
 
@@ -886,6 +978,35 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: FontWeight.extraBold,
     color: Colors.primaryDark,
+  },
+  facturacionDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginTop: 4,
+  },
+  facturacionTitle: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+    color: Colors.gray700,
+  },
+  facturacionHelper: {
+    fontSize: FontSize.xs,
+    color: Colors.gray500,
+    marginTop: -4,
+  },
+  facturacionInputLabel: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  facturacionInput: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.sm,
+    fontSize: FontSize.base,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.white,
   },
   reserveButton: {
     backgroundColor: Colors.primaryDark,

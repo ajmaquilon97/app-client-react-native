@@ -27,7 +27,9 @@ export async function crearCheckoutDatafast(
   reservaId: number,
   accessToken: string,
 ): Promise<DatafastCheckout> {
-  const res = await fetch(`${RESERVAS_URL}/${reservaId}/pago/datafast/checkout`, {
+  const url = `${RESERVAS_URL}/${reservaId}/pago/datafast/checkout`;
+  if (__DEV__) console.log('[Datafast][BACKEND] POST', url);
+  const res = await fetch(url, {
     method: 'POST',
     headers: authHeaders(accessToken),
   });
@@ -35,7 +37,7 @@ export async function crearCheckoutDatafast(
   const data = await res.json();
   // El swagger no documenta el shape exacto de esta respuesta todavía — logueamos
   // el crudo para poder confirmar/corregir el parseo contra el backend real.
-  if (__DEV__) console.log('[Datafast] checkout creado, respuesta cruda:', data);
+  if (__DEV__) console.log('[Datafast][BACKEND] checkout creado, respuesta cruda:', data);
   return data;
 }
 
@@ -59,12 +61,11 @@ export async function verificarPagoDatafast(
   resourcePath: string,
   accessToken: string,
 ): Promise<DatafastVerificacion> {
-  const res = await fetch(
-    `${RESERVAS_URL}/${reservaId}/pago/datafast/status?resourcePath=${encodeURIComponent(resourcePath)}`,
-    { headers: authHeaders(accessToken) },
-  );
+  const url = `${RESERVAS_URL}/${reservaId}/pago/datafast/status?resourcePath=${encodeURIComponent(resourcePath)}`;
+  if (__DEV__) console.log('[Datafast][BACKEND] GET', url);
+  const res = await fetch(url, { headers: authHeaders(accessToken) });
   await throwIfNotOk(res, 'No se pudo verificar el pago con Datafast.');
   const data = await res.json();
-  if (__DEV__) console.log('[Datafast] verificación de pago, respuesta cruda:', data);
+  if (__DEV__) console.log('[Datafast][BACKEND] verificación de pago, respuesta cruda:', data);
   return data;
 }

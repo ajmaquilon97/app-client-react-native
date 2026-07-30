@@ -1,0 +1,404 @@
+POLÍTICA DE PROTECCIÓN DE DATOS PERSONALES ECUADOR
+Última actualización: 09/06/2023
+
+ANTECEDENTES PRELIMINARES
+
+Esta política de protección de datos personales (en lo sucesivo denominada Política de protección de datos personales o simplemente Política) establece las prácticas de recopilación y transmisión de los datos personales en los Canales digitales con el objetivo de informarle de las maneras en las que a través de nuestro sitio web(www.pedidosya.com.ec) o a través de nuestra aplicación PedidosYa para dispositivos móviles (en adelante, el “Portal”) recopilamos sus datos personales, del uso que se le da a dicha información y las formas en que compartiremos cualquier dato personal que decide proporcionar a DELIVERY HERO DH E-COMMERCE ECUADOR S.A.S. (En adelante PedidosYa).
+
+Por favor, tómese el tiempo suficiente para leer esta Política detenidamente.
+
+Los Canales digitales pueden contener enlaces a sitios web de terceros. Si accede a un sitio web de terceros a través de uno de dichos enlaces, tenga en cuenta que presentan sus propias políticas de protección de datos personales, por lo que PedidosYa no acepta responsabilidad alguna por las mismas o por el procesamiento de los datos personales que se realice en dichos sitios web. Revise las políticas correspondientes antes de enviar información personal a tales sitios web de tercero
+
+Esta Política aplica a todos los usuarios de nuestro Portal.
+
+Al dar su consentimiento a la siguiente Política, usted autoriza expresamente DELIVERY HERO DH E-COMMERCE ECUADOR S.A.S. (“PedidosYa”) y por tanto otorga su aceptación expresa para que PedidosYa recopile, procese, use y trate sus datos personales, de conformidad con la normativa vigente en Ecuador, así como cualquier norma que la modifique o reemplace en el futuro. (la “Normativa”).
+
+Los usuarios garantizan y responden, en cualquier caso, de la veracidad, exactitud, vigencia y autenticidad de los Datos Personales facilitados, y se comprometen a mantenerla debidamente actualizada.
+
+PRINCIPIOS QUE ORIENTAN LA POLÍTICA
+
+PedidosYa y sus sociedades relacionadas por vínculos de subordinación o control en Ecuador o en una jurisdicción o territorio diferente (en adelante las "Sociedades Relacionadas"), en el tratamiento de la información de sus usuarios, respeta y respetará sus derechos, aplicando y garantizando los siguientes principios orientadores de la Política:
+
+Principio de Juridicidad: En el tratamiento de datos personales de los usuarios se dará aplicación a las disposiciones vigentes y aplicables, incluyendo las disposiciones contractuales pactadas con los usuarios.
+
+Principio de Libertad: El tratamiento y transferencia de datos personales sólo se llevará a cabo con el consentimiento, libre, previo, informado, específico e inequívoco del usuario. Los datos personales que no tengan el carácter de datos públicos en los términos de la Normativa, no podrán ser obtenidos o divulgados sin previa autorización escrita de su titular, o en ausencia de mandato legal o judicial que releve el consentimiento.
+
+Principio de Finalidad: El tratamiento de datos personales a los que tenga acceso y sean almacenados y recogidos por PedidosYa, estarán subordinados y atenderán una finalidad determinadas, explícitas, legítimas y comunicadas al titul
+
+Principio de Calidad y Exactitud: La información protegida sujeta a tratamiento debe ser exactos, íntegros, precisos, completos, comprobables, claros; y, de ser el caso, debidamente actualizados PedidosYa no será responsable frente al usuario cuando sean objeto de tratamiento, datos o información parcial, incompleta o fraccionada o que induzca a error, que hubiere sido proporcionada por el usuario sin que existiera la forma de ser verificada la veracidad o calidad de la misma por parte de PedidosYa o si la misma hubiere sido entregada o divulgada por el usuario declarando o garantizando, de cualquier forma, su veracidad o calidad. El usuario tendrá derecho a solicitar en cualquier momento que se corrijan o actualicen los datos que fueren inexactos, incompletos, erróneos, falsos, incorrectos o imprecisos.
+
+Principio de Transparencia: El tratamiento de datos personales deberá ser transparente, por lo que toda información o comunicación relativa a este tratamiento deberá ser fácilmente accesible y fácil de entender y se deberá utilizar un lenguaje sencillo y claro.
+
+Principio de Seguridad: Los datos personales protegidos bajo la Política sujetos a tratamiento por PedidosYa, serán objeto de protección de conformidad a los estándares normales de la industria, a través de la adopción de medidas tecnológicas de protección, protocolos, y medidas administrativas que sean necesarias para otorgar seguridad a los registros y repositorios electrónicos evitando su adulteración, modificación, pérdida, consulta, y, en general, en contra de cualquier uso, acceso o tratamiento no autorizado.
+
+Principio de Confidencialidad: El tratamiento de datos personales debe concebirse sobre la base del debido sigilo y secreto, es decir, no debe tratarse o comunicarse para un fin distinto para el cual fueron recogidos, a menos que concurra una de las causales que habiliten un nuevo tratamiento conforme los supuestos de tratamiento legítimo señalados la Ley.
+
+Principio de Conservación: Los datos personales serán conservados durante un tiempo no mayor al necesario para cumplir con la finalidad de su tratamiento.
+
+Principio de Lealtad: El tratamiento de datos personales deberá ser leal, por lo que para los titulares debe quedar claro que se están recogiendo, utilizando, consultando o tratando de otra manera, datos personales que les conciernen, así como las formas en que dichos datos son o serán tratados.
+
+Principio de Pertinencia y minimización de datos personales: Los datos personales deben ser pertinentes y estar limitados a lo estrictamente necesario para el cumplimiento de la finalidad del tratamiento.
+
+Principio de Proporcionalidad: El tratamiento debe ser adecuado, necesario, oportuno, relevante y no excesivo con relación a las finalidades para las cuales hayan sido recogidos o a la naturaleza misma, de las categorías especiales de datos.
+
+INFORMACIÓN QUE PEDIDOSYA RECOPILA Y USO DE LA INFORMACIÓN RECOPILADA
+
+El responsable de la base de datos es PedidosYa, con domicilio en Fernando Ayarza N13-16 y Carlos Montúfar, parroquia Iñaquito, Ciudad de Quito (Provincia de Pichincha, Ecuador). Somos responsables de los datos de carácter personal proporcionados a través del Portal, así como los que pudiera facilitar en el futuro en el marco de su relación con nosotros.
+
+A continuación, informamos a nuestros usuarios qué datos recolectamos, para qué propósitos y bajo qué circunstancias los compartimos con otros.
+
+Principalmente recolectamos sus datos personales a través de los siguientes medios:
+
+Información proporcionada por el usuario
+Los datos personales que proporciona el usuario incluyen los datos introducidos dentro del Portal o dentro de nuestro sitio web, y pueden incluir datos identificativos, de contacto entre otros.
+
+Información de encuestas
+Podemos pedirle que complete encuestas que utilizamos con fines de investigación. En tales circunstancias, se recopiló la información proporcionada en dichas encuestas.
+
+Uso del Sitio web y Portal
+Cuando un usuario visita El Portal, se recopilan detalles e información de dichas visitas a través de cookies y otras tecnologías de seguimiento. Entre esta información, se incluye su dirección IP y nombre de dominio, la versión del navegador y el sistema operativo, datos de tráfico y ubicación, registros web, los recursos a los que accede y otros datos de comunicación.
+
+Datos suministrada por otras fuentes
+Podemos recopilar sus datos personales de fuentes públicas y de terceros.
+
+TIPOLOGÍAS DE DATOS QUE RECOLECTAMOS
+
+Los datos personales son información con la que podemos relacionar a nuestros usuarios directa o indirectamente, tales como su nombre y apellidos, dirección, número de teléfono, fecha de nacimiento, datos de localización o dirección de correo electrónico y todo otro dato que usted voluntariamente nos provea.
+
+A continuación, le mostramos qué datos recolectamos:
+
+Cuando usted visita nuestro Portal pero no se registra ni realiza un pedido, recopilamos los siguientes datos personales:
+
+CATEGORÍA DE INFORMACIÓN
+
+EXPLICACIÓN
+
+Datos identificativos:
+
+Identificación del dispositivo, otros identificadores del dispositivo, hardware.
+
+Datos de comportamiento:
+
+Duración de uso del sitio web y origen.
+
+Si no sólo visita el Portal, sino que también desea iniciar sesión para ver, por ejemplo, sus antiguos pedidos, además de los datos antes mencionados, recopilamos los siguientes datos personales:
+
+CATEGORÍA DE INFORMACIÓN
+
+EXPLICACIÓN
+
+Datos identificativos:
+
+Nombre de usuario, contraseña.
+
+Datos de contacto:
+
+Teléfono, correo electrónico, dirección domiciliaria
+
+Datos personales que recogemos al visitar nuestra página web, al registrarse y al realizar pedidos:
+
+Para aprovechar todas las prestaciones ofrecidas por PedidosYa, el usuario puede iniciar sesión y realizar su pedido. Naturalmente, en este caso se recogerán más datos, según se describe a continuación, de acuerdo con la información que usted proporcione.
+
+Los campos necesarios para la gestión de pedidos están marcados como obligatorios. Sin esta información no podemos procesar sus pedidos. El resto de la información que no se muestra como campos obligatorios es opcional.
+
+Si usted nos proporciona libre y voluntariamente esta información, nos ayudará a mejorar el servicio que le préstamos. Sin embargo, la omisión de esta información no le impedirá aprovechar todas las prestaciones ofrecidas por PedidosYa. El alcance depende de la información que usted proporcione. Pero la información básica es la siguiente:
+
+CATEGORÍA DE INFORMACIÓN
+
+EXPLICACIÓN
+
+Información de cuenta:
+
+Esta información puede incluir el nombre completo, domicilio, fecha de nacimiento, número telefónico, email, documento de identidad o número de documentos de identificación número de socio en programas de promociones asociados a PedidosYa, foto de perfil.
+
+Ubicación:
+
+Si el usuario autoriza el tratamiento de sus datos de ubicación recopilamos dicha información precisa o aproximada a través de datos como GPS, dirección IP y wifi. Esta información se recopila cuando PedidosYa funciona en primer plano y/o cuando está en segundo plano si el usuario concede permiso a dichos efectos en su dispositivo móvil o en los ajustes de PedidosYa.
+
+Información de acceso:
+
+Mail y contraseña.
+
+Información del dispositivo desde el que visita nuestro sitio web:
+
+Identificación del dispositivo, sistema operativo y/u otros identificadores del dispositivo, hardware.
+
+Información de conexión:
+
+Hora, fecha, duración de uso del sitio web y origen.
+
+Comportamiento en página web:
+
+Información sobre el tipo de servicio que solicita, el tipo de pedido que realiza, el detalle del pedido, la información de entrega, la fecha y hora en la que se realiza el pedido, el precio y la forma de pago.
+
+Datos de salud:
+
+Información sobre diagnóstico y prescripción/receta médica con el fin de comunicar a la farmacia a través de la cual se está realizando la compra. Incidentalmente podremos acceder a otros datos tales como enfermedades, o discapacidades, que sin embargo no requerimos o utilizamos, pero pueden encontrarse dentro de la imagen o detalle de la receta. Esta información se almacena por un periodo de hasta 45 días.
+
+Datos Crediticios:
+
+Número de cuenta, número de tarjeta de crédito/debido, código de seguridad
+
+Otra información:
+
+Información que el usuario nos provea voluntariamente mientras utiliza el sitio web o el Portal e información de otras fuentes tales como redes sociales o aplicaciones que utilicen nuestra interfaz de conexión u otras bases de datos públicas.
+
+En cualquiera de los casos antes indicados, por favor tenga presente que toda información que usted nos provea según lo antes descrito, PedidosYa la considera datos personales y por tanto si nos provee datos personales de otra persona, PedidosYa no será responsable de obtener el consentimiento previo de esa otra persona para tratar dichos datos personales según estas Políticas de protección de datos personales, carga que le será imputable a usted de forma exclusiva por hacer uso y tratamiento de datos personales de terceros, entendiéndose en todo momento que, respecto de dichos datos, es usted es el Responsable del Tratamiento.
+
+USO DE LOS DATOS PERSONALES DE LOS USUARIOS
+
+En esta sección, se establecen los fines por los que se recopila los datos personales del usuario mediante los canales digitales y, de acuerdo con las obligaciones que impone la legislación ecuatoriana, se identifican las razones jurídicas que fundamentan el procesamiento de la información.
+
+Estas razones jurídicas se recogen en la Ley Orgánica de Protección de Datos, que permite a las empresas procesar datos personales únicamente de acuerdo con las razones jurídicas específicas que se establecen en la ley.
+
+Tenga en cuenta que, además de las divulgaciones que se identifican a continuación, se puede revelar información personal por los fines que se explican en este documento a proveedores, contratistas, agentes, consejeros (ya sean legales, financieros, comerciales o de otro tipo) de PedidosYa que actúen en nuestro nombre.
+
+Solo recolectamos sus datos personales, previa su autorización, cuando sea estrictamente necesario para el cumplimiento de las obligaciones contractuales y cuya finalidad sea lícita y previamente definida. PedidosYa recopila y usa su información personal para los propósitos especificados en esta Política o en las secciones relevantes de nuestro Portal. Los datos serán almacenados y custodiados por PedidosYa por todo el tiempo que usted se encuentre activo en nuestra plataforma.
+
+PedidosYa utiliza su información para los siguientes fines:
+
+Prestación de servicios:
+
+Utilizamos sus datos personales para ofrecer, personalizar, mantener y mejorar la prestación de los servicios que les ofrecemos a nuestros usuarios, así como realizar las siguientes actividades:
+
+Administrar el sitio web.
+
+Crear y actualizar su cuenta.
+
+Verificar su perfil.
+
+Mejorar su experiencia de navegación personalizando el Portal.
+
+Habilitarlo a usted para el uso de los servicios disponibles en el Portal.
+
+Enviarle comunicados comerciales generales via correo electrónico.
+
+Realizar comentarios y valoraciones de los comercios adheridos, su oferta y productos.
+
+Procesar y realizar el pago de los pedidos.
+
+Controlar la ruta del pedido para verificar su entrega.
+
+Activar funciones para personalizar su cuenta.
+
+Servicio de Atención al Cliente:
+
+Cuando el usuario se pone en contacto con nuestro Servicio de Atención al Cliente para obtener información o para presentar un reclamo, almacenamos la información que el usuario nos proporciona. A modo de ejemplo: la razón para contactarnos o en qué entrega faltaba algo. Dependiendo del motivo del contacto, los datos personales pueden variar. Como queremos mejorar nuestro servicio para usted, almacenamos la comunicación en su cuenta. De esta manera podemos responder a sus preguntas con mayor rapidez.
+
+Protección y seguridad:
+
+Utilizamos sus datos personales para mantener la protección, seguridad e integridad de nuestros servicios y usuarios. Asimismo, utilizamos la información para prevenir fraudes.
+
+Investigación y desarrollo:
+
+Podemos utilizar la información que recopilamos para testear, investigar, analizar y desarrollar productos. Esto permite que podamos mejorar en términos de seguridad y que podamos desarrollar nuevas funciones o servicios.
+
+Publicidad:
+
+Podemos enviarte correos electrónicos, SMS, push notifications o realizar llamadas a tu móvil, teléfono fijo o cualquier otro dispositivo que sea susceptible de recibir llamadas para ofrecerte váuchers, descuentos y promociones, realizar encuestas y para realizar encuestas o sondeos de opinión para mejorar nuestro servicio y la calidad de este. El usuario puede oponerse al tratamiento posterior de los datos con fines publicitarios con cada correo electrónico o en los ajustes en el Portal.
+
+Marketing:
+
+Queremos evitar newsletters genéricas y medidas de marketing incontroladas. Por lo tanto, seleccionamos las ofertas que mejor se adapten a sus intereses y nos ponemos en contacto con usted si creemos que la información puede ser de su interés. Puede oponerse al tratamiento posterior de los datos con fines publicitarios con cada correo electrónico.
+
+PedidosYa podrá utilizar la información para promocionar y procesar concursos y sorteos, entregas de premios y ofrecerle publicidad y contenidos relacionados con nuestros servicios y los de nuestros socios comerciales o comercios adheridos.
+
+Asimismo, PedidosYa podrá enviarle muestras de productos.
+
+Procedimientos judiciales o requerimientos administrativos:
+
+Podremos utilizar sus datos personales en caso de que nos sea requerido por orden judicial o resolución administrativa, regulatoria, arbitral, administrativa, y en general, cuando sea requerido por cualquier autoridad gubernamental competente.
+
+Procedimiento relacionado con el pago- Key Chain:
+
+Utilizamos sus datos personales para procesar los pagos en nuestra plataforma digital, lo cual involucra compartirlos con entidades financieras y proveedores tecnológicos. A través de Key Chain, cuando usted ingresa datos crediticios o contraseñas, si usted así lo autoriza estos pueden almacenarse y cifrarse dentro de su dispositivo móvil. En este sentido la autenticación se realizará a través del dispositivo móvil por lo que no requerimos que ingrese estos datos en nuestro Portal. Nosotros no almacenamos o tratamos tus datos biométricos, sólo utilizamos el resultado de tu verificación de identidad que se realiza dentro de tu dispositivo.
+
+Procesos relacionados con tratamientos de salud o enfermedades:
+
+Podemos tratar sus datos personales relacionados con su salud para remitir a los proveedores de productos médicos, los cuales deben verificar la validez de una receta médica para despachar ciertos productos solicitados.
+
+Para este procedimiento, tomamos como base de legitimación, su consentimiento y el cumplimiento de una obligación legal.
+
+Soporte y seguimiento de procesos:
+
+En situaciones PedidosYa utilizará sus datos personales para dar seguimiento y soporte a las actividades descritas en el uso de tratamiento de datos.
+
+Para esto tomamos como base de legitimación el interés legítimo y el cumplimiento de obligaciones contractuales.
+
+Verificación de edad:
+
+Utilizamos sus datos personales para comprobar la edad de los usuarios y proteger los datos de niños, niñas y adolescentes. Así también verificamos su edad para la venta de productos regulados tales como tabaco y/o alcohol.
+
+Autentificación:
+
+Dentro del proceso de autentificación, utilizamos el resultado de la verificación biométrica realizada a través de tu dispositivo móvil. No almacenamos datos biométricos.
+
+SOBRE EL PAGO ONLINE
+
+PAGO ONLINE
+
+Puedes realizar el pago de tus pedidos de forma online y al hacerlo rigen los siguientes términos y condiciones:
+
+Recopilamos cierta información que nos resulta necesaria para procesar los pagos, como (i) su código postal; (ii) su número de teléfono móvil; (iii) detalles sobre su historial de transacciones en el Portal; (iv) información bancaria (emisor de la tarjeta y si es de débito o de crédito); (v) dirección de correo electrónico del usuario con el que se realiza el pedido; y (vi) dirección de entrega de pedido.
+
+PedidosYa ofrece a los Usuarios la posibilidad de almacenar en el Portal información adicional de sus métodos de pago (tarjeta de crédito o de débito) para facilitar su uso, evitando que el Usuario deba introducir los datos de la tarjeta cada vez que quiera realizar un pago. Para la reutilización de la información del método de pago, PedidosYa ofrece a los Usuarios la posibilidad de configurar los controles de acceso adicionales dispuestos en el Portal. En caso de que sea necesario, PedidosYa utilizará la información biométrica almacenada por el dispositivo del Usuario, únicamente a los fines de permitir al Usuario verificar su identidad y culminar con el proceso de pago.
+
+Entidades que nos ayudan con el funcionamiento de pago online
+Nos aseguramos de que todos los proveedores que pueden tener acceso a sus datos personales actúen de manera confidencial, leal y cumpliendo estrictamente la normativa aplicable sobre protección de datos. A tal fin, les exigimos que formalicen con nosotros acuerdos específicos que regulan la utilización por su parte de tus datos personales, por ejemplo, Contratos de Transmisión de Datos personales en los que se les exijan condiciones adecuadas de seguridad para el tratamiento de datos personales.
+
+Entidades que prestan servicios de procesamiento de datos
+En PedidosYa recurrimos a proveedores financieros para ejecutar y procesar los pagos de los pedidos que realice, y son estos quienes recopilan la información de su tarjeta de crédito o débito.
+
+El pago se realiza directamente al proveedor financiero y dependerá de este último la autorización del pago.
+
+ACTUALIZACIÓN DE LA INFORMACIÓN
+
+El Usuario manifiesta que todos los datos facilitados por él son ciertos y correctos, y se obliga a mantenerlos actualizados. A estos efectos, responde de la veracidad de los datos que comunique y los mantendrá convenientemente actualizados, de tal forma que responda a su situación real. Será responsable de las informaciones falsas, excesivas o inexactas que proporcione. Si usted actualiza y/o modifica sus datos personales, “PedidosYa” conservará la información personal anterior por motivos de seguridad y control del fraude por el tiempo en el cual usted se mantenga como usuario activo de la plataforma.
+
+CON QUIÉN COMPARTIMOS SUS DATOS PERSONALES
+
+En el evento que PedidosYa, en el ejercicio de sus actividades propias, utilice, transmita o transfiera internacionalmente datos personales garantizará el cumplimiento de los principios aplicables establecidos en la Sección 2 de la presente Política, así como la normativa aplicable.
+
+Concretamente PedidosYa, en el giro ordinario de sus negocios podrá incorporar la información que Ud. nos provea dentro de sus sistemas de información. PedidosYa, como responsable del tratamiento garantiza que los sistemas de información cumplen en su integridad la Política y la Normativa.
+
+El usuario reconoce con la aceptación de la Política que, de presentarse una venta, fusión, consolidación, cambio de control societario, transferencia sustancial de activos, reorganización o liquidación de PedidosYa, PedidosYa podrá transferir, enajenar o asignar sus datos personales a una o más partes relevantes, incluidas Sociedades Relacionadas o terceros.
+
+En la siguiente sección le indicamos a quién le informamos sus datos y en qué condiciones, así como a qué países los transferimos.
+
+Terceros tienen acceso a los datos personales
+
+Empresas relacionadas a PedidosYa
+
+Podremos compartir datos con nuestras empresas relacionadas para facilitar y mejorar el procesamiento de nuestros datos sobre servicios. Por ejemplo, en el Espacio Económico Europeo (EEE) y Uruguay, PedidosYa procesa y almacena información en nombre de sus filiales internacionales. Así también podemos compartir sus datos personales en otros países en los que PedidosYa cuenta con operaciones, cuando sea necesaria para prestar nuestros servicios.
+
+Comercios adheridos a PedidosYa
+
+PedidosYa comparte los datos estrictamente necesarios con los comercios adheridos a efectos de que los comercios adheridos puedan concretar los pedidos de los usuarios.
+
+Proveedores de servicios y comercios adheridos a PedidosYa
+
+PedidosYA puede facilitar información a sus proveedores, consultores, socios de marketing, empresas de investigación y otros proveedores de servicios o socios comerciales. A modo de ejemplo PedidosYA podrá facilitar información a:
+
+- Procesadores y facilitadores de pagos
+
+- Proveedores de almacenamiento en la nube
+
+- Socios de marketing y proveedores de plataformas de marketing
+
+- Proveedores de análisis de datos
+
+- Proveedores de investigación, incluidos los que implementan estudios o proyectos de investigación en colaboración con PedidosYa o en su nombre
+
+- Proveedores que ayudan a PedidosYa a mejorar la seguridad de sus apps
+
+- Consultores y otros proveedores de servicios profesionales
+
+Otros
+
+PedidosYa podría compartir su información de otra manera que no sea la descrita en esta política si así se lo notificamos previamente y obtenemos de usted previamente la aceptación expresa correspondiente.
+
+A QUÉ PAÍSES TRANSFERIMOS SUS DATOS
+
+Procesamos sus datos principalmente dentro de Ecuador, Uruguay y dentro de la Unión Europea (UE) y el Espacio Económico Europeo (EEE). Sin embargo, algunos de nuestros proveedores de servicios tienen su sede en Estados Unidos.
+
+Si desea obtener una copia de las medidas específicas que se aplican a la exportación de los datos personales póngase en contacto directamente con nosotros a través de: i) manera presencial por medio del balcón de servicio en nuestras oficinas; ii) enviando un correo electrónico a protecciondedatos.ecuador@pedidosya.com.
+
+INFORMACIÓN ACERCA DE SUS DERECHOS
+
+Si tiene alguna pregunta acerca del uso de los datos personales, póngase en contacto con nosotros en primer lugar a través de los Canales de contacto establecidos.
+
+En determinadas circunstancias, tiene el derecho de solicitar:
+
+(a) Le proporcionemos más detalles sobre el uso que hacemos de sus datos.
+
+(b) Le proporcionemos una copia de los datos personales que nos ha proporcionado en los lineamientos de la LOPDP.
+
+(c) Actualizaremos cualquier dato que haya modificado o que haya cambiado y rectificaremos cualquier inexactitud en los datos personales que tratamos en los lineamientos de la LOPDP.
+
+(d) Eliminemos cualesquiera datos personales que ya no tengamos un fundamento legal para utilizar.
+
+(e) Cuando el tratamiento se base en el consentimiento, retirar su consentimiento para que dejemos de realizar ese tratamiento concreto (véase la sección 5.1 sobre mercadeo).
+
+(f) Oponerse a cualquier tratamiento basado en el interés legítimo cuando 1) No se afecten derechos y libertades fundamentales de terceros, la ley se lo permita y no se trate de información pública, de interés público o cuyo tratamiento está ordenado por la ley. 2) El tratamiento de datos personales tenga por objeto la mercadotecnia directa; el interesado tendrá derecho a oponerse en todo momento al tratamiento de los datos personales que le conciernan, incluida la elaboración de perfiles; en cuyo caso los datos personales dejarán de ser tratados para dichos fines. 3) Cuando no sea necesario su consentimiento para el tratamiento como consecuencia de la concurrencia de un interés legítimo, previsto en el artículo 7, y se justifique en una situación concreta personal del titular, siempre que una ley no disponga lo contrario,A menos que nuestras razones para llevar a cabo dicho tratamiento superen cualquier perjuicio a sus derechos de protección de datos.
+
+(g) Suspender el tratamiento de sus datos mientras en las siguientes situaciones: 1) Cuando el titular impugne la exactitud de los datos personales, mientras el responsable de tratamiento verifica la exactitud de los mismos; 2) El tratamiento sea ilícito y el interesado se oponga a la supresión de los datos personales y solicite en su lugar la limitación de su uso; 3) El responsable ya no necesite los datos personales para los fines del tratamiento, pero el interesado los necesite para la formulación, el ejercicio o la defensa de reclamaciones; y, 4) Cuando el interesado se haya opuesto al tratamiento en virtud del artículo 31 de la presente LOPDP, mientras se verifica si los motivos legítimos del responsable prevalecen sobre los del interesado.
+
+(h) La portabilidad de sus datos en un formato compatible, actualizado, estructurado, común, interoperable y de lectura mecánica, preservando sus características; o a transmitirlos a otros responsables en los lineamientos de la LOPDP
+
+(i) No ser sujeto de decisiones total o parcialmente automatizadas, incluida la elaboración de perfiles, que produzcan efectos jurídicos en él o que atenten contra sus derechos y libertades fundamentales.
+
+El ejercicio de estos derechos está sujeto a ciertas excepciones, en algunos casos establecidas en la Ley Orgánica de Protección de Datos Personales, para salvaguardar el interés público (p. ej., prevenir o detectar un acto ilícito) y los intereses de PedidosYa (p. ej., mantener privilegios legales). Si ejerce alguno de estos derechos, se verificará la legitimidad de la solicitud y recibirá una respuesta en el plazo de hasta quince (15) días.
+
+Si no está satisfecho con el uso que se hace de su información personal o de la respuesta que ha recibido al ejercer sus derechos, tiene derecho a presentar una queja ante la Autoridad de Protección de Datos Personales, a través de los canales que esta habilite para el efecto.
+
+Para gestionar y/o eliminar sus datos personales, usted puede ingresar a nuestra Portal móvil o sitio web (www.pedidosya.com.ec) y dirigirse a “Menú” -> “Ayuda en Línea” -> “Mi cuenta”.
+
+Una vez finalizado el procedimiento de eliminación de sus datos personales, “PedidosYa” no tendrá registro alguno de sus datos personales en sus bases de datos, quedando únicamente los registros de pedidos realizados por usted a los solos efectos de análisis de prevención de fraude y estadísticos de la plataforma, sin ser asociados a ninguna cuenta o persona.
+
+INFORMACIÓN SOBRE COOKIES
+
+Una cookie consiste en un archivo de información enviada por un servidor web a un navegador web, y almacenada por el navegador. La información es luego enviada de nuevo al servidor web en cada momento que el navegador solicita una página del servidor. Esto habilita al servidor a identificar y rastrear el navegador web. Nosotros usaremos tanto cookies de sesión como cookies persistentes únicamente en nuestro sitio web.
+
+Usaremos las cookies de sesión para estar al tanto de usted mientras utiliza en el Portal.
+
+Por su parte, usamos cookies persistentes para habilitar a nuestro sitio web que lo reconozca a usted cuando visita nuestro Portal. Las cookies de sesión serán eliminadas de su computadora cuando usted cierra el navegador web. Las cookies persistentes se mantendrán almacenadas en su computadora hasta que sean eliminadas, o hasta que lleguen a una fecha de expiración especificada.
+
+Utilizamos Google Analytics para analizar el uso de este sitio web. Google Analytics genera información estadística y de otro tipo sobre el uso de sitios web mediante cookies, las cuales son almacenadas en la computadora del usuario. La información generada en relación con nuestro sitio web es utilizada para crear reportes sobre el uso de nuestro sitio. Google almacenará esta información.
+
+Las políticas de protección de datos personales de Google se encuentran disponibles en: https://www.google.com/privacypolicy.html
+
+La mayoría de los navegadores web lo autorizan a usted a rechazar la aceptación de cookies. Esto se logra a través de la configuración de cada navegador en particular. Esto sin embargo, tendrá un impacto negativo con respecto a la usabilidad de varios sitios web incluyendo este.
+
+Podemos cambiar el contenido de nuestros sitios web y la forma en que utilizamos las cookies y, en consecuencia, nuestra Política de protección de datos personales y nuestra Política de Cookies pueden cambiar de vez en cuando en el futuro. Si cambiamos esta Política de protección de datos personales o nuestra Política de Cookies, actualizaremos la fecha de la última modificación a continuación. Si estos cambios son importantes, lo indicaremos claramente en nuestros sitios web.
+
+SEGURIDAD DE SU INFORMACIÓN PERSONAL Y SERVIDORES
+
+Toda información recabada en el Portal será tratada en cumplimiento de la Normativa y los datos serán utilizados únicamente para los fines aquí consentidos o los que consienta oportunamente en el futuro. PedidosYa expresa su compromiso de proteger la seguridad de la información personal de los usuarios. Con ese fin, PedidosYa usa una amplia variedad de tecnologías y procedimientos de seguridad para proteger la información personal contra un acceso, uso, modificación o una divulgación no autorizados. Sin embargo, la transmisión de datos a través de internet es inherentemente insegura, y nosotros no podemos garantizar la seguridad de los datos enviados a través de internet. PedidosYa no tiene control alguno sobre la privacidad de las comunicaciones mientras estén en tránsito hacia ella. Por lo anterior, le recomendamos que no incluya información confidencial, secreta, comprometedora, datos sensibles o información personal delicada que usted no desea revelar en estas comunicaciones (incluyendo correos electrónicos). Asimismo, usted es responsable de mantener su contraseña y detalles de usuario confidencialmente.
+
+Usted reconoce y acepta que, a pesar de todos nuestros esfuerzos, ninguna medida de seguridad de datos puede garantizar por completo la protección en todo momento.
+
+CAMBIOS EN ESTA DECLARACIÓN DE PRIVACIDAD
+
+PedidosYa se reserva el derecho de realizar las modificaciones que estime oportunas en esta Política de protección de datos personales. Si se realizan cambios materiales en esta Política, se lo informaremos mediante una comunicación electrónica y requeriremos su aceptación expresa respecto del nuevo texto de esta Política. Consulte con frecuencia esta declaración para estar informado, en forma permanente y actualizada, de cómo PedidosYa protege la privacidad de su información.
+
+NOTA SOBRE EL USO DE ESTE SITIO POR PARTE DE MENORES DE EDAD
+
+Este sitio no está dirigido a niños, niñas y adolescentes, ya que nos interesa de sobremanera proteger la privacidad de éstos. Por ello, no deseamos recopilar ninguna información que identifique personalmente a menores de edad. Si un menor de edad nos hubiera suministrado información que lo identifica personalmente, sus padres y/o tutores deberán comunicarse con nosotros a través del contacto datospersonales@pedidosya.com. En caso de tomar conocimiento que los datos de un menor de edad (menor de 12 años) han sido proporcionados a PedidosYa, eliminaremos dicha información a la mayor brevedad posible.
+
+DISPOSICIONES FINALES
+
+El Portal puede contener enlaces con referencias a otros sitios web más allá de nuestro control. Por favor recuerde que no tenemos ningún control sobre estos sitios web y que nuestra Política no es aplicable a estos sitios. Le recomendamos que lea las políticas de protección de datos personales y los términos y condiciones de los sitios web conectados o referenciados en los que usted entre. Ninguna parte de esta Política supone la creación o adición de algún derecho o reclamación (ya sea legal, equitativo o de otro tipo) que cualquier individuo o persona pueda tener según la ley, o de alguna otra forma, en contra de la empresa, terceros, o sus directores respectivos, delegados, empleados, agentes o representantes; ni la existencia de la presente Política o su aplicación impondrá o agregará obligación alguna o responsabilidad a ninguno de los nombrados, que no tenga actualmente según la ley ecuatoriana.
+
+JURISDICCIÓN Y LEY APLICABLE
+
+La presente Política se encuentra regida sin excepción y en todos sus términos por la Ley Orgánica de Protección de Datos Personales, su reglamento y demás instrumentos relacionados dentro de Ecuador. Cualquier controversia derivada de la presente Política, su existencia, validez, interpretación, alcance o cumplimiento será sometida a los tribunales ordinarios de Justicia con jurisdicción en Ecuador, renunciando en forma expresa a cualquier otro fuero o jurisdicción.
+
+CONSENTIMIENTO
+
+Presto mi consentimiento para que mis datos personales, sean tratados y transmitidos por encargados de tratamiento ubicados en EE. UU., en el Espacio Económico Europeo (EEE), Uruguay y Ecuador, para que los utilicen con los fines indicados en esta Política, incluida la posibilidad de que me hagan llegar vía correo electrónico u otro medio de comunicación, información sobre promociones y novedades relacionadas con PedidosYa.
+
+En cualquier momento usted podrá revocar el consentimiento otorgado, para lo cual le solicitamos contratarse por alguno de los medios que dejamos a su disposición en la siguiente sección.
+
+CONTACTO
+
+Si tiene alguna pregunta relacionada con esta política, póngase en contacto con nosotros a través de los siguientes canales (en lo sucesivo denominados Canales de contacto establecidos)
+
+i. De manera presencial por medio del balcón de servicio en nuestras oficinas en Fernando Ayarza N13-16 y Carlos Montúfar, parroquia Iñaquito, Ciudad de Quito (Provincia de Pichincha, Ecuador
+
+ii. Enviando un correo electrónico a protecciondedatos.ecuador@pedidosya.com.
+
+Adicionalmente podrá contactarse con nuestro delegado de Protección de Datos Personales: identidad y datos de contacto del delegado de protección de datos personales, que incluirá: dirección domiciliaria, número de teléfono y correo electrónico;
+
+RECETAS MEDICAS
+
+Adicionalmente a lo señalado líneas arriba, PedidosYa pone a disposición del usuario la posibilidad de realizar compras en distintos establecimientos farmacéuticos. Entre los productos que se pueden adquirir se encuentran medicinas cuya venta puede encontrarse condicionada a la presentación de la receta médica correspondiente.
+
+Para poder adquirir estos productos, el usuario debe haber accedido a su cuenta a través de su usuario y contraseña, elegir el producto y subir una foto clara y legible de la receta médica en el campo que para tal efecto se disponga.
+
+La información que se solicita es necesaria para que el establecimiento farmacéutico pueda verificar la legalidad de la dispensa del medicamento y así evitar un uso irresponsable o peligroso de alguna sustancia. Cabe precisar que PedidosYa solo accede a la esta información con la finalidad de transferirla a los establecimientos farmacéuticos para la correcta evaluación de la información y eventual despacho, y solo será comunicada o trasferida al establecimiento que realice dicho despacho.
+
+La información que se necesitará de manera obligatoria es la siguiente: Fotografía de la receta médica según lo exigido en el marco legal, nombres completos, edad, indicación del diagnóstico y/o del medicamento a dispensar.
+
+En caso, el usuario no cumpla con presentar de manera completa y satisfactoria los datos antes mencionados, PedidosYa no podrá completar el proceso de compra con lo cual no podrá acceder al producto a través de nuestra plataforma.
+
+Los datos personales serán tratados de forma temporal mientras sean necesarios para cumplir con las finalidades anteriormente descritas. Una vez vencido el plazo de conservación, la información se eliminará de los registros de PedidosYa.

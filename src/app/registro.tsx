@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
-import { ArrowLeftIcon } from '@/components/icons';
+import { ArrowLeftIcon, CheckIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 import AuthTextField from '@/components/auth/AuthTextField';
 import AuthButton from '@/components/auth/AuthButton';
@@ -28,6 +28,7 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  aceptaTerminos?: string;
 }
 
 export default function RegistroScreen() {
@@ -40,6 +41,7 @@ export default function RegistroScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [generalError, setGeneralError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,10 @@ export default function RegistroScreen() {
     if (!EMAIL_REGEX.test(trimmedEmail)) nextErrors.email = 'Ingresa un correo válido.';
     if (password.length < 6) nextErrors.password = 'Mínimo 6 caracteres.';
     if (confirmPassword !== password) nextErrors.confirmPassword = 'Las contraseñas no coinciden.';
+    if (!aceptaTerminos) {
+      nextErrors.aceptaTerminos =
+        'Debes aceptar los Términos y Condiciones y la Política de Privacidad.';
+    }
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -165,6 +171,34 @@ export default function RegistroScreen() {
               onSubmitEditing={handleSubmit}
             />
 
+            <TouchableOpacity
+              style={styles.termsRow}
+              activeOpacity={0.7}
+              onPress={() => {
+                setAceptaTerminos(prev => !prev);
+                setErrors(prev => ({ ...prev, aceptaTerminos: undefined }));
+              }}>
+              <View style={[styles.checkbox, aceptaTerminos && styles.checkboxChecked]}>
+                {aceptaTerminos && <CheckIcon size={14} color={Colors.white} strokeWidth={3} />}
+              </View>
+              <Text style={styles.termsText}>
+                He leído y acepto los{' '}
+                <Text
+                  style={styles.termsLink}
+                  onPress={() => router.push('/terminos-condiciones')}>
+                  Términos y Condiciones
+                </Text>{' '}
+                y la{' '}
+                <Text style={styles.termsLink} onPress={() => router.push('/politica-privacidad')}>
+                  Política de Privacidad
+                </Text>{' '}
+                de AGORA.
+              </Text>
+            </TouchableOpacity>
+            {!!errors.aceptaTerminos && (
+              <Text style={styles.termsError}>{errors.aceptaTerminos}</Text>
+            )}
+
             <AuthButton label="CREAR CUENTA" onPress={handleSubmit} loading={loading} />
 
             <View style={styles.dividerRow}>
@@ -173,7 +207,22 @@ export default function RegistroScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            <GoogleButton label="Registrarme con Google" />
+            <View>
+              <GoogleButton label="Registrarme con Google" />
+              {!aceptaTerminos && (
+                <TouchableOpacity
+                  style={StyleSheet.absoluteFill}
+                  activeOpacity={1}
+                  onPress={() =>
+                    setErrors(prev => ({
+                      ...prev,
+                      aceptaTerminos:
+                        'Debes aceptar los Términos y Condiciones y la Política de Privacidad.',
+                    }))
+                  }
+                />
+              )}
+            </View>
           </View>
 
           <View style={styles.footerRow}>
@@ -232,6 +281,43 @@ const styles = StyleSheet.create({
   },
   form: {
     marginBottom: Spacing.xl,
+  },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1.5,
+    borderColor: Colors.gray300,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxChecked: {
+    backgroundColor: Colors.accentTeal,
+    borderColor: Colors.accentTeal,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: FontSize.sm,
+    color: Colors.gray600,
+    lineHeight: FontSize.sm * 1.4,
+  },
+  termsLink: {
+    color: Colors.accentTeal,
+    fontWeight: FontWeight.semiBold,
+  },
+  termsError: {
+    color: Colors.error,
+    fontSize: FontSize.sm,
+    marginBottom: Spacing.md,
+    marginTop: -Spacing.xs,
   },
   dividerRow: {
     flexDirection: 'row',
