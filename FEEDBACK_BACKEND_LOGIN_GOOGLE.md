@@ -1,5 +1,20 @@
 # Feedback para backend: endpoint de login con Google
 
+> ✅ Resuelto (2026-08-01): backend implementó el endpoint, pero en una ruta distinta a la
+> pedida y separada por espacio de identidad en vez de un único endpoint "inteligente":
+> - `POST /api/mobile/auth/google` (`GoogleLoginRequest { idToken }`) → upsert en el espacio
+>   **Cliente** (TipoUsuarioId=3), sin password si es cuenta nueva. **Este es el que usa la app
+>   móvil.**
+> - `POST /api/auth/google/token` → upsert en el espacio **Propietario** (TipoUsuarioId=2, portal
+>   web). No aplica a la app móvil.
+>
+> Ambos responden `{ accessToken, refreshToken }` como se pidió, más `401` si el idToken es
+> inválido/expirado o la cuenta está anulada, y `409` si el correo/username ya está en uso por
+> otra cuenta Cliente. Actualizamos `src/services/auth.service.ts` (`loginWithGoogle`) para
+> apuntar a `/mobile/auth/google` — antes apuntaba a `/auth/google`, que en este swagger solo
+> existe como `GET` (parte del flujo de redirect OAuth del portal web), así que el botón de
+> Google hubiera seguido fallando aunque backend ya tuviera todo listo.
+
 ## Resumen
 
 Agregamos inicio de sesión con Google en la app móvil (botón "Continuar con Google" en login y

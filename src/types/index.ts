@@ -86,6 +86,8 @@ export interface ReservaCliente {
 }
 
 export interface ReservaPago {
+  subtotal: number;
+  comision: number;
   total: number | null;
   pagado: number;
   pendiente: number;
@@ -94,6 +96,7 @@ export interface ReservaPago {
 
 export interface Reserva {
   id: number;
+  codigo: string | null;
   espacioId: number;
   espacioTitulo: string;
   cliente: ReservaCliente;

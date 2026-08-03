@@ -4,6 +4,10 @@ import { throwIfNotOk } from '@/services/apiError';
 
 const AUTH_URL = `${API_BASE_URL}/auth`;
 const USUARIOS_URL = `${API_BASE_URL}/usuarios`;
+// Endpoint específico del espacio de identidad Cliente (TipoUsuarioId=3) — ver
+// FEEDBACK_BACKEND_LOGIN_GOOGLE.md. Backend lo separó de `/auth/google/token`
+// (que hace upsert en el espacio Propietario/Web) para no mezclar cuentas.
+const MOBILE_AUTH_URL = `${API_BASE_URL}/mobile/auth`;
 
 const CLIENTE_TIPO_CODIGO = 'CLI';
 
@@ -45,7 +49,7 @@ async function parseErrorMessage(res: Response, fallback: string): Promise<strin
 }
 
 export async function login(email: string, password: string): Promise<AuthTokens> {
-  const res = await fetch(`${AUTH_URL}/login`, {
+  const res = await fetch(`${MOBILE_AUTH_URL}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -60,11 +64,17 @@ export async function login(email: string, password: string): Promise<AuthTokens
 }
 
 export async function loginWithGoogle(idToken: string): Promise<AuthTokens> {
-  const res = await fetch(`${AUTH_URL}/google`, {
+  const res = await fetch(`${MOBILE_AUTH_URL}/google`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ idToken }),
   });
+  if (res.status === 401) {
+    throw new Error('No se pudo verificar tu cuenta de Google. Intenta nuevamente.');
+  }
+  if (res.status === 409) {
+    throw new Error('Ese correo ya está en uso por otra cuenta. Intenta con otro método.');
+  }
   if (!res.ok) {
     throw new Error(await parseErrorMessage(res, 'No se pudo iniciar sesión con Google.'));
   }

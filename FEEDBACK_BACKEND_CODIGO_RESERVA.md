@@ -1,5 +1,9 @@
 # Feedback para backend: código de reserva legible en ReservaResponse
 
+> ✅ Resuelto (2026-08-01): backend agregó el campo `codigo` (string, nullable) a
+> `ReservaResponse`. La app ya lo consume en `src/app/(tabs)/calendario.tsx`, con fallback al
+> formato derivado (`Reserva #000123`) por si alguna reserva viniera con `codigo: null`.
+
 ## Resumen
 
 En "Mis Reservas" queremos mostrarle al usuario un código de reserva identificable (para que lo pueda dar

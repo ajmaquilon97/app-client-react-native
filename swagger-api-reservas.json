@@ -41,6 +41,48 @@
         }
       }
     },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/register — Registra un nuevo usuario del frontend Web (Anfitriones).\r\nSiempre crea la cuenta como Propietario (TipoUsuarioId=2): no se puede elegir el tipo\r\ndesde el body. Hashea la contraseña con PBKDF2 vía Identity y emite tokens inmediatamente\r\n(auto-login).",
+        "requestBody": {
+          "description": "<b>Nombre</b> (string, máx. 150, requerido).\r\n<b>Apellido</b> (string, máx. 150, requerido).\r\n<b>Email</b> (string email, máx. 200, requerido) — puede repetirse con una cuenta\r\n              Cliente existente del mismo correo (Web y Mobile son espacios de identidad separados).\r\n<b>Username</b> (string, máx. 50, requerido) — único dentro de todo el sistema.\r\n<b>Password</b> (string, mín. 6 caracteres, requerido).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroAppRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroAppRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroAppRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "{ id, accessToken, refreshToken } — usuario creado y sesión iniciada."
+          },
+          "400": {
+            "description": "Datos inválidos (contraseña muy corta, correo malformado, etc.)."
+          },
+          "409": {
+            "description": "Ya existe una cuenta Propietario con ese correo, o el nombre de usuario ya está en uso."
+          }
+        }
+      }
+    },
     "/api/auth/refresh": {
       "post": {
         "tags": [
@@ -353,6 +395,42 @@
           },
           "401": {
             "description": "Código inválido, expirado o ya utilizado."
+          }
+        }
+      }
+    },
+    "/api/auth/google/token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/google/token — Autentica con un ID token de Google (JWT) obtenido\r\nclient-side vía Google Identity Services, sin el flujo de redirect. Valida la firma, el\r\nemisor y que `aud` sea exactamente `Google:ClientId` (Web) antes de confiar en\r\nel token; hace upsert dentro del espacio Propietario (TipoUsuarioId=2) y devuelve los\r\ntokens de la app directamente (sin código de un solo uso: no hay redirect de por medio).",
+        "requestBody": {
+          "description": "<b>IdToken</b> (string, requerido) — ID token devuelto por el SDK de Google.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleIdTokenRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleIdTokenRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleIdTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ accessToken, refreshToken }"
+          },
+          "401": {
+            "description": "Token inválido, correo no verificado, cuenta anulada, o vinculado a una cuenta Cliente existente."
           }
         }
       }
@@ -1353,6 +1431,248 @@
         }
       }
     },
+    "/api/facturas": {
+      "get": {
+        "tags": [
+          "Facturas"
+        ],
+        "summary": "GET /api/facturas — Listado paginado de facturas de las reservas de los espacios del\r\nanfitrión autenticado.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "<b>search</b> (string, opcional) — busca por código de reserva, clave de acceso, número de comprobante o nombre/razón social del cliente.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "<b>status</b> (string, opcional) — uno de: `Procesando`, `Recibida`, `Autorizada`, `Devuelta`, `No autorizada`, `Error`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "description": "<b>dateFrom</b> (DateTime, opcional) — filtra facturas con fecha de emisión mayor o igual a esta fecha.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "description": "<b>dateTo</b> (DateTime, opcional) — filtra facturas con fecha de emisión menor o igual a esta fecha.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "<b>page</b> (int, opcional, default 0) — número de página (base 0).",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "<b>size</b> (int, opcional, default 20) — tamaño de página.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`PagedResponse<FacturaItemDto>`."
+          },
+          "400": {
+            "description": "El valor de `status` no es uno de los permitidos."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/facturas/{id}/reintentar": {
+      "post": {
+        "tags": [
+          "Facturas"
+        ],
+        "summary": "POST /api/facturas/{id}/reintentar — Reintenta el envío al SRI de una factura. Solo\r\naplica si el estado en BD es `Devuelta` o `Error`: la reinicia a\r\n`Procesando` y la reencola para que el worker de facturación la vuelva a firmar y\r\nenviar desde cero. Si está `No autorizada`, el SRI ya emitió un juicio de fondo\r\nsobre el comprobante — requiere corregir los datos (fiscales, montos, etc.) y volver a\r\nemitir, no un simple reintento.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (Guid, ruta, requerido) — identificador de la factura.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "202": {
+            "description": "Reintento encolado."
+          },
+          "400": {
+            "description": "La factura está `No autorizada`: requiere corrección manual antes de reintentar."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño del espacio de la reserva facturada."
+          },
+          "404": {
+            "description": "No existe una factura con ese ID."
+          },
+          "409": {
+            "description": "La factura no está en un estado reintentable (Procesando, Recibida o Autorizada)."
+          }
+        }
+      }
+    },
+    "/api/financiero/resumen": {
+      "get": {
+        "tags": [
+          "Financiero"
+        ],
+        "summary": "GET /api/financiero/resumen — KPIs financieros del anfitrión autenticado en el rango\r\n[from, to] (ambos inclusive): ingresos netos, variación vs. el período inmediatamente\r\nanterior de la misma duración, conteo de facturas autorizadas y con error, total\r\nreversado (notas de crédito autorizadas), y la serie diaria de ingresos del rango.",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "description": "<b>from</b> (DateTime, opcional) — inicio del rango. Por defecto, el día 1 del mes en curso.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "<b>to</b> (DateTime, opcional) — fin del rango (inclusive). Por defecto, hoy.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`FinancieroResumenResponse`.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancieroResumenResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancieroResumenResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancieroResumenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/financiero/ingresos": {
+      "get": {
+        "tags": [
+          "Financiero"
+        ],
+        "summary": "GET /api/financiero/ingresos — Listado paginado de reservas ya pagadas de los espacios\r\ndel anfitrión autenticado, con su factura de alquiler asociada (si existe).",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "<b>page</b> (int, opcional, default 0) — número de página (base 0).",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "<b>size</b> (int, opcional, default 20) — tamaño de página.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`PagedResponse<IngresoItemDto>`."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/invitaciones/{tokenQr}/validar": {
+      "post": {
+        "tags": [
+          "Invitaciones"
+        ],
+        "summary": "POST /api/invitaciones/{tokenQr}/validar — Valida una entrada QR escaneada en la puerta.\r\nSi el token existe, no fue usado todavía y el usuario autenticado es el dueño del espacio\r\nde la reserva, la marca como `usada` registrando `FechaUso`.",
+        "parameters": [
+          {
+            "name": "tokenQr",
+            "in": "path",
+            "description": "<b>tokenQr</b> (string, ruta, requerido) — token embebido en el código QR escaneado.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`InvitacionResponse` recién validada."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño del espacio de la reserva del token."
+          },
+          "404": {
+            "description": "No existe una invitación con ese token."
+          },
+          "409": {
+            "description": "La entrada ya había sido usada; se devuelve igual el estado actual en `invitacion`."
+          }
+        }
+      }
+    },
     "/api/logs": {
       "get": {
         "tags": [
@@ -1365,6 +1685,198 @@
           },
           "404": {
             "description": "No hay un archivo de log para la fecha actual."
+          }
+        }
+      }
+    },
+    "/api/mobile/auth/login": {
+      "post": {
+        "tags": [
+          "MobileAuth"
+        ],
+        "summary": "POST /api/mobile/auth/login — Inicia sesión con credenciales locales (correo y\r\ncontraseña) dentro del espacio de identidad Cliente. Devuelve un access token JWT\r\n(15 min) y un refresh token de larga duración.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo del usuario registrado.\r\n<b>Password</b> (string, requerido) — contraseña en texto plano; se valida contra el hash almacenado.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ accessToken, refreshToken }"
+          },
+          "401": {
+            "description": "Credenciales inválidas o cuenta anulada."
+          }
+        }
+      }
+    },
+    "/api/mobile/auth/register": {
+      "post": {
+        "tags": [
+          "MobileAuth"
+        ],
+        "summary": "POST /api/mobile/auth/register — Registra un nuevo usuario del frontend Mobile\r\n(Clientes). Siempre crea la cuenta como Cliente (TipoUsuarioId=3): no se puede elegir el\r\ntipo desde el body. Hashea la contraseña con PBKDF2 vía Identity y emite tokens\r\ninmediatamente (auto-login).",
+        "requestBody": {
+          "description": "<b>Nombre</b> (string, máx. 150, requerido).\r\n<b>Apellido</b> (string, máx. 150, requerido).\r\n<b>Email</b> (string email, máx. 200, requerido) — puede repetirse con una cuenta\r\n              Propietario existente del mismo correo (Web y Mobile son espacios de identidad separados).\r\n<b>Username</b> (string, máx. 50, requerido) — único dentro de todo el sistema.\r\n<b>Password</b> (string, mín. 6 caracteres, requerido).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroAppRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroAppRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroAppRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "{ id, accessToken, refreshToken } — usuario creado y sesión iniciada."
+          },
+          "400": {
+            "description": "Datos inválidos (contraseña muy corta, correo malformado, etc.)."
+          },
+          "409": {
+            "description": "Ya existe una cuenta Cliente con ese correo, o el nombre de usuario ya está en uso."
+          }
+        }
+      }
+    },
+    "/api/mobile/auth/send-email-otp": {
+      "post": {
+        "tags": [
+          "MobileAuth"
+        ],
+        "summary": "POST /api/mobile/auth/send-email-otp — Genera un código de verificación de 6 dígitos\r\npara el correo indicado (cuenta Cliente) y lo envía mediante el servicio de correo.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo del usuario que solicita la verificación.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailOtpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailOtpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailOtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — el código fue enviado al correo."
+          },
+          "404": {
+            "description": "No existe un usuario con ese correo."
+          }
+        }
+      }
+    },
+    "/api/mobile/auth/verify-email-otp": {
+      "post": {
+        "tags": [
+          "MobileAuth"
+        ],
+        "summary": "POST /api/mobile/auth/verify-email-otp — Valida el código de verificación y confirma el\r\ncorreo de la cuenta Cliente. Identity actualiza automáticamente EmailConfirmed al validar.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo del usuario a verificar.\r\n<b>Code</b> (string, requerido) — código de 6 dígitos recibido por correo.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailOtpRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailOtpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailOtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — correo verificado correctamente."
+          },
+          "400": {
+            "description": "Código inválido o expirado."
+          },
+          "404": {
+            "description": "No existe un usuario con ese correo."
+          }
+        }
+      }
+    },
+    "/api/mobile/auth/google": {
+      "post": {
+        "tags": [
+          "MobileAuth"
+        ],
+        "summary": "POST /api/mobile/auth/google — Autentica con un ID token de Google (JWT), validado\r\ncontra `GoogleAuth:WebClientId`. Busca la cuenta Cliente (TipoUsuarioId=3) por\r\ncorreo; si no existe, la crea sin contraseña (PasswordHash queda NULL vía Identity).",
+        "requestBody": {
+          "description": "<b>IdToken</b> (string, requerido) — ID token devuelto por el SDK de Google.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleLoginRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleLoginRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ accessToken, refreshToken }"
+          },
+          "401": {
+            "description": "Token de Google inválido/expirado, o cuenta anulada."
+          },
+          "409": {
+            "description": "El correo o nombre de usuario ya está en uso por otra cuenta Cliente."
           }
         }
       }
@@ -1487,6 +1999,89 @@
           },
           "404": {
             "description": "No existe un espacio activo con ese ID."
+          }
+        }
+      }
+    },
+    "/api/negocios/me": {
+      "get": {
+        "tags": [
+          "Negocios"
+        ],
+        "summary": "GET /api/negocios/me — Devuelve el negocio asociado al usuario autenticado.",
+        "responses": {
+          "200": {
+            "description": "`NegocioResponse` con los datos del negocio."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "404": {
+            "description": "El usuario autenticado no tiene un negocio registrado."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Negocios"
+        ],
+        "summary": "PUT /api/negocios/me — Crea o actualiza (upsert) el negocio del usuario autenticado.\r\nSi el usuario ya tiene un negocio registrado, lo actualiza; si no, crea uno nuevo.",
+        "requestBody": {
+          "description": "<b>NombreNegocio</b>, <b>NumeroIdentificacion</b>, <b>RazonSocial</b>, <b>Direccion</b>\r\n              (requeridos).\r\n<b>TipoIdentificacion</b> (string?, opcional) — catálogo SRI; si se omite, usa \"04\" (RUC).\r\n<b>Categoria</b>, <b>TelefonoNegocio</b>, <b>Descripcion</b>, <b>LogoUrl</b> (opcionales).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NegocioRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NegocioRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/NegocioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`NegocioResponse` con el negocio creado o actualizado."
+          },
+          "400": {
+            "description": "Datos inválidos."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/pruebas/sri": {
+      "get": {
+        "tags": [
+          "PruebasSri"
+        ],
+        "summary": "GET /api/pruebas/sri — Emite una factura ficticia de prueba ($10.00 a Consumidor Final)\r\ncontra el ambiente del SRI configurado y devuelve la respuesta cruda de cada etapa:\r\nfirma, Recepción (RECIBIDA / DEVUELTA) y Autorización (AUTORIZADO / NO AUTORIZADO).\r\nNo crea ninguna reserva ni guarda la factura en la base.",
+        "parameters": [
+          {
+            "name": "incluirXml",
+            "in": "query",
+            "description": "<b>incluirXml</b> (bool, query, opcional) — si es true, agrega el XML firmado completo a la respuesta. Útil para diagnosticar rechazos de esquema.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Diagnóstico completo del intento, incluso si el SRI rechazó el comprobante."
+          },
+          "404": {
+            "description": "La aplicación no corre en entorno Development."
           }
         }
       }
@@ -1865,7 +2460,7 @@
         "tags": [
           "Reservas"
         ],
-        "summary": "POST /api/reservas/{id}/cancelar — Cancela una reserva. Válido desde `pendiente`,\r\n`confirmada` o `reagendada`. Doble autorización: puede cancelar tanto el Anfitrión\r\ndueño del espacio como el Cliente que hizo la reserva.",
+        "summary": "POST /api/reservas/{id}/cancelar — Cancela una reserva. Endpoint único: Cliente y\r\nAnfitrión comparten la misma lógica, diferenciada según cuál de los dos es el usuario\r\nautenticado para esta reserva. Válido desde `pendiente`, `confirmada` o\r\n`reagendada`. Doble autorización: puede cancelar tanto el Anfitrión dueño del\r\nespacio como el Cliente que hizo la reserva.\r\nReglas de tiempo (hora de Ecuador):\r\n - Ambos roles: no se puede cancelar si la reserva ya está en curso o finalizó\r\n   (ahora >= FechaInicio).\r\n - Solo Cliente: no se puede autocancelar el mismo día de la reserva (falta menos de 1 día).\r\nDispara el reverso (notas de crédito) de forma best-effort: si falla, la cancelación igual\r\nse confirma y el fallo se refleja en `estadoReverso`.",
         "parameters": [
           {
             "name": "id",
@@ -1899,7 +2494,7 @@
         },
         "responses": {
           "200": {
-            "description": "`ReservaResponse` con el nuevo estado."
+            "description": "`ReservaCancelacionResponse` con el nuevo estado y `estadoReverso` (`PROCESANDO` o `ERROR`)."
           },
           "400": {
             "description": "Motivo faltante o con menos de 5 caracteres."
@@ -1911,7 +2506,7 @@
             "description": "No existe una reserva con ese ID."
           },
           "409": {
-            "description": "La reserva está en un estado desde el cual no se puede cancelar."
+            "description": "La reserva está en un estado desde el cual no se puede cancelar, ya está en curso/finalizó,\r\no (solo Cliente) falta menos de 1 día para la fecha."
           }
         }
       }
@@ -2139,6 +2734,334 @@
           },
           "404": {
             "description": "No existe una reserva con ese ID."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/factura": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "GET /api/reservas/{id}/factura — Consulta el estado de las facturas electrónicas de la\r\nreserva. Una reserva pagada genera dos: el fee de la plataforma y el alquiler del\r\nespacio, distinguibles por `tipoFactura`. La emisión es automática al aprobarse el\r\npago; no existe un endpoint para dispararla manualmente.\r\nSolo el cliente que hizo la reserva puede consultarlo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de `FacturaStatusResponse` con el estado de cada factura."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el cliente que hizo la reserva."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID, o no tiene facturas asociadas."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/reverso": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{id}/reverso — Genera el reverso ante el SRI de una reserva: por cada\r\nfactura autorizada (fee y espacio) sin una nota de crédito vigente, crea una NotaCredito\r\nen estado `procesando` y la encola para firma y envío en segundo plano. Devuelve de\r\ninmediato (202): el resultado final se consulta con `GET .../reverso`. Doble\r\nautorización: puede iniciarlo tanto el Anfitrión dueño del espacio como el Cliente que\r\nhizo la reserva.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador de la reserva a reversar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>Motivo</b> (string, mínimo 5 caracteres) — razón del reverso.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaReversoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaReversoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaReversoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "202": {
+            "description": "Lista de `NotaCreditoResponse` recién creadas (vacía si no había nada que reversar)."
+          },
+          "400": {
+            "description": "Motivo faltante o con menos de 5 caracteres."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño del espacio ni el cliente de la reserva."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "GET /api/reservas/{id}/reverso — Lista las notas de crédito generadas sobre las facturas\r\nde la reserva. Doble autorización: accesible tanto para el Anfitrión dueño del espacio\r\ncomo para el Cliente que hizo la reserva.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de `NotaCreditoResponse` (vacía si la reserva no tiene reversos generados)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño del espacio ni el cliente de la reserva."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          }
+        }
+      }
+    },
+    "/api/reversos": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "GET /api/reversos — Lista paginada de notas de crédito de las reservas de los espacios\r\ndel anfitrión autenticado, para el módulo financiero.",
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "description": "<b>estado</b> (string, opcional) — uno de: `procesando`, `enviada`, `autorizada`, `rechazada`, `anulada`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaDesde",
+            "in": "query",
+            "description": "<b>fechaDesde</b> (DateTime, opcional) — filtra notas con `CreatedAt` mayor o igual a esta fecha. Alias: `from`.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "fechaHasta",
+            "in": "query",
+            "description": "<b>fechaHasta</b> (DateTime, opcional) — filtra notas con `CreatedAt` menor o igual a esta fecha. Alias: `to`.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "<b>from</b> (DateTime, opcional) — alias de `fechaDesde` (misma convención que GET /api/financiero/resumen). Si se envían ambos, gana `from`.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "<b>to</b> (DateTime, opcional) — alias de `fechaHasta`. Si se envían ambos, gana `to`.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "<b>page</b> (int, opcional, default 0) — número de página (base 0).",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "<b>size</b> (int, opcional, default 20) — tamaño de página.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`PagedResponse<NotaCreditoResponse>` con los reversos del anfitrión."
+          },
+          "400": {
+            "description": "El valor de `estado` no es uno de los permitidos."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/invitaciones/asignar": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{id}/invitaciones/asignar — Asigna entradas QR (control de aforo)\r\ntodavía disponibles de la reserva a la lista de invitados recibida, una entrada por\r\ninvitado. Marca cada entrada asignada como `enviada` y dispara el envío del correo\r\ncon el código QR de forma asíncrona (no espera la entrega). Doble autorización: puede\r\nasignar tanto el Anfitrión dueño del espacio como el Cliente que hizo la reserva.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Lista de `{ Nombre, Correo }` — un invitado por entrada a asignar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InvitacionAsignarRequest"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InvitacionAsignarRequest"
+                }
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InvitacionAsignarRequest"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lista de `InvitacionResponse` recién asignadas."
+          },
+          "400": {
+            "description": "Algún invitado tiene `Nombre` o `Correo` faltante/inválido."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño del espacio ni el cliente de la reserva."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          },
+          "409": {
+            "description": "No quedan suficientes entradas disponibles para asignar a todos los invitados."
+          }
+        }
+      }
+    },
+    "/api/reservas/{id}/incidencia": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{id}/incidencia — Reporta una incidencia sobre una reserva que ya no\r\nse puede cancelar por la ventana normal (en curso o finalizada). Exclusivo del Cliente\r\nque hizo la reserva. Queda en estado `abierto` hasta que Admin/Staff la resuelva\r\n(ver `POST /api/tickets-soporte/{id}/resolver`).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>Descripcion</b> (string, mínimo 5 caracteres) — detalle de la incidencia.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidenciaRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidenciaRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidenciaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "`TicketSoporteResponse` recién creado, en estado `abierto`."
+          },
+          "400": {
+            "description": "Descripción faltante o con menos de 5 caracteres."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el cliente que hizo la reserva."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          },
+          "409": {
+            "description": "La reserva está cancelada, o todavía no está en curso ni finalizada."
           }
         }
       }
@@ -2477,6 +3400,112 @@
         }
       }
     },
+    "/api/tickets-soporte": {
+      "get": {
+        "tags": [
+          "TicketsSoporte"
+        ],
+        "summary": "GET /api/tickets-soporte — Lista paginada de tickets de soporte, para el back-office\r\n(Admin/Staff). Sin scoping por propietario: Admin/Staff ve todos los tickets de la plataforma.",
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "description": "<b>estado</b> (string, opcional) — uno de: `abierto`, `en_revision`, `aprobado`, `rechazado`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "<b>page</b> (int, opcional, default 0) — número de página (base 0).",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "<b>size</b> (int, opcional, default 20) — tamaño de página.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`PagedResponse<TicketSoporteResponse>`."
+          },
+          "400": {
+            "description": "El valor de `estado` no es uno de los permitidos."
+          },
+          "403": {
+            "description": "El usuario autenticado no tiene rol Admin/Staff."
+          }
+        }
+      }
+    },
+    "/api/tickets-soporte/{id}/resolver": {
+      "post": {
+        "tags": [
+          "TicketsSoporte"
+        ],
+        "summary": "POST /api/tickets-soporte/{id}/resolver — Resuelve un ticket (Admin/Staff). Si\r\n`aprobado` es true, marca el ticket como `aprobado` y dispara el reverso\r\n(notas de crédito) de la reserva; si es false, lo marca `rechazado` sin disparar nada.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (Guid, ruta, requerido) — identificador del ticket.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>Aprobado</b> (bool), <b>Notas</b> (string, mínimo 5 caracteres).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketResolverRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketResolverRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketResolverRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`TicketSoporteResponse` con el ticket resuelto."
+          },
+          "400": {
+            "description": "Notas faltantes o con menos de 5 caracteres."
+          },
+          "403": {
+            "description": "El usuario autenticado no tiene rol Admin/Staff."
+          },
+          "404": {
+            "description": "No existe un ticket con ese ID."
+          },
+          "409": {
+            "description": "El ticket ya fue resuelto anteriormente."
+          }
+        }
+      }
+    },
     "/api/tipos-espacios": {
       "get": {
         "tags": [
@@ -2561,9 +3590,9 @@
         "tags": [
           "Usuarios"
         ],
-        "summary": "POST /api/usuarios — Registra un nuevo usuario en el sistema (Fase 1 del onboarding).\r\nHashea la contraseña con PBKDF2 vía Identity y emite tokens inmediatamente (auto-login).",
+        "summary": "POST /api/usuarios — Registra un nuevo usuario en el sistema (Fase 1 del onboarding).\r\nMismo endpoint para web y móvil. Hashea la contraseña con PBKDF2 vía Identity y emite\r\ntokens inmediatamente (auto-login).",
         "requestBody": {
-          "description": "<b>Nombre</b> (string, máx. 150, requerido) — nombre del usuario.\r\n<b>Apellido</b> (string, máx. 150, requerido) — apellido del usuario.\r\n<b>Email</b> (string email, máx. 200, requerido) — dirección de correo única.\r\n<b>Username</b> (string, máx. 50, requerido) — nombre de usuario único.\r\n<b>Password</b> (string, mín. 6 caracteres, requerido) — contraseña en texto plano (se hashea antes de guardar).\r\n<b>TipoUsuarioId</b> (int, requerido) — ID del tipo de usuario (ver GET /api/usuarios/tipos).",
+          "description": "<b>Nombre</b> (string, máx. 150, requerido) — nombre del usuario.\r\n<b>Apellido</b> (string, máx. 150, requerido) — apellido del usuario.\r\n<b>Email</b> (string email, máx. 200, requerido) — dirección de correo única.\r\n<b>Username</b> (string, máx. 50, requerido) — nombre de usuario único.\r\n<b>Password</b> (string, mín. 6 caracteres, requerido) — contraseña en texto plano (se hashea antes de guardar).\r\n<b>TipoUsuarioId</b> (int, requerido) — 2 (Propietario) o 3 (Cliente); ver GET /api/usuarios/tipos.\r\n              No se puede autoregistrar como Administrador (1) por este endpoint público.",
           "content": {
             "application/json": {
               "schema": {
@@ -2589,11 +3618,11 @@
           "201": {
             "description": "{ id, accessToken, refreshToken } — usuario creado y sesión iniciada."
           },
+          "400": {
+            "description": "Datos inválidos (contraseña muy corta, correo malformado, TipoUsuarioId no autoregistrable, etc.)."
+          },
           "409": {
             "description": "Ya existe una cuenta con ese correo o nombre de usuario."
-          },
-          "400": {
-            "description": "Datos inválidos (contraseña muy corta, correo malformado, etc.)."
           }
         }
       }
@@ -2658,7 +3687,7 @@
           }
         ],
         "requestBody": {
-          "description": "<b>Nombre</b> (string, máx. 150) — nombre del usuario.\r\n<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.",
+          "description": "<b>TipoUsuarioId</b> (int?, opcional) — 2 (Propietario) o 3 (Cliente); confirma/corrige el tipo\r\n              asignado en el registro o el default de Google. Se omite si no se quiere cambiar.\r\n<b>Nombre</b> (string, máx. 150) — nombre del usuario.\r\n<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.\r\n<b>FotoPerfilUrl</b> (string?, máx. 500) — ruta o URL de la foto de perfil.\r\n<b>ProvinciaId</b> (int?, opcional) — provincia del perfil (catálogo CAT_Provincias).\r\n<b>CiudadId</b> (int?, opcional) — ciudad del perfil (catálogo CAT_Ciudades); si se envía,\r\n              requiere `ProvinciaId` y debe pertenecerle, o se rechaza con 400.",
           "content": {
             "application/json": {
               "schema": {
@@ -2680,6 +3709,9 @@
         "responses": {
           "200": {
             "description": "`UsuarioResponse` con el perfil actualizado."
+          },
+          "400": {
+            "description": "`TipoUsuarioId` no es Propietario (2) ni Cliente (3); o `CiudadId` no pertenece\r\n              a `ProvinciaId` (o se envió `CiudadId` sin `ProvinciaId`)."
           },
           "401": {
             "description": "No autenticado (falta o expiró el JWT)."
@@ -2757,6 +3789,25 @@
         }
       }
     },
+    "/api/usuarios/me": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "summary": "GET /api/usuarios/me — Devuelve el perfil del usuario autenticado, extrayendo su ID\r\ndel claim `sub` del JWT. Pensado para la pantalla de Configuración (perfil del\r\nAnfitrión/Cliente).",
+        "responses": {
+          "200": {
+            "description": "{ id, nombre, apellido, email, telefono, fotoPerfilUrl, rutaFotoCedula }"
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "404": {
+            "description": "El usuario del token ya no existe o fue anulado."
+          }
+        }
+      }
+    },
     "/api/usuarios/check-availability": {
       "post": {
         "tags": [
@@ -2764,7 +3815,7 @@
         ],
         "summary": "POST /api/usuarios/check-availability — Verifica si un correo y/o número de\r\nteléfono ya están en uso. Endpoint público, pensado para validar en tiempo\r\nreal durante el onboarding sin exponer si la cuenta existe vía un error 409.",
         "requestBody": {
-          "description": "<b>Email</b> (string?) — correo a verificar; se omite la validación si es nulo o vacío.\r\n<b>PhoneNumber</b> (string?) — teléfono a verificar; se omite la validación si es nulo o vacío.",
+          "description": "<b>Email</b> (string?) — correo a verificar; se omite la validación si es nulo o vacío.\r\n<b>PhoneNumber</b> (string?) — teléfono a verificar; se omite la validación si es nulo o vacío.\r\n<b>TipoUsuarioId</b> (int?, opcional) — 2 (Propietario/Web) o 3 (Cliente/Mobile). El mismo\r\n              correo/teléfono puede estar en uso legítimamente por el otro tipo (espacios de identidad\r\n              separados); si se omite, \"en uso\" considera ambos tipos.",
           "content": {
             "application/json": {
               "schema": {
@@ -2869,6 +3920,11 @@
           "phoneNumber": {
             "type": "string",
             "nullable": true
+          },
+          "tipoUsuarioId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2890,6 +3946,11 @@
       "CompletarPerfilRequest": {
         "type": "object",
         "properties": {
+          "tipoUsuarioId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "nombre": {
             "maxLength": 150,
             "type": "string",
@@ -2913,6 +3974,21 @@
           "rutaFotoCedula": {
             "maxLength": 500,
             "type": "string",
+            "nullable": true
+          },
+          "fotoPerfilUrl": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          },
+          "provinciaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ciudadId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -3173,6 +4249,10 @@
               "type": "string"
             },
             "nullable": true
+          },
+          "modoConfirmacion": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3270,6 +4350,10 @@
             "type": "string",
             "nullable": true
           },
+          "modoConfirmacion": {
+            "type": "string",
+            "nullable": true
+          },
           "calificacion": {
             "type": "number",
             "format": "double",
@@ -3353,6 +4437,24 @@
         },
         "additionalProperties": false
       },
+      "FacturacionReservaDto": {
+        "type": "object",
+        "properties": {
+          "identificacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "correo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "FechaEspecialRequest": {
         "required": [
           "descripcion",
@@ -3377,6 +4479,66 @@
           "modalidad": {
             "minLength": 1,
             "pattern": "hora|jornada|evento",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FinancieroResumenResponse": {
+        "type": "object",
+        "properties": {
+          "ingresosMes": {
+            "type": "number",
+            "format": "double"
+          },
+          "variacionIngresos": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "facturasAutorizadas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "facturasConError": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalReversado": {
+            "type": "number",
+            "format": "double"
+          },
+          "serieIngresos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SerieIngresoItem"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GoogleIdTokenRequest": {
+        "required": [
+          "idToken"
+        ],
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GoogleLoginRequest": {
+        "required": [
+          "idToken"
+        ],
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "minLength": 1,
             "type": "string"
           }
         },
@@ -3422,6 +4584,38 @@
         },
         "additionalProperties": false
       },
+      "IncidenciaRequest": {
+        "required": [
+          "descripcion"
+        ],
+        "type": "object",
+        "properties": {
+          "descripcion": {
+            "minLength": 5,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InvitacionAsignarRequest": {
+        "required": [
+          "correo",
+          "nombre"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "correo": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "additionalProperties": false
+      },
       "LoginRequest": {
         "type": "object",
         "properties": {
@@ -3430,6 +4624,63 @@
             "nullable": true
           },
           "password": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "NegocioRequest": {
+        "required": [
+          "direccion",
+          "nombreNegocio",
+          "numeroIdentificacion",
+          "razonSocial"
+        ],
+        "type": "object",
+        "properties": {
+          "nombreNegocio": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "tipoIdentificacion": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "numeroIdentificacion": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string"
+          },
+          "razonSocial": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          },
+          "direccion": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "categoria": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "telefonoNegocio": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "maxLength": 1000,
+            "type": "string",
+            "nullable": true
+          },
+          "logoUrl": {
+            "maxLength": 500,
             "type": "string",
             "nullable": true
           }
@@ -3507,6 +4758,44 @@
         "properties": {
           "refreshToken": {
             "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistroAppRequest": {
+        "required": [
+          "apellido",
+          "email",
+          "nombre",
+          "password",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "maxLength": 150,
+            "minLength": 1,
+            "type": "string"
+          },
+          "apellido": {
+            "maxLength": 150,
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "username": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 6,
             "type": "string"
           }
         },
@@ -3625,6 +4914,14 @@
       "ReservaPagoResponse": {
         "type": "object",
         "properties": {
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "comision": {
+            "type": "number",
+            "format": "double"
+          },
           "total": {
             "type": "number",
             "format": "double",
@@ -3686,6 +4983,9 @@
           "totalHoras": {
             "type": "integer",
             "format": "int32"
+          },
+          "facturacion": {
+            "$ref": "#/components/schemas/FacturacionReservaDto"
           }
         },
         "additionalProperties": false
@@ -3696,6 +4996,10 @@
           "id": {
             "type": "integer",
             "format": "int32"
+          },
+          "codigo": {
+            "type": "string",
+            "nullable": true
           },
           "espacioId": {
             "type": "integer",
@@ -3739,6 +5043,19 @@
           "fechaCreacion": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReservaReversoRequest": {
+        "required": [
+          "motivo"
+        ],
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "minLength": 5,
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -3867,6 +5184,20 @@
         },
         "additionalProperties": false
       },
+      "SerieIngresoItem": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "nullable": true
+          },
+          "monto": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "TarifaHoyDto": {
         "type": "object",
         "properties": {
@@ -3904,6 +5235,22 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TicketResolverRequest": {
+        "required": [
+          "notas"
+        ],
+        "type": "object",
+        "properties": {
+          "aprobado": {
+            "type": "boolean"
+          },
+          "notas": {
+            "minLength": 5,
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -3974,6 +5321,20 @@
           },
           "rutaFotoCedula": {
             "type": "string",
+            "nullable": true
+          },
+          "fotoPerfilUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "provinciaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ciudadId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           },
           "tipoUsuarioId": {

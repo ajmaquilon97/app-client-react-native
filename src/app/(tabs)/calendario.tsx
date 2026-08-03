@@ -150,7 +150,9 @@ export default function CalendarScreen() {
                 {formatRangoReserva(item.fechaInicio, item.fechaFin)}
               </Text>
             </View>
-            <Text style={styles.cardCodigo}>Reserva #{String(item.id).padStart(6, '0')}</Text>
+            <Text style={styles.cardCodigo}>
+              {item.codigo ?? `Reserva #${String(item.id).padStart(6, '0')}`}
+            </Text>
             <Text style={styles.cardDetail}>
               {item.totalHoras} hora{item.totalHoras !== 1 ? 's' : ''}
               {'   |   '}Total:{' '}

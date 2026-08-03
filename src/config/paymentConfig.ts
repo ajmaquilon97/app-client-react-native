@@ -89,15 +89,15 @@ export const DATAFAST_DIAGNOSTICO_DIRECTO_UAT = __DEV__ && DATAFAST_DIAGNOSTICO_
 // ─── Comisión de servicio ───
 //
 // Nuestra ganancia sobre cada reserva: 10% adicional al precio del espacio.
-// IMPORTANTE: el monto real que se cobra en la pasarela (Datafast/Kushki) lo
-// calcula el backend a partir de la reserva en base de datos (nunca un valor
-// que mande el cliente, ver FEEDBACK_BACKEND_DATAFAST.md → "Notas de
-// seguridad"). Esta constante es solo para mostrar el desglose en la UI
-// *antes* de crear la reserva — una vez creada, el total que se cobra de
-// verdad es siempre `reserva.pago.total` que devuelve backend. Ver
-// FEEDBACK_BACKEND_COMISION_SERVICIO.md — pendiente que backend aplique este
-// mismo 10% al calcular `pago.total`, si no el desglose no coincide con lo
-// que realmente se cobra.
+// Backend ya aplica este mismo 10% al calcular `pago.total`/`pago.subtotal`/
+// `pago.comision` (ver FEEDBACK_BACKEND_COMISION_SERVICIO.md — confirmado
+// 2026-08-01), incluyendo el monto real cobrado en la pasarela (Datafast/
+// Kushki) y el reverso al cancelar. Esta constante ya NO es un cálculo
+// provisional: sigue siendo necesaria porque, *antes* de crear la reserva,
+// todavía no existe un `pago` de backend con el que pintar el desglose en la
+// UI — en cuanto se crea la reserva, la app pasa a usar siempre
+// `reserva.pago.total`/`subtotal`/`comision` de backend, nunca este cálculo
+// local (ver `SpaceDetailSheet.tsx`).
 export const SERVICE_FEE_RATE = 0.1;
 
 // ─── Helper para obtener config según proveedor ───
