@@ -2,13 +2,19 @@
 
 > **De:** equipo Frontend Web (Next.js — portal de anfitriones)
 > **Para:** equipo Frontend Mobile (app de clientes finales)
-> **Fecha:** 2026-08-04
+> **Fecha:** 2026-08-04 — **actualizado 2026-08-05**
 > **Contexto:** ya identificamos con Backend que la app necesita soportar 3 tipos de
 > espacio con dos modelos de reserva distintos (ver `docs/backend-espacios-archetypes-spec.md`,
 > ya enviado a Backend). El lado Web/Anfitriones ya ajustó su UI para esto. Este documento
-> es para que ustedes analicen el impacto en el flujo de reserva de la app de clientes y
-> levanten **sus propios** requerimientos a Backend — coordinados con los que ya pedimos
-> nosotros, sin duplicar.
+> es para que ustedes analicen el impacto en el flujo de reserva de la app de clientes.
+>
+> **Actualización 2026-08-05:** Backend ya implementó y confirmó el contrato completo,
+> incluyendo los endpoints `/api/mobile/*` (ver `docs/back_responses/api-specs-aforo.md`,
+> probado end-to-end contra base de datos real). La sección §2 de este documento, que
+> originalmente era "esto es lo que deben ir a pedirle a Backend", ahora está reescrita
+> como "esto es lo que ya existe y así deben consumirlo" — no hace falta que vuelvan a
+> pedir nada de lo que aparece marcado ✅. Queda **una sola pregunta abierta** (§2.6) que
+> ya le reenviamos a Backend.
 
 ---
 
@@ -80,43 +86,83 @@ Backend decide agregar una modalidad `entrada` dedicada (ver `backend-espacios-a
 
 ---
 
-## 2. Qué deberían pedirle a Backend (su propia lista, coordinada con la nuestra)
+## 2. Cómo quedó el contrato real (ya implementado, confirmado por Backend)
 
-Backend ya tiene nuestro pedido general (`docs/backend-espacios-archetypes-spec.md`). Lo
-que sigue es **específico de los endpoints `/api/mobile/*`** que backend todavía no cubrió
-porque nuestro spec se enfocó en el lado Anfitriones/Web:
+Esto ya no es una lista de pedidos — es el contrato con el que deben integrar. Fuente:
+`docs/back_responses/api-specs-aforo.md` (probado end-to-end contra base de datos real).
 
-1. **`modalidadReserva` también en `EspacioMobileResponse`** (`GET /api/mobile/espacios` y
-   el detalle de disponibilidad) — hoy ese shape trae `tipoEspacioId`/`tipoEspacioNombre`
-   pero no el código ni la modalidad. Sin esto, mobile no puede decidir qué UI mostrar.
-2. **Endpoint o respuesta alternativa de disponibilidad para `cupo_compartido`** —
-   equivalente mobile del `/api/aforo` que pedimos para el panel de anfitriones (ver
-   `backend-espacios-archetypes-spec.md` §2): algo como
-   `{ fecha, capacidadTotal, vendida, disponible }`, para reemplazar el bloque `horas[]`
-   cuando el espacio sea de cupo compartido. Confirmar si conviene que sea el mismo
-   endpoint `/api/aforo` (reutilizado desde mobile) o una versión dentro de
-   `DisponibilidadMobileResponse`.
-3. **Campo de cantidad en `ReservaRequest`** (ej. `cantidadEntradas` o reusar `pax`) para
-   que el cliente pueda especificar cuántas entradas está comprando en un espacio
-   `cupo_compartido`. Para `franja_exclusiva` este campo no debería ser necesario (o
-   ignorarse), igual que hoy.
-4. **`POST /api/mobile/reservas`: la validación de "no solape" debe ser condicional al
-   archetype** — para `cupo_compartido`, en vez de rechazar por solape de horario, debe
-   validar que `cantidadEntradas` solicitada no exceda el aforo disponible de ese día
-   (mismo pedido que hicimos en `backend-espacios-archetypes-spec.md` §3, pero aplicado
-   puntualmente a este endpoint mobile — no asuman que ya está cubierto solo porque lo
-   pedimos para el genérico `/api/reservas`).
-5. **Confirmar la convención `fechaInicio = fechaFin`** para reservas de `cupo_compartido`
-   (acotada al horario operativo del espacio ese día, sin franja específica) — es la misma
-   convención que ya propusimos a Backend; mobile debe armar el request con ese mismo
-   criterio para que el modelo sea consistente entre ambos clientes.
-6. **`GET /api/mobile/espacios`: `TarifaHoy` para espacios `cupo_compartido`** — confirmar
-   con Backend si va a calcularse sobre una modalidad `entrada` nueva o reutilizando
-   `hora` (pendiente de la decisión del §4 de nuestro spec) para saber qué campo leer.
+1. **`modalidadReserva` ya está en `EspacioMobileResponse`** ✅ — tanto en
+   `GET /api/mobile/espacios` (cada elemento del listado) como en
+   `GET /api/mobile/espacios/{id}/disponibilidad` (raíz de la respuesta). Valores:
+   `"franja_exclusiva"` | `"cupo_compartido"`. Úsenlo para decidir qué pantalla renderizar
+   — no el `tipoEspacioNombre`.
+2. **`GET /api/aforo` y `GET /api/aforo/dia` sirven directo para mobile** ✅ — no es un
+   endpoint aparte, es el mismo que usa el panel de anfitriones, y **ya no exige ser el
+   dueño del espacio**: cualquier usuario autenticado puede consultarlo (así fue pedido
+   específicamente para que mobile lo use antes de reservar). Para el detalle
+   (`GET /api/aforo/dia`), el arreglo `tickets[]` (nombre de cliente + hora de compra)
+   solo viene poblado para el dueño — para cualquier cliente Mobile llega `tickets: []`,
+   pero `capacidadTotal`/`vendida`/`disponible` sí son visibles siempre. Usen estos
+   endpoints en vez de `horas[]` cuando `modalidadReserva == "cupo_compartido"`.
+3. **`ReservaRequest` ya tiene `pax`** ✅ — mismo body en `POST /api/mobile/reservas`:
+   ```jsonc
+   {
+     "espacioId": 25,
+     "fechaInicio": "2026-08-10T10:00:00",
+     "fechaFin": "2026-08-10T12:00:00",
+     "totalHoras": 2,
+     "pax": 3,          // NUEVO — cantidad de entradas para cupo_compartido
+     "facturacion": null
+   }
+   ```
+   Para `franja_exclusiva` sigue funcionando igual (pueden seguir mandando `pax` en 0 o
+   el valor que ya usaban, no se valida contra nada). Para `cupo_compartido`, `pax` es la
+   cantidad de entradas que el cliente está comprando.
+4. **La validación de aforo en `POST /api/mobile/reservas` ya está activa** ✅ — no es
+   "no solape de horario" para `cupo_compartido`: el backend suma el `pax` de todas las
+   reservas activas de ese espacio ese día, le suma el `pax` de la solicitud, y si supera
+   `MaxCapacidad` responde `409 Conflict` con un mensaje que ya trae capacidad/vendidas/
+   solicitadas listo para mostrar al usuario:
+   ```json
+   { "message": "Se excedió el aforo disponible para el 2026-08-10: capacidad 5, vendidas 5, solicitadas 1." }
+   ```
+   Es transaccional (aislamiento `Serializable`) — probado en vivo con dos compras
+   simultáneas que individualmente cabían pero juntas no: una se creó, la otra recibió
+   `409`. No hace falta ningún manejo especial de carrera del lado del cliente, solo
+   mostrar el mensaje de error si llega `409`. Para `franja_exclusiva` el comportamiento
+   de solape **no cambió**.
+5. **Confirmada la convención `fechaInicio = fechaFin`** ✅ — con una restricción
+   importante: **ambas fechas deben caer en el mismo día calendario**. Backend calcula el
+   aforo por el día de `fechaInicio`; si el rango cruza medianoche, no se valida ni se
+   contabiliza correctamente. Arment el request de reserva de piscina siempre dentro de un
+   mismo día.
+6. **`TarifaHoy` para espacios `cupo_compartido` — ✅ corregido, con un matiz importante.**
+   Ver `docs/back_responses/tarifa-hoy-mobile-fix.md`. El listado (`GET /api/mobile/espacios`)
+   ya estaba correcto. El que **estaba realmente roto** era
+   `GET /api/mobile/espacios/{espacioId}/disponibilidad` — no era solo el label: ese
+   endpoint leía el precio por hora del espacio (no `entradaPrecio`), así que para una
+   piscina devolvía un precio equivocado o `null`. Ya está corregido (ambos endpoints
+   comparten el mismo resolutor). **Re-testeen específicamente la pantalla de
+   detalle/disponibilidad de piscinas, no solo el listado** — si asumieron que el número
+   ahí era bueno y solo el texto era cosmético, puede que hayan validado un precio
+   incorrecto sin darse cuenta.
+
+   Contrato resultante para `cupo_compartido` (ambos endpoints):
+   ```json
+   { "modalidad": "Entrada", "precio": 8.50, "unidad": "entrada", "esPromocion": false }
+   ```
+   Tres cosas a tener en cuenta al consumirlo:
+   - `modalidad`/`unidad` son texto libre para mostrar, **no identificadores** — para
+     ramificar lógica sigan usando `modalidadReserva` del espacio, no estos campos.
+   - `tarifa`/`tarifaHoy` puede venir `null` si el espacio no tiene `entradaActiva`/
+     `entradaPrecio` configurado — tolerar ese caso, no es un error del backend.
+   - `esPromocion` viene siempre `false` en `cupo_compartido` — las promociones hoy solo
+     existen sobre la jerarquía de precio por hora. Si el producto necesita promociones
+     en piscinas, es trabajo pendiente de Backend — avisar si hace falta.
 
 ---
 
-## 3. Algo que YA existe y no hace falta pedir de nuevo: entradas QR
+## 3. Algo que ya existe y pueden reutilizar: entradas QR
 
 Ya hay un sistema de invitaciones/QR construido (`POST /api/reservas/{id}/invitaciones/asignar`
 + `POST /api/invitaciones/{tokenQr}/validar`), pensado para asignar y validar entradas
@@ -124,9 +170,10 @@ individuales de **una reserva ya creada**. Es una buena base a reutilizar para l
 validación en la puerta de la piscina (cada entrada comprada podría generar su propio QR
 para escanear al ingresar), **pero ojo**: ese sistema resuelve el aforo *de una reserva
 puntual* (cuántos invitados entran con esa reserva), no el aforo *compartido entre
-reservas de distintos clientes el mismo día* — eso sigue siendo el problema de fondo del
-§2.2/§2.4. No dupliquen el pedido de "sistema de QR" — enfóquense en pedir que la
-validación de aforo compartido (§2.4) exista antes de crear la reserva.
+reservas de distintos clientes el mismo día* — ese problema de fondo ya lo resolvió
+Backend con la validación transaccional de §2.4, es un mecanismo aparte. Si quieren dar a
+cada entrada comprada su propio QR individual para el control en puerta, evalúen
+reutilizar este sistema — no hace falta pedir uno nuevo.
 
 ---
 
@@ -141,16 +188,18 @@ necesario tocar nada de eso.
 
 ## Checklist para el equipo Mobile
 
-- [ ] Revisar si `GET /api/mobile/espacios` / disponibilidad necesitan `modalidadReserva`
-      expuesto para decidir qué pantalla renderizar (§2.1).
-- [ ] Definir con Backend el contrato de disponibilidad para `cupo_compartido` en mobile
-      (§2.2) — puede ser el mismo `/api/aforo` que pedimos nosotros, a confirmar.
-- [ ] Pedir el campo de cantidad de entradas en `ReservaRequest` (§2.3).
-- [ ] Pedir que la validación de solape en `POST /api/mobile/reservas` sea condicional al
-      archetype, con validación de aforo para `cupo_compartido` (§2.4) — **no asumir que
-      ya quedó cubierto** por nuestro pedido genérico a `/api/reservas`.
-- [ ] Confirmar la convención `fechaInicio = fechaFin` para reservas de cupo compartido (§2.5).
-- [ ] Confirmar cómo se calculará `TarifaHoy` para piscinas en `GET /api/mobile/espacios` (§2.6).
-- [ ] Evaluar reutilizar el sistema de invitaciones QR existente para la validación en
-      puerta, sin perder de vista que no resuelve el aforo compartido por sí solo (§3).
-- [ ] Confirmar que no hace falta ningún cambio para canchas/salones (§4).
+- [x] `modalidadReserva` expuesto en `GET /api/mobile/espacios` y disponibilidad — úsenlo
+      para decidir qué pantalla renderizar (§2.1).
+- [x] Contrato de aforo para `cupo_compartido` en mobile: mismos `GET /api/aforo` /
+      `GET /api/aforo/dia` del panel de anfitriones, abiertos a cualquier autenticado (§2.2).
+- [x] `pax` ya existe en `ReservaRequest` — envíenlo con la cantidad de entradas (§2.3).
+- [x] Validación de aforo transaccional activa en `POST /api/mobile/reservas` para
+      `cupo_compartido`, con `409` + mensaje listo para mostrar (§2.4).
+- [x] Convención `fechaInicio = fechaFin` confirmada — mismo día calendario obligatorio (§2.5).
+- [x] `TarifaHoy` corregido en ambos endpoints (§2.6) — **re-testear puntualmente la
+      pantalla de detalle/disponibilidad de piscinas**, ahí era donde el precio (no solo
+      el label) estaba mal antes del fix. Tolerar `tarifa: null` cuando no hay
+      `entradaPrecio` configurado.
+- [ ] Evaluar (opcional) reutilizar el sistema de invitaciones QR existente para la
+      validación en puerta de cada entrada comprada (§3).
+- [x] Confirmado que no hace falta ningún cambio para canchas/salones (§4).
