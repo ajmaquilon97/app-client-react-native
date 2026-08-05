@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.obsidiantech.agora"
+      "package": "com.obsidiantechlab.agora"
     },
     "web": {
       "output": "static",
@@ -40,6 +40,12 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Permite que Espacios use tu ubicación para calcular la distancia a cada espacio."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permite que Espacios use la cámara para escanear las entradas de los invitados en la puerta."
         }
       ],
       "@react-native-google-signin/google-signin"

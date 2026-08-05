@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { KioskAuthProvider, useKioskAuth } from '@/context/KioskAuthContext';
 import { Colors } from '@/constants/colors';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { LocationProvider } from '@/context/LocationContext';
@@ -24,8 +25,9 @@ function SplashLoading() {
 
 function RootNavigator() {
   const { isAuthenticated, isBootstrapping } = useAuth();
+  const { isKioskAuthenticated, isBootstrapping: isKioskBootstrapping } = useKioskAuth();
 
-  if (isBootstrapping) {
+  if (isBootstrapping || isKioskBootstrapping) {
     return <SplashLoading />;
   }
 
@@ -34,10 +36,20 @@ function RootNavigator() {
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="verificar-telefono" options={{ presentation: 'card' }} />
+        <Stack.Screen name="reserva/[id]/invitados" options={{ presentation: 'card' }} />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="login" options={{ presentation: 'card' }} />
         <Stack.Screen name="registro" options={{ presentation: 'card' }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!isKioskAuthenticated}>
+        <Stack.Screen name="recepcion/login" options={{ presentation: 'card' }} />
+      </Stack.Protected>
+      <Stack.Protected guard={isKioskAuthenticated}>
+        <Stack.Screen
+          name="recepcion/scan"
+          options={{ gestureEnabled: false, headerBackVisible: false }}
+        />
       </Stack.Protected>
     </Stack>
   );
@@ -47,11 +59,13 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <FavoritesProvider>
-          <LocationProvider>
-            <RootNavigator />
-          </LocationProvider>
-        </FavoritesProvider>
+        <KioskAuthProvider>
+          <FavoritesProvider>
+            <LocationProvider>
+              <RootNavigator />
+            </LocationProvider>
+          </FavoritesProvider>
+        </KioskAuthProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

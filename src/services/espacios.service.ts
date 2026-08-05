@@ -71,6 +71,7 @@ function mapApiToEspacio(e: EspacioAPI): Espacio {
     longitud: coords?.longitude ?? null,
     modalidadReserva: e.modalidadReserva,
     maxCapacidad: e.maxCapacidad,
+    validarAforo: e.validarAforo,
     // --- campos pendientes de otros endpoints ---
     rating: 0,
     reviews: 0,

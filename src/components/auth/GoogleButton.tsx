@@ -29,18 +29,29 @@ export default function GoogleButton({ label }: GoogleButtonProps) {
     if (loading) return;
     setLoading(true);
     try {
+      console.log('[GoogleButton] Verificando Play Services...');
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      console.log('[GoogleButton] Play Services OK, invocando GoogleSignin.signIn()...');
       const response = await GoogleSignin.signIn();
+      console.log('[GoogleButton] Respuesta de GoogleSignin.signIn():', response);
       if (!isSuccessResponse(response)) {
+        console.log('[GoogleButton] signIn() no fue exitoso (cancelado u otro tipo):', response);
         return;
       }
       const { idToken } = response.data;
       if (!idToken) {
+        console.log('[GoogleButton] La respuesta no incluyó idToken:', response.data);
         throw new Error('Google no devolvió un token válido.');
       }
+      console.log('[GoogleButton] idToken recibido, invocando loginWithGoogle()...');
       await loginWithGoogle(idToken);
+      console.log('[GoogleButton] loginWithGoogle() exitoso, redirigiendo.');
       router.replace('/');
     } catch (err) {
+      console.log('[GoogleButton] Error en el flujo de Google Sign-In:', err);
+      if (isErrorWithCode(err)) {
+        console.log('[GoogleButton] Código de error:', err.code);
+      }
       if (isErrorWithCode(err) && err.code === statusCodes.IN_PROGRESS) {
         return;
       }

@@ -5,6 +5,128 @@
     "version": "1.0"
   },
   "paths": {
+    "/api/aforo": {
+      "get": {
+        "tags": [
+          "Aforo"
+        ],
+        "summary": "GET /api/aforo — Aforo diario (capacidad, vendida, disponible) de un espacio\r\nde cupo compartido, para cada día del rango [fechaInicio, fechaFin].",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fechaInicio",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "fechaFin",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de `AforoDiaResponse`, uno por día del rango. Accesible para cualquier usuario autenticado, no solo el dueño.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AforoDiaResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AforoDiaResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AforoDiaResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "fechaFin es anterior a fechaInicio."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
+    "/api/aforo/dia": {
+      "get": {
+        "tags": [
+          "Aforo"
+        ],
+        "summary": "GET /api/aforo/dia — Resumen de aforo de un solo día (capacidad, vendida, disponible)\r\nmás el detalle de reservas (`tickets`) de ese día para el espacio.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "fecha",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`AforoDiaDetalleResponse`. El resumen (capacidadTotal/vendida/disponible) es visible\r\n              para cualquier usuario autenticado. `tickets` (nombre del cliente y hora de compra\r\n              de cada reserva) solo viene poblado si el usuario autenticado es el dueño del espacio;\r\n              para cualquier otro usuario llega como arreglo vacío `[]`, por privacidad de los\r\n              demás compradores.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AforoDiaDetalleResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AforoDiaDetalleResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AforoDiaDetalleResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -1831,6 +1953,42 @@
         }
       }
     },
+    "/api/mobile/auth/recepcion": {
+      "post": {
+        "tags": [
+          "MobileAuth"
+        ],
+        "summary": "POST /api/mobile/auth/recepcion — Abre una sesión de kiosco con el PIN que emitió el\r\nanfitrión (POST /api/reservas/{id}/pin-recepcion). No autentica a un usuario: el JWT que\r\ndevuelve lleva `role=Recepcion` y un claim `reservaId`, y sólo sirve para\r\n`POST /api/mobile/recepcion/validar-qr` sobre esa reserva.\r\nEl token vence junto con el PIN (2 h después del fin de la reserva), no a los 15 min del\r\naccess token normal: el guardia no puede re-autenticarse a mitad del evento.\r\nNo requiere JWT previo — el PIN es la credencial.",
+        "requestBody": {
+          "description": "<b>Pin</b> (string, requerido) — los 6 dígitos entregados al recepcionista.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecepcionLoginRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecepcionLoginRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecepcionLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`RecepcionLoginResponse` con `accessToken`, `reservaId` y `expiraEn`."
+          },
+          "401": {
+            "description": "PIN inexistente, revocado o vencido."
+          }
+        }
+      }
+    },
     "/api/mobile/auth/register": {
       "post": {
         "tags": [
@@ -2174,6 +2332,225 @@
           },
           "404": {
             "description": "No existe un espacio activo con ese ID."
+          }
+        }
+      }
+    },
+    "/api/mobile/reservas/{reservaId}/invitados": {
+      "get": {
+        "tags": [
+          "MobileInvitados"
+        ],
+        "summary": "GET /api/mobile/reservas/{reservaId}/invitados — Lista los invitados de la reserva.\r\nSólo el Cliente dueño de la reserva puede consultarlos. La respuesta omite a propósito\r\n`CodigoQr` y `CodigoCorto`: son credenciales de ingreso y sólo viajan por correo\r\nal invitado.",
+        "parameters": [
+          {
+            "name": "reservaId",
+            "in": "path",
+            "description": "<b>reservaId</b> (int, ruta, requerido) — Id de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de `InvitadoResponse` con `Id`, `Nombre`, `Correo` y `Estado`.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvitadoResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvitadoResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvitadoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño de la reserva."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
+          }
+        }
+      }
+    },
+    "/api/mobile/reservas/{reservaId}/invitados/{invitadoId}": {
+      "put": {
+        "tags": [
+          "MobileInvitados"
+        ],
+        "summary": "PUT /api/mobile/reservas/{reservaId}/invitados/{invitadoId} — Corrige el nombre y el\r\ncorreo de un invitado. Sólo el Cliente dueño de la reserva.\r\n<b>Regenera las credenciales de ingreso</b> (código QR y código corto) e invalida las\r\nanteriores: si el correo estaba mal escrito, quien lo recibió por error se queda con un\r\nQR que ya no abre la puerta. También reinicia el contador de reenvíos a 0.\r\nNo se puede editar un invitado que ya ingresó.",
+        "parameters": [
+          {
+            "name": "reservaId",
+            "in": "path",
+            "description": "<b>reservaId</b> (int, ruta, requerido) — Id de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "invitadoId",
+            "in": "path",
+            "description": "<b>invitadoId</b> (Guid, ruta, requerido) — Id del invitado.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "<b>Nombre</b> (string, requerido) y <b>Correo</b> (string, requerido, formato email).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarInvitadoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarInvitadoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarInvitadoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`InvitadoResponse` con los datos ya corregidos."
+          },
+          "400": {
+            "description": "`Nombre`/`Correo` inválidos, o el invitado ya ingresó al evento."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño de la reserva."
+          },
+          "404": {
+            "description": "No existe la reserva, o el invitado no pertenece a esa reserva."
+          }
+        }
+      }
+    },
+    "/api/mobile/reservas/{reservaId}/invitados/{invitadoId}/reenviar": {
+      "post": {
+        "tags": [
+          "MobileInvitados"
+        ],
+        "summary": "POST /api/mobile/reservas/{reservaId}/invitados/{invitadoId}/reenviar — Reenvía la\r\ncredencial de ingreso al correo del invitado. Sólo el Cliente dueño de la reserva, y sólo\r\nsobre invitados que pertenezcan a esa misma reserva.\r\nLímite de 3 reenvíos por invitado y espera mínima de 5 minutos entre uno y otro.",
+        "parameters": [
+          {
+            "name": "reservaId",
+            "in": "path",
+            "description": "<b>reservaId</b> (int, ruta, requerido) — Id de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "invitadoId",
+            "in": "path",
+            "description": "<b>invitadoId</b> (Guid, ruta, requerido) — Id del invitado.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reenvío aceptado; se incrementó el contador y se actualizó la fecha."
+          },
+          "400": {
+            "description": "Se alcanzó el límite de 3 reenvíos para ese invitado."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño de la reserva."
+          },
+          "404": {
+            "description": "No existe la reserva, o el invitado no pertenece a esa reserva."
+          },
+          "429": {
+            "description": "Todavía no pasan 5 minutos desde el último reenvío. Incluye cabecera `Retry-After`."
+          }
+        }
+      }
+    },
+    "/api/mobile/recepcion/validar-qr": {
+      "post": {
+        "tags": [
+          "MobileRecepcion"
+        ],
+        "summary": "POST /api/mobile/recepcion/validar-qr — Marca el ingreso de un invitado en la puerta.\r\nExclusivo de sesiones de kiosco (rol `Recepcion`).\r\nEl `reservaId` se toma del claim del JWT, nunca del body: una sesión de kiosco sólo\r\npuede validar invitados de su propia reserva, aunque le presenten un código válido de otro evento.",
+        "requestBody": {
+          "description": "<b>Codigo</b> (string, requerido) — el Guid del QR escaneado o el código corto de 6 caracteres.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarQrRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarQrRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarQrRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ValidarQrResponse` con el `nombre` del invitado que acaba de ingresar."
+          },
+          "401": {
+            "description": "El JWT falta/expiró, no es de una sesión de kiosco, o el PIN que la abrió ya no está vigente (venció o fue revocado)."
+          },
+          "404": {
+            "description": "El código no existe o no pertenece a esta reserva."
+          },
+          "409": {
+            "description": "Ese código ya se usó para ingresar."
           }
         }
       }
@@ -3120,7 +3497,7 @@
         "tags": [
           "Reservas"
         ],
-        "summary": "POST /api/reservas/{id}/invitaciones/asignar — Asigna entradas QR (control de aforo)\r\ntodavía disponibles de la reserva a la lista de invitados recibida, una entrada por\r\ninvitado. Marca cada entrada asignada como `enviada` y dispara el envío del correo\r\ncon el código QR de forma asíncrona (no espera la entrega). Doble autorización: puede\r\nasignar tanto el Anfitrión dueño del espacio como el Cliente que hizo la reserva.",
+        "summary": "POST /api/reservas/{id}/invitaciones/asignar — Asigna entradas QR (control de aforo)\r\ntodavía disponibles de la reserva a la lista de invitados recibida, una entrada por\r\ninvitado. Marca cada entrada asignada como `enviada` y dispara el envío del correo\r\ncon el código QR de forma asíncrona (no espera la entrega). Exclusivo del Cliente que\r\nhizo la reserva: `AsignarAsync` compara contra `Reserva.UsuarioId` y nada más,\r\nasí que el Anfitrión dueño del espacio también recibe 403 acá (él escanea en la puerta,\r\nno reparte las entradas).",
         "parameters": [
           {
             "name": "id",
@@ -3170,7 +3547,7 @@
             "description": "Algún invitado tiene `Nombre` o `Correo` faltante/inválido."
           },
           "403": {
-            "description": "El usuario autenticado no es el dueño del espacio ni el cliente de la reserva."
+            "description": "El usuario autenticado no es el cliente que hizo la reserva."
           },
           "404": {
             "description": "No existe una reserva con ese ID."
@@ -3237,6 +3614,40 @@
           },
           "409": {
             "description": "La reserva está cancelada, o todavía no está en curso ni finalizada."
+          }
+        }
+      }
+    },
+    "/api/reservas/{reservaId}/pin-recepcion": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "summary": "POST /api/reservas/{reservaId}/pin-recepcion — Emite el PIN de 6 dígitos que recepción\r\nteclea en el kiosco para esta reserva. Exclusivo del Anfitrión dueño del espacio.\r\nCada llamada <b>rota</b> el PIN: revoca el que estuviera activo y devuelve uno nuevo, de\r\nmodo que un PIN filtrado deja de servir en cuanto se genera el siguiente. El PIN en claro\r\nsólo se devuelve acá; no hay endpoint para volver a consultarlo.\r\nEl PIN caduca 2 horas después de la `fechaFin` de la reserva.",
+        "parameters": [
+          {
+            "name": "reservaId",
+            "in": "path",
+            "description": "<b>reservaId</b> (int, ruta, requerido) — Id de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`PinRecepcionResponse` con el `pin` y su `fechaExpiracion`."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "La reserva no pertenece a un espacio del usuario autenticado."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID."
           }
         }
       }
@@ -3689,13 +4100,13 @@
         "summary": "GET /api/tipos-espacios — Devuelve el catálogo completo de tipos de espacio disponibles.\r\nÚtil para poblar selectores en el formulario de creación o edición de espacios.\r\nNo requiere parámetros.",
         "responses": {
           "200": {
-            "description": "Lista de `TiposEspacios` con los campos: id, codigo, nombre.",
+            "description": "Lista de `TipoEspacioResponse` con los campos: id, codigo, nombre, modalidadReserva.",
             "content": {
               "text/plain": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TiposEspacios"
+                    "$ref": "#/components/schemas/TipoEspacioResponse"
                   }
                 }
               },
@@ -3703,7 +4114,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TiposEspacios"
+                    "$ref": "#/components/schemas/TipoEspacioResponse"
                   }
                 }
               },
@@ -3711,7 +4122,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/TiposEspacios"
+                    "$ref": "#/components/schemas/TipoEspacioResponse"
                   }
                 }
               }
@@ -4038,6 +4449,79 @@
   },
   "components": {
     "schemas": {
+      "AforoDiaDetalleResponse": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "capacidadTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "vendida": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "disponible": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AforoTicketResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AforoDiaResponse": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date"
+          },
+          "capacidadTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "vendida": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "disponible": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AforoTicketResponse": {
+        "type": "object",
+        "properties": {
+          "reservaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombreCliente": {
+            "type": "string",
+            "nullable": true
+          },
+          "pax": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "horaCompra": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "Asistencia": {
         "enum": [
           "no_registrado",
@@ -4199,6 +4683,10 @@
             "type": "string",
             "nullable": true
           },
+          "modalidadReserva": {
+            "type": "string",
+            "nullable": true
+          },
           "tarifa": {
             "$ref": "#/components/schemas/TarifaHoyDto"
           },
@@ -4208,6 +4696,25 @@
               "$ref": "#/components/schemas/HoraEstadoDto"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EditarInvitadoRequest": {
+        "required": [
+          "correo",
+          "nombre"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "correo": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
           }
         },
         "additionalProperties": false
@@ -4236,6 +4743,10 @@
             "format": "int32"
           },
           "tipoEspacioNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "modalidadReserva": {
             "type": "string",
             "nullable": true
           },
@@ -4335,6 +4846,14 @@
             "type": "boolean"
           },
           "eventoPrecio": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "entradaActiva": {
+            "type": "boolean"
+          },
+          "entradaPrecio": {
             "type": "number",
             "format": "double",
             "nullable": true
@@ -4531,6 +5050,14 @@
           }
         },
         "additionalProperties": false
+      },
+      "EstadoInvitado": {
+        "enum": [
+          "Pendiente",
+          "Enviado",
+          "Ingresado"
+        ],
+        "type": "string"
       },
       "EstadoPago": {
         "enum": [
@@ -4795,6 +5322,27 @@
         },
         "additionalProperties": false
       },
+      "InvitadoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "correo": {
+            "type": "string",
+            "nullable": true
+          },
+          "estado": {
+            "$ref": "#/components/schemas/EstadoInvitado"
+          }
+        },
+        "additionalProperties": false
+      },
       "LoginRequest": {
         "type": "object",
         "properties": {
@@ -4935,6 +5483,19 @@
               "$ref": "#/components/schemas/CiudadResponse"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecepcionLoginRequest": {
+        "required": [
+          "pin"
+        ],
+        "type": "object",
+        "properties": {
+          "pin": {
+            "minLength": 1,
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -5170,6 +5731,10 @@
             "format": "date-time"
           },
           "totalHoras": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pax": {
             "type": "integer",
             "format": "int32"
           },
@@ -5468,7 +6033,7 @@
         },
         "additionalProperties": false
       },
-      "TiposEspacios": {
+      "TipoEspacioResponse": {
         "type": "object",
         "properties": {
           "id": {
@@ -5480,6 +6045,10 @@
             "nullable": true
           },
           "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "modalidadReserva": {
             "type": "string",
             "nullable": true
           }
@@ -5555,6 +6124,19 @@
           "fechaCreacion": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidarQrRequest": {
+        "required": [
+          "codigo"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "minLength": 1,
+            "type": "string"
           }
         },
         "additionalProperties": false

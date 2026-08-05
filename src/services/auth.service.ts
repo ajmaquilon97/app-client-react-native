@@ -64,11 +64,21 @@ export async function login(email: string, password: string): Promise<AuthTokens
 }
 
 export async function loginWithGoogle(idToken: string): Promise<AuthTokens> {
-  const res = await fetch(`${MOBILE_AUTH_URL}/google`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ idToken }),
+  console.log('[auth.service] loginWithGoogle: POST', `${MOBILE_AUTH_URL}/google`, {
+    idTokenLength: idToken?.length,
   });
+  let res: Response;
+  try {
+    res = await fetch(`${MOBILE_AUTH_URL}/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+  } catch (err) {
+    console.log('[auth.service] loginWithGoogle: fetch falló (red/CORS/DNS):', err);
+    throw err;
+  }
+  console.log('[auth.service] loginWithGoogle: status de respuesta:', res.status);
   if (res.status === 401) {
     throw new Error('No se pudo verificar tu cuenta de Google. Intenta nuevamente.');
   }
@@ -76,9 +86,13 @@ export async function loginWithGoogle(idToken: string): Promise<AuthTokens> {
     throw new Error('Ese correo ya está en uso por otra cuenta. Intenta con otro método.');
   }
   if (!res.ok) {
-    throw new Error(await parseErrorMessage(res, 'No se pudo iniciar sesión con Google.'));
+    const message = await parseErrorMessage(res, 'No se pudo iniciar sesión con Google.');
+    console.log('[auth.service] loginWithGoogle: respuesta no OK, mensaje:', message);
+    throw new Error(message);
   }
-  return res.json();
+  const data = await res.json();
+  console.log('[auth.service] loginWithGoogle: respuesta OK:', data);
+  return data;
 }
 
 export async function getTiposUsuario(): Promise<TipoUsuario[]> {

@@ -26,7 +26,7 @@ import { reversarPagoDatafastDirecto, obtenerTransaccionDirecta } from '@/servic
 import { DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/config/paymentConfig';
 import { formatRangoReserva } from '@/utils/fechas';
 import { getModalidadReserva } from '@/utils/espacioArchetype';
-import { EstadoReserva, Reserva } from '@/types';
+import { EstadoReserva, Espacio, Reserva } from '@/types';
 
 const ESTADOS_CANCELABLES: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];
 const ESTADOS_ACTIVOS: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];
@@ -126,10 +126,23 @@ export default function CalendarScreen() {
     );
   };
 
+  const handleVerInvitados = (item: Reserva, espacio?: Espacio) => {
+    router.push({
+      pathname: '/reserva/[id]/invitados',
+      params: {
+        id: String(item.id),
+        titulo: item.espacioTitulo,
+        ...(espacio?.maxCapacidad != null ? { maxCapacidad: String(espacio.maxCapacidad) } : {}),
+      },
+    });
+  };
+
   const renderReserva = ({ item }: ListRenderItemInfo<Reserva>) => {
     const espacio = espaciosPorId.get(item.espacioId);
     const esCancelable = ESTADOS_CANCELABLES.includes(item.estado);
     const esCupoCompartido = !!espacio && getModalidadReserva(espacio) === 'cupo_compartido';
+    const puedeVerInvitados =
+      item.estadoPago === 'pagado' && item.estado !== 'cancelada' && !!espacio?.validarAforo;
 
     return (
       <View style={styles.card}>
@@ -170,11 +183,18 @@ export default function CalendarScreen() {
             <Text style={[styles.cardEstado, { color: ESTADO_COLOR[item.estado] }]}>
               {ESTADO_LABEL[item.estado]}
             </Text>
-            {esCancelable && (
-              <TouchableOpacity activeOpacity={0.7} onPress={() => handleCancelar(item)}>
-                <Text style={styles.cardCancel}>Cancelar</Text>
-              </TouchableOpacity>
-            )}
+            <View style={styles.cardFooterActions}>
+              {puedeVerInvitados && (
+                <TouchableOpacity activeOpacity={0.7} onPress={() => handleVerInvitados(item, espacio)}>
+                  <Text style={styles.cardInvitados}>Invitados</Text>
+                </TouchableOpacity>
+              )}
+              {esCancelable && (
+                <TouchableOpacity activeOpacity={0.7} onPress={() => handleCancelar(item)}>
+                  <Text style={styles.cardCancel}>Cancelar</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
       </View>
@@ -384,6 +404,17 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
     color: Colors.rose,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  cardFooterActions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  cardInvitados: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+    color: Colors.accentTeal,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

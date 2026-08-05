@@ -137,6 +137,12 @@ export default function LoginScreen() {
               <Text style={styles.footerLink}>Crear cuenta</Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            style={styles.recepcionButton}
+            onPress={() => router.push('/recepcion/login')}>
+            <Text style={styles.recepcionButtonText}>Ingreso Recepción</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -217,5 +223,16 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     color: Colors.accentTeal,
     fontWeight: FontWeight.bold,
+  },
+  recepcionButton: {
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+    paddingVertical: Spacing.xs,
+  },
+  recepcionButtonText: {
+    fontSize: FontSize.sm,
+    color: Colors.gray400,
+    fontWeight: FontWeight.semiBold,
+    textDecorationLine: 'underline',
   },
 });

@@ -123,11 +123,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loginWithGoogle = useCallback(
     async (idToken: string) => {
+      console.log('[AuthContext] loginWithGoogle: invocando authService.loginWithGoogle...');
       const { accessToken, refreshToken: newRefreshToken } =
         await authService.loginWithGoogle(idToken);
+      console.log('[AuthContext] loginWithGoogle: tokens recibidos del backend.');
       const userId = authService.decodeJwtSubject(accessToken);
+      console.log('[AuthContext] loginWithGoogle: userId extraído del accessToken:', userId);
       if (!userId) throw new Error('No se pudo interpretar la sesión recibida.');
       const usuario = await authService.fetchUsuario(userId, accessToken);
+      console.log('[AuthContext] loginWithGoogle: usuario obtenido:', usuario);
       await persistSession(accessToken, newRefreshToken, usuario);
     },
     [persistSession],
