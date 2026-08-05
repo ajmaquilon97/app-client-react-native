@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.obsidiantechlab.agora"
+      "package": "com.obsidiantechlab.agora",
+      "versionCode": 2
     },
     "web": {
       "output": "static",

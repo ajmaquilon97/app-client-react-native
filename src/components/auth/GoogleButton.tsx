@@ -13,6 +13,7 @@ import { Spacing, BorderRadius } from '@/constants/spacing';
 import { GoogleIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 import { GOOGLE_WEB_CLIENT_ID } from '@/config/googleAuthConfig';
+import { ApiError } from '@/services/apiError';
 
 GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
 
@@ -55,10 +56,16 @@ export default function GoogleButton({ label }: GoogleButtonProps) {
       if (isErrorWithCode(err) && err.code === statusCodes.IN_PROGRESS) {
         return;
       }
-      Alert.alert(
-        'No se pudo iniciar sesión',
-        err instanceof Error ? err.message : 'Ocurrió un error con el inicio de sesión de Google.',
-      );
+      // Alert (no solo console.log) porque en un APK de testing no hay consola a la mano —
+      // esto le da al tester algo que pueda leer/capturar en pantalla y reportar.
+      const detalle = [
+        isErrorWithCode(err) ? `Código: ${err.code}` : null,
+        err instanceof ApiError ? `HTTP: ${err.status}` : null,
+        err instanceof Error ? err.message : `Error desconocido: ${String(err)}`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      Alert.alert('No se pudo iniciar sesión con Google', detalle);
     } finally {
       setLoading(false);
     }

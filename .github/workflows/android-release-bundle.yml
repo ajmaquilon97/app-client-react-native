@@ -1,0 +1,71 @@
+name: Android Release Bundle
+
+# Genera el .aab de release en cada commit a develop, firmado con
+# agora-release-key.jks. El keystore y sus contraseñas no viven en el repo
+# (ver .gitignore) — se reconstruyen en el runner a partir de GitHub Secrets,
+# igual que gradle.properties en local. Requiere estos secrets en
+# Settings > Secrets and variables > Actions:
+#   ANDROID_RELEASE_KEYSTORE_BASE64  (agora-release-key.jks en base64)
+#   ANDROID_RELEASE_KEY_ALIAS
+#   ANDROID_RELEASE_STORE_PASSWORD
+#   ANDROID_RELEASE_KEY_PASSWORD
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode release keystore
+        run: echo "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > agora-release-key.jks
+
+      - name: Configure release signing
+        run: |
+          mkdir -p ~/.gradle
+          {
+            echo "MYAPP_RELEASE_STORE_FILE=agora-release-key.jks"
+            echo "MYAPP_RELEASE_KEY_ALIAS=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}"
+            echo "MYAPP_RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_RELEASE_STORE_PASSWORD }}"
+            echo "MYAPP_RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}"
+          } >> ~/.gradle/gradle.properties
+
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android
+
+      - name: Build release bundle
+        working-directory: android
+        run: ./gradlew bundleRelease
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ github.sha }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
