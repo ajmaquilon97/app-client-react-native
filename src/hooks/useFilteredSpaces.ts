@@ -13,6 +13,8 @@ interface UseFilteredSpacesReturn {
   total: number;
   isLoading: boolean;
   isError: boolean;
+  isRefetching: boolean;
+  refetch: () => void;
 }
 
 export function useFilteredSpaces({
@@ -20,7 +22,7 @@ export function useFilteredSpaces({
   query,
   filtroRapido,
 }: UseFilteredSpacesParams): UseFilteredSpacesReturn {
-  const { data = [], isLoading, isError } = useEspacios();
+  const { data = [], isLoading, isError, isRefetching, refetch } = useEspacios();
 
   const espacios = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -53,6 +55,8 @@ export function useFilteredSpaces({
     total: espacios.length,
     isLoading,
     isError,
+    isRefetching,
+    refetch,
   };
 }
 

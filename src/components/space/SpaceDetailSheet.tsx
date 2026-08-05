@@ -100,8 +100,6 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   const [disponibilidadError, setDisponibilidadError] = useState<string | null>(null);
 
   // Aforo disponible del día — solo aplica a espacios `cupo_compartido` (piscinas).
-  // GET /api/aforo todavía no existe en backend (ver FEEDBACK_BACKEND_MODALIDADES_RESERVA.md);
-  // fetchAforoDia genera un mock determinístico mientras tanto.
   const [aforo, setAforo] = useState<AforoDia | null>(null);
   const [aforoLoading, setAforoLoading] = useState(false);
   const [aforoError, setAforoError] = useState<string | null>(null);

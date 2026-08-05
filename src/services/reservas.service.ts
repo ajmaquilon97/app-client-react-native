@@ -44,11 +44,9 @@ interface CrearReservaInput {
   // acepte explícitamente, es posible que este campo se rechace o se ignore
   // silenciosamente.
   facturacion?: FacturacionInput;
-  // Cantidad de entradas para espacios `cupo_compartido` (piscinas). Reutiliza el
-  // nombre de `ReservaResponse.pax`, que backend ya devuelve hoy en las respuestas —
-  // ver FEEDBACK_BACKEND_MODALIDADES_RESERVA.md. Igual que `facturacion`, se manda
-  // optimista: mientras backend no confirme soporte en `ReservaRequest`, puede ser
-  // ignorado silenciosamente.
+  // Cantidad de entradas para espacios `cupo_compartido` (piscinas). Backend valida el
+  // aforo del día contra este valor y responde 409 si se excede (ver
+  // docs/instrucciones-equipo-mobile-modalidades-reserva.md §2.3-2.4).
   pax?: number;
 }
 

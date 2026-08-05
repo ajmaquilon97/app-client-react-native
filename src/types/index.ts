@@ -2,13 +2,9 @@ export type Categoria = 'canchas' | 'piscinas' | 'salones';
 
 export type FiltroRapido = 'cercanos' | 'puntuacion' | 'inmediato';
 
-// Ver docs/backend-espacios-archetypes-spec.md — backend todavía no expone este campo
-// (`modalidadReserva` en el catálogo de tipos de espacio), así que hoy siempre llega
-// `undefined` y se infiere localmente. Ver src/utils/espacioArchetype.ts.
 export type ModalidadReserva = 'franja_exclusiva' | 'cupo_compartido';
 
-// Mismo shape que `GET /api/aforo/dia` propuesto en docs/backend-espacios-archetypes-spec.md
-// §2 — hoy se genera con un mock local, ver src/services/aforo.service.ts.
+// Mismo shape que devuelve `GET /api/aforo/dia` (ver src/services/aforo.service.ts).
 export interface AforoDia {
   fecha: string;
   capacidadTotal: number;

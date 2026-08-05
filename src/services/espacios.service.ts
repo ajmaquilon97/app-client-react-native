@@ -29,10 +29,6 @@ interface EspacioAPI {
   imagenPortada: string | null;
   imagenesGaleria: string[] | null;
   tarifaHoy: TarifaHoyAPI | null;
-  // Pedido a backend, todavía no confirmado — ver
-  // docs/backend-espacios-archetypes-spec.md §1 y FEEDBACK_BACKEND_MODALIDADES_RESERVA.md.
-  // Hoy siempre llega undefined; se infiere localmente mientras tanto (ver
-  // src/utils/espacioArchetype.ts).
   modalidadReserva?: ModalidadReserva;
 }
 

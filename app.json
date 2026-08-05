@@ -48,7 +48,8 @@
           "cameraPermission": "Permite que Espacios use la cámara para escanear las entradas de los invitados en la puerta."
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "./plugins/withAndroidReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": true,

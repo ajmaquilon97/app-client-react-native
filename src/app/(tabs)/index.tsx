@@ -20,6 +20,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  RefreshControl,
   StatusBar,
   StyleSheet,
   Text,
@@ -45,7 +46,7 @@ export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
 
   const { isFavorite, toggleFavorite } = useFavoritesContext();
-  const { espacios, total } = useFilteredSpaces({
+  const { espacios, total, isRefetching, refetch } = useFilteredSpaces({
     categoria: categoriaSeleccionada,
     query: busqueda,
     filtroRapido,
@@ -187,6 +188,14 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={Colors.accentTeal}
+            colors={[Colors.accentTeal]}
+          />
+        }
       />
 
       <SpaceDetailSheet
