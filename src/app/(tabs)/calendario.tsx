@@ -25,6 +25,7 @@ import { cancelarReserva } from '@/services/reservas.service';
 import { reversarPagoDatafastDirecto, obtenerTransaccionDirecta } from '@/services/datafastDirectUat';
 import { DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/config/paymentConfig';
 import { formatRangoReserva } from '@/utils/fechas';
+import { getModalidadReserva } from '@/utils/espacioArchetype';
 import { EstadoReserva, Reserva } from '@/types';
 
 const ESTADOS_CANCELABLES: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];
@@ -128,6 +129,7 @@ export default function CalendarScreen() {
   const renderReserva = ({ item }: ListRenderItemInfo<Reserva>) => {
     const espacio = espaciosPorId.get(item.espacioId);
     const esCancelable = ESTADOS_CANCELABLES.includes(item.estado);
+    const esCupoCompartido = !!espacio && getModalidadReserva(espacio) === 'cupo_compartido';
 
     return (
       <View style={styles.card}>
@@ -154,7 +156,9 @@ export default function CalendarScreen() {
               {item.codigo ?? `Reserva #${String(item.id).padStart(6, '0')}`}
             </Text>
             <Text style={styles.cardDetail}>
-              {item.totalHoras} hora{item.totalHoras !== 1 ? 's' : ''}
+              {esCupoCompartido
+                ? `${item.pax} entrada${item.pax !== 1 ? 's' : ''}`
+                : `${item.totalHoras} hora${item.totalHoras !== 1 ? 's' : ''}`}
               {'   |   '}Total:{' '}
               <Text style={styles.cardDetailBold}>
                 ${(item.pago.total ?? 0).toFixed(2)}

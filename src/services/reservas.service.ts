@@ -44,6 +44,12 @@ interface CrearReservaInput {
   // acepte explícitamente, es posible que este campo se rechace o se ignore
   // silenciosamente.
   facturacion?: FacturacionInput;
+  // Cantidad de entradas para espacios `cupo_compartido` (piscinas). Reutiliza el
+  // nombre de `ReservaResponse.pax`, que backend ya devuelve hoy en las respuestas —
+  // ver FEEDBACK_BACKEND_MODALIDADES_RESERVA.md. Igual que `facturacion`, se manda
+  // optimista: mientras backend no confirme soporte en `ReservaRequest`, puede ser
+  // ignorado silenciosamente.
+  pax?: number;
 }
 
 export async function crearReserva(

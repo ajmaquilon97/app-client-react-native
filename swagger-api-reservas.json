@@ -230,6 +230,75 @@
         }
       }
     },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/forgot-password — Genera un token de restablecimiento de contraseña\r\n(Identity, GeneratePasswordResetTokenAsync) y lo envía por correo como enlace al\r\nfrontend. Siempre responde 200 con un mensaje genérico, exista o no una cuenta\r\nPropietario con ese correo, para no permitir enumeración de usuarios.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo de la cuenta a recuperar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — mensaje genérico, independiente de si el correo existe."
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "POST /api/auth/reset-password — Consume el token emitido por forgot-password y\r\nestablece la nueva contraseña (Identity, ResetPasswordAsync). Al tener éxito, revoca\r\ntodos los refresh tokens activos del usuario para cerrar cualquier sesión abierta con\r\nla contraseña anterior; el access token JWT ya emitido sigue siendo válido hasta su\r\nexpiración natural (máx. Jwt:AccessTokenMinutes) porque es stateless.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo de la cuenta.\r\n<b>Token</b> (string, requerido) — token recibido en el enlace de forgot-password.\r\n<b>NewPassword</b> (string, mín. 6 caracteres, requerido) — nueva contraseña.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — contraseña actualizada correctamente."
+          },
+          "400": {
+            "description": "{ message: \"El enlace no es válido o expiró.\" } — token inválido, expirado o cuenta inexistente."
+          }
+        }
+      }
+    },
     "/api/auth/send-sms-otp": {
       "post": {
         "tags": [
@@ -1203,6 +1272,43 @@
         }
       }
     },
+    "/api/espacios/{id}/inactivar": {
+      "post": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "POST /api/espacios/{id}/inactivar — Inactiva un espacio propio que esté en estado\r\n\"activo\". No afecta ninguna reserva existente (pasada o futura) del espacio: solo\r\nbloquea la creación de reservas nuevas mientras permanezca inactivo.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (int, ruta, requerido) — identificador del espacio a inactivar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`EspacioResponse` con `Estado` actualizado a \"inactivo\"."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El espacio no pertenece al usuario autenticado y este no tiene rol \"admin\"."
+          },
+          "404": {
+            "description": "No existe un espacio con ese ID."
+          },
+          "409": {
+            "description": "El espacio no está en estado \"activo\"."
+          }
+        }
+      }
+    },
     "/api/espacios/{espacioId}/reseñas": {
       "get": {
         "tags": [
@@ -1842,6 +1948,75 @@
         }
       }
     },
+    "/api/mobile/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "MobileAuth"
+        ],
+        "summary": "POST /api/mobile/auth/forgot-password — Genera un token de restablecimiento de\r\ncontraseña (Identity, GeneratePasswordResetTokenAsync) para la cuenta Cliente y lo\r\nenvía por correo como enlace al frontend. Siempre responde 200 con un mensaje\r\ngenérico, exista o no una cuenta Cliente con ese correo, para no permitir enumeración\r\nde usuarios.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo de la cuenta a recuperar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — mensaje genérico, independiente de si el correo existe."
+          }
+        }
+      }
+    },
+    "/api/mobile/auth/reset-password": {
+      "post": {
+        "tags": [
+          "MobileAuth"
+        ],
+        "summary": "POST /api/mobile/auth/reset-password — Consume el token emitido por forgot-password y\r\nestablece la nueva contraseña de la cuenta Cliente (Identity, ResetPasswordAsync). Al\r\ntener éxito, revoca todos los refresh tokens activos del usuario; el access token JWT\r\nya emitido sigue siendo válido hasta su expiración natural porque es stateless.",
+        "requestBody": {
+          "description": "<b>Email</b> (string, requerido) — correo de la cuenta.\r\n<b>Token</b> (string, requerido) — token recibido en el enlace de forgot-password.\r\n<b>NewPassword</b> (string, mín. 6 caracteres, requerido) — nueva contraseña.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "{ message } — contraseña actualizada correctamente."
+          },
+          "400": {
+            "description": "{ message: \"El enlace no es válido o expiró.\" } — token inválido, expirado o cuenta inexistente."
+          }
+        }
+      }
+    },
     "/api/mobile/auth/google": {
       "post": {
         "tags": [
@@ -2027,7 +2202,7 @@
         ],
         "summary": "PUT /api/negocios/me — Crea o actualiza (upsert) el negocio del usuario autenticado.\r\nSi el usuario ya tiene un negocio registrado, lo actualiza; si no, crea uno nuevo.",
         "requestBody": {
-          "description": "<b>NombreNegocio</b>, <b>NumeroIdentificacion</b>, <b>RazonSocial</b>, <b>Direccion</b>\r\n              (requeridos).\r\n<b>TipoIdentificacion</b> (string?, opcional) — catálogo SRI; si se omite, usa \"04\" (RUC).\r\n<b>Categoria</b>, <b>TelefonoNegocio</b>, <b>Descripcion</b>, <b>LogoUrl</b> (opcionales).",
+          "description": "<b>NombreNegocio</b>, <b>NumeroIdentificacion</b>, <b>RazonSocial</b>, <b>Direccion</b>\r\n              (requeridos).\r\n<b>TipoIdentificacion</b> (string?, opcional) — catálogo SRI; si se omite, usa \"04\" (RUC).\r\n<b>Categoria</b>, <b>TelefonoNegocio</b>, <b>Descripcion</b>, <b>LogoUrl</b> (opcionales).\r\n<b>ProvinciaId</b> (int?, opcional) — provincia del negocio (catálogo CAT_Provincias).\r\n<b>CiudadId</b> (int?, opcional) — ciudad del negocio (catálogo CAT_Ciudades); si se envía,\r\n              requiere `ProvinciaId` y debe pertenecerle, o se rechaza con 400.",
           "content": {
             "application/json": {
               "schema": {
@@ -2051,7 +2226,7 @@
             "description": "`NegocioResponse` con el negocio creado o actualizado."
           },
           "400": {
-            "description": "Datos inválidos."
+            "description": "Datos inválidos; o `CiudadId` no pertenece a `ProvinciaId` (o se envió\r\n`CiudadId` sin `ProvinciaId`)."
           },
           "401": {
             "description": "No autenticado (falta o expiró el JWT)."
@@ -3687,7 +3862,7 @@
           }
         ],
         "requestBody": {
-          "description": "<b>TipoUsuarioId</b> (int?, opcional) — 2 (Propietario) o 3 (Cliente); confirma/corrige el tipo\r\n              asignado en el registro o el default de Google. Se omite si no se quiere cambiar.\r\n<b>Nombre</b> (string, máx. 150) — nombre del usuario.\r\n<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.\r\n<b>FotoPerfilUrl</b> (string?, máx. 500) — ruta o URL de la foto de perfil.\r\n<b>ProvinciaId</b> (int?, opcional) — provincia del perfil (catálogo CAT_Provincias).\r\n<b>CiudadId</b> (int?, opcional) — ciudad del perfil (catálogo CAT_Ciudades); si se envía,\r\n              requiere `ProvinciaId` y debe pertenecerle, o se rechaza con 400.",
+          "description": "<b>TipoUsuarioId</b> (int?, opcional) — 2 (Propietario) o 3 (Cliente); confirma/corrige el tipo\r\n              asignado en el registro o el default de Google. Se omite si no se quiere cambiar.\r\n<b>Nombre</b> (string, máx. 150) — nombre del usuario.\r\n<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.\r\n<b>FotoPerfilUrl</b> (string?, máx. 500) — ruta o URL de la foto de perfil.",
           "content": {
             "application/json": {
               "schema": {
@@ -3711,7 +3886,7 @@
             "description": "`UsuarioResponse` con el perfil actualizado."
           },
           "400": {
-            "description": "`TipoUsuarioId` no es Propietario (2) ni Cliente (3); o `CiudadId` no pertenece\r\n              a `ProvinciaId` (o se envió `CiudadId` sin `ProvinciaId`)."
+            "description": "`TipoUsuarioId` no es Propietario (2) ni Cliente (3)."
           },
           "401": {
             "description": "No autenticado (falta o expiró el JWT)."
@@ -3979,16 +4154,6 @@
           "fotoPerfilUrl": {
             "maxLength": 500,
             "type": "string",
-            "nullable": true
-          },
-          "provinciaId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "ciudadId": {
-            "type": "integer",
-            "format": "int32",
             "nullable": true
           }
         },
@@ -4518,6 +4683,20 @@
         },
         "additionalProperties": false
       },
+      "ForgotPasswordRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "additionalProperties": false
+      },
       "GoogleIdTokenRequest": {
         "required": [
           "idToken"
@@ -4682,6 +4861,16 @@
           "logoUrl": {
             "maxLength": 500,
             "type": "string",
+            "nullable": true
+          },
+          "provinciaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ciudadId": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -5096,6 +5285,30 @@
         },
         "additionalProperties": false
       },
+      "ResetPasswordRequest": {
+        "required": [
+          "email",
+          "newPassword",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "token": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "newPassword": {
+            "minLength": 6,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "ReseñaRequest": {
         "type": "object",
         "properties": {
@@ -5325,16 +5538,6 @@
           },
           "fotoPerfilUrl": {
             "type": "string",
-            "nullable": true
-          },
-          "provinciaId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "ciudadId": {
-            "type": "integer",
-            "format": "int32",
             "nullable": true
           },
           "tipoUsuarioId": {

@@ -1,4 +1,4 @@
-import { Espacio, Categoria } from '@/types';
+import { Espacio, Categoria, ModalidadReserva } from '@/types';
 import { API_BASE_URL } from '@/config/api';
 import { parseLatLngFromGoogleMapsUrl } from '@/utils/geo';
 import { throwIfNotOk } from '@/services/apiError';
@@ -29,6 +29,11 @@ interface EspacioAPI {
   imagenPortada: string | null;
   imagenesGaleria: string[] | null;
   tarifaHoy: TarifaHoyAPI | null;
+  // Pedido a backend, todavía no confirmado — ver
+  // docs/backend-espacios-archetypes-spec.md §1 y FEEDBACK_BACKEND_MODALIDADES_RESERVA.md.
+  // Hoy siempre llega undefined; se infiere localmente mientras tanto (ver
+  // src/utils/espacioArchetype.ts).
+  modalidadReserva?: ModalidadReserva;
 }
 
 const IMAGEN_FALLBACK =
@@ -64,6 +69,8 @@ function mapApiToEspacio(e: EspacioAPI): Espacio {
     unidad: e.tarifaHoy?.unidad ?? 'hora',
     latitud: coords?.latitude ?? null,
     longitud: coords?.longitude ?? null,
+    modalidadReserva: e.modalidadReserva,
+    maxCapacidad: e.maxCapacidad,
     // --- campos pendientes de otros endpoints ---
     rating: 0,
     reviews: 0,

@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
 import { Spacing, BorderRadius } from '@/constants/spacing';
-import { Disponibilidad, Espacio, Reserva } from '@/types';
+import { AforoDia, Disponibilidad, Espacio, Reserva } from '@/types';
 import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/components/icons';
 import PaymentModal from '@/components/payment/PaymentModal';
 import { useAuth } from '@/context/AuthContext';
@@ -39,10 +39,13 @@ import {
   cancelarReserva,
   FacturacionInput,
 } from '@/services/reservas.service';
+import { fetchAforoDia } from '@/services/aforo.service';
+import { getModalidadReserva } from '@/utils/espacioArchetype';
 import { SERVICE_FEE_RATE } from '@/config/paymentConfig';
 import LocationMap from '@/components/space/LocationMap';
 import DaySelector from '@/components/space/DaySelector';
 import HourRangeSelector from '@/components/space/HourRangeSelector';
+import TicketQuantitySelector from '@/components/space/TicketQuantitySelector';
 import { MIS_RESERVAS_QUERY_KEY } from '@/hooks/useMisReservas';
 
 // Si el cliente no completa los datos de facturación, se manda como
@@ -74,9 +77,16 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   const queryClient = useQueryClient();
   const { fetchAuthorized, user } = useAuth();
   const hoy = useMemo(() => new Date(), [visible]);
+  // Ver docs/backend-espacios-archetypes-spec.md — mientras backend no confirme
+  // `modalidadReserva`, se infiere localmente (ver espacioArchetype.ts).
+  const modalidad = useMemo(
+    () => (espacio ? getModalidadReserva(espacio) : 'franja_exclusiva'),
+    [espacio],
+  );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [horaDesde, setHoraDesde] = useState<number | null>(null);
   const [horaHasta, setHoraHasta] = useState<number | null>(null);
+  const [cantidadEntradas, setCantidadEntradas] = useState(1);
   const [showPayment, setShowPayment] = useState(false);
   const [creandoReserva, setCreandoReserva] = useState(false);
   const [reservaCreada, setReservaCreada] = useState<Reserva | null>(null);
@@ -89,11 +99,19 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   const [disponibilidadLoading, setDisponibilidadLoading] = useState(false);
   const [disponibilidadError, setDisponibilidadError] = useState<string | null>(null);
 
+  // Aforo disponible del día — solo aplica a espacios `cupo_compartido` (piscinas).
+  // GET /api/aforo todavía no existe en backend (ver FEEDBACK_BACKEND_MODALIDADES_RESERVA.md);
+  // fetchAforoDia genera un mock determinístico mientras tanto.
+  const [aforo, setAforo] = useState<AforoDia | null>(null);
+  const [aforoLoading, setAforoLoading] = useState(false);
+  const [aforoError, setAforoError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!visible) {
       setSelectedDate(null);
       setHoraDesde(null);
       setHoraHasta(null);
+      setCantidadEntradas(1);
       setShowPayment(false);
       setReservaCreada(null);
       setIdentificacionFacturacion('');
@@ -101,6 +119,8 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       setCorreoFacturacion('');
       setDisponibilidad(null);
       setDisponibilidadError(null);
+      setAforo(null);
+      setAforoError(null);
     }
   }, [visible]);
 
@@ -134,6 +154,38 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       cancelled = true;
     };
   }, [visible, espacio, selectedDate, fetchAuthorized]);
+
+  useEffect(() => {
+    if (!visible || !espacio || !selectedDate || modalidad !== 'cupo_compartido') {
+      setAforo(null);
+      return;
+    }
+    let cancelled = false;
+    setAforoLoading(true);
+    setAforoError(null);
+
+    (async () => {
+      try {
+        const data = await fetchAuthorized(accessToken =>
+          fetchAforoDia(espacio.id, toDateOnlyString(selectedDate), espacio.maxCapacidad, accessToken),
+        );
+        if (!cancelled) {
+          setAforo(data);
+          setCantidadEntradas(prev => Math.min(Math.max(prev, 1), Math.max(data.disponible, 1)));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setAforoError(err instanceof Error ? err.message : 'No se pudo obtener el aforo disponible.');
+        }
+      } finally {
+        if (!cancelled) setAforoLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, espacio, selectedDate, modalidad, fetchAuthorized]);
 
   const handleChangeHoraDesde = useCallback((hora: number) => {
     setHoraDesde(hora);
@@ -169,14 +221,26 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 
   const handleReservar = useCallback(async () => {
     if (!espacio) return;
-    if (!selectedDate || horaDesde == null || horaHasta == null) {
+
+    if (!selectedDate) {
+      Alert.alert('Faltan datos', 'Elige el día para tu reserva.', [{ text: 'Entendido' }]);
+      return;
+    }
+
+    if (modalidad === 'cupo_compartido') {
+      if (cantidadEntradas < 1) {
+        Alert.alert('Faltan datos', 'Elige la cantidad de entradas para tu reserva.', [{ text: 'Entendido' }]);
+        return;
+      }
+    } else if (horaDesde == null || horaHasta == null) {
       Alert.alert(
         'Faltan datos',
-        'Elige el día y el rango de horas (desde–hasta) para tu reserva.',
+        'Elige el rango de horas (desde–hasta) para tu reserva.',
         [{ text: 'Entendido' }],
       );
       return;
     }
+
     if (!disponibilidad?.tarifa) {
       Alert.alert(
         'Tarifa no disponible',
@@ -196,20 +260,34 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
         }
       : FACTURACION_CONSUMIDOR_FINAL;
 
+    // Convención acordada con el equipo Web para `cupo_compartido` (piscinas):
+    // fechaInicio = fechaFin = el día elegido, sin franja horaria específica — ver
+    // docs/backend-espacios-archetypes-spec.md §3 y FEEDBACK_BACKEND_MODALIDADES_RESERVA.md.
+    // `totalHoras: 0` es un placeholder: backend todavía no confirmó qué espera este
+    // campo para una venta de entrada.
+    const inputReserva =
+      modalidad === 'cupo_compartido'
+        ? {
+            espacioId: espacio.id,
+            fechaInicio: toLocalDateTimeString(selectedDate, 0),
+            fechaFin: toLocalDateTimeString(selectedDate, 0),
+            totalHoras: 0,
+            pax: cantidadEntradas,
+            facturacion,
+          }
+        : {
+            espacioId: espacio.id,
+            // horaDesde/horaHasta ya se validaron como no-nulos arriba para este archetype.
+            fechaInicio: toLocalDateTimeString(selectedDate, horaDesde as number),
+            fechaFin: toLocalDateTimeString(selectedDate, horaHasta as number),
+            totalHoras: cantidadHoras,
+            facturacion,
+          };
+
     setCreandoReserva(true);
     try {
       const nueva = await fetchAuthorized(accessToken =>
-        crearReserva(
-          {
-            espacioId: espacio.id,
-            fechaInicio: toLocalDateTimeString(selectedDate, horaDesde),
-            fechaFin: toLocalDateTimeString(selectedDate, horaHasta),
-            totalHoras: cantidadHoras,
-            facturacion,
-          },
-          user?.id ?? '',
-          accessToken,
-        ),
+        crearReserva(inputReserva, user?.id ?? '', accessToken),
       );
       setReservaCreada(nueva);
       setShowPayment(true);
@@ -228,8 +306,10 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   }, [
     espacio,
     selectedDate,
+    modalidad,
     horaDesde,
     horaHasta,
+    cantidadEntradas,
     disponibilidad,
     cantidadHoras,
     user,
@@ -241,9 +321,13 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   ]);
 
   const fechaHoraTexto =
-    selectedDate && horaDesde != null && horaHasta != null
-      ? `${formatFecha(selectedDate)} · ${formatHora(horaDesde)}–${formatHora(horaHasta)}`
-      : '';
+    modalidad === 'cupo_compartido'
+      ? selectedDate
+        ? `${formatFecha(selectedDate)} · ${cantidadEntradas} entrada${cantidadEntradas !== 1 ? 's' : ''}`
+        : ''
+      : selectedDate && horaDesde != null && horaHasta != null
+        ? `${formatFecha(selectedDate)} · ${formatHora(horaDesde)}–${formatHora(horaHasta)}`
+        : '';
 
   const handlePaymentSuccess = useCallback(async (result?: { pagoYaRegistrado?: boolean }) => {
     // Datafast ya registra el pago en el backend al verificar la transacción
@@ -291,10 +375,19 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 
   if (!espacio) return null;
 
+  const esCupoCompartido = modalidad === 'cupo_compartido';
+  // Backend hoy reutiliza la modalidad de tarifa "hora" como precio de entrada para
+  // piscinas (ver docs/backend-espacios-archetypes-spec.md §4, sin decidir todavía), así
+  // que `espacio.unidad` vendría mal etiquetado — lo forzamos acá para la UI.
+  const unidadLabel = esCupoCompartido ? 'entrada' : espacio.unidad;
+  const cantidadUnidades = esCupoCompartido ? cantidadEntradas : cantidadHoras;
   const precioDelDia = disponibilidad?.tarifa?.precio ?? espacio.precio;
-  const subtotalReserva = cantidadHoras > 0 ? precioDelDia * cantidadHoras : 0;
+  const subtotalReserva = cantidadUnidades > 0 ? precioDelDia * cantidadUnidades : 0;
   const comisionServicio = subtotalReserva * SERVICE_FEE_RATE;
   const totalReserva = subtotalReserva + comisionServicio;
+  // Para que el resumen genérico de pago (`${cantidad} ${espacio.unidad}(s)`) diga
+  // "entrada(s)" en vez de "hora(s)" cuando corresponde.
+  const espacioParaPago = esCupoCompartido ? { ...espacio, unidad: unidadLabel } : espacio;
 
   return (
     <Modal
@@ -434,7 +527,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                 <View style={styles.bookingHeader}>
                   <Text style={styles.bookingHeaderLabel}>Planifica tu reserva</Text>
                   <Text style={styles.bookingHeaderPrice}>
-                    ${espacio.precio} <Text style={styles.bookingPriceUnit}>/{espacio.unidad}</Text>
+                    ${espacio.precio} <Text style={styles.bookingPriceUnit}>/{unidadLabel}</Text>
                   </Text>
                 </View>
 
@@ -464,22 +557,37 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   </>
                 )}
 
-                <Text style={[styles.inputLabel, styles.inputLabelSpaced]}>Horario</Text>
-                <HourRangeSelector
-                  horaDesde={horaDesde}
-                  horaHasta={horaHasta}
-                  onChangeDesde={handleChangeHoraDesde}
-                  onChangeHasta={setHoraHasta}
-                  horasEstado={disponibilidad?.horas}
-                />
+                {esCupoCompartido ? (
+                  <>
+                    <Text style={[styles.inputLabel, styles.inputLabelSpaced]}>Cantidad de entradas</Text>
+                    <TicketQuantitySelector
+                      cantidad={cantidadEntradas}
+                      onChange={setCantidadEntradas}
+                      aforo={aforo}
+                      loading={aforoLoading}
+                      error={aforoError}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Text style={[styles.inputLabel, styles.inputLabelSpaced]}>Horario</Text>
+                    <HourRangeSelector
+                      horaDesde={horaDesde}
+                      horaHasta={horaHasta}
+                      onChangeDesde={handleChangeHoraDesde}
+                      onChangeHasta={setHoraHasta}
+                      horasEstado={disponibilidad?.horas}
+                    />
+                  </>
+                )}
 
                 {/* Desglose de costos */}
-                {cantidadHoras > 0 && disponibilidad?.tarifa && (
+                {cantidadUnidades > 0 && disponibilidad?.tarifa && (
                   <View style={[styles.costBreakdown, styles.costBreakdownSpaced]}>
                     <View style={styles.costRow}>
                       <Text style={styles.costLabel}>
-                        Costo por {cantidadHoras} {espacio.unidad}
-                        {cantidadHoras !== 1 ? 's' : ''}:
+                        Costo por {cantidadUnidades} {unidadLabel}
+                        {cantidadUnidades !== 1 ? 's' : ''}:
                       </Text>
                       <Text style={styles.costValue}>${precioDelDia} c/u</Text>
                     </View>
@@ -580,9 +688,9 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       {espacio && (
         <PaymentModal
           visible={showPayment}
-          espacio={espacio}
+          espacio={espacioParaPago}
           fecha={fechaHoraTexto}
-          cantidad={cantidadHoras}
+          cantidad={cantidadUnidades}
           total={(reservaCreada?.pago.total ?? totalReserva).toFixed(2)}
           reservaId={reservaCreada?.id ?? null}
           onClose={handleClosePayment}
