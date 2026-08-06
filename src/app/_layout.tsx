@@ -37,10 +37,13 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="verificar-telefono" options={{ presentation: 'card' }} />
         <Stack.Screen name="reserva/[id]/invitados" options={{ presentation: 'card' }} />
+        <Stack.Screen name="reserva/[id]/detalle" options={{ presentation: 'card' }} />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="login" options={{ presentation: 'card' }} />
         <Stack.Screen name="registro" options={{ presentation: 'card' }} />
+        <Stack.Screen name="olvide-password" options={{ presentation: 'card' }} />
+        <Stack.Screen name="restablecer-password" options={{ presentation: 'card' }} />
       </Stack.Protected>
       <Stack.Protected guard={!isKioskAuthenticated}>
         <Stack.Screen name="recepcion/login" options={{ presentation: 'card' }} />

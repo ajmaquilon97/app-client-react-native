@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/config/api';
-import { Disponibilidad, Reserva } from '@/types';
+import { Disponibilidad, FacturaStatus, Reserva } from '@/types';
 import { throwIfNotOk } from '@/services/apiError';
 
 const MOBILE_ESPACIOS_URL = `${API_BASE_URL}/mobile/espacios`;
@@ -101,6 +101,17 @@ export async function cancelarReserva(
     console.log('[Reversa][BACKEND] estadoPago tras cancelar:', data?.estadoPago);
   }
   return data;
+}
+
+export async function facturasReserva(id: number, accessToken: string): Promise<FacturaStatus[]> {
+  const res = await fetch(`${RESERVAS_URL}/${id}/factura`, {
+    headers: authHeaders(accessToken),
+  });
+  // 404 también significa "todavía no tiene facturas asociadas" (p.ej. reserva
+  // sin pagar aún) — no es un error para la UI, simplemente no hay nada que mostrar.
+  if (res.status === 404) return [];
+  await throwIfNotOk(res, 'No se pudieron obtener las facturas de la reserva.');
+  return res.json();
 }
 
 export async function registrarPago(

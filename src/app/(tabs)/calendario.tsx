@@ -137,6 +137,13 @@ export default function CalendarScreen() {
     });
   };
 
+  const handleVerDetalle = (item: Reserva) => {
+    router.push({
+      pathname: '/reserva/[id]/detalle',
+      params: { id: String(item.id), titulo: item.espacioTitulo },
+    });
+  };
+
   const renderReserva = ({ item }: ListRenderItemInfo<Reserva>) => {
     const espacio = espaciosPorId.get(item.espacioId);
     const esCancelable = ESTADOS_CANCELABLES.includes(item.estado);
@@ -145,7 +152,10 @@ export default function CalendarScreen() {
       item.estadoPago === 'pagado' && item.estado !== 'cancelada' && !!espacio?.validarAforo;
 
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        style={styles.card}
+        onPress={() => handleVerDetalle(item)}>
         <Image
           source={{ uri: espacio?.imagen ?? IMAGEN_FALLBACK }}
           style={styles.cardImage}
@@ -197,7 +207,7 @@ export default function CalendarScreen() {
             </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 

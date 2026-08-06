@@ -281,3 +281,25 @@ export async function verificarSmsOtp(code: string, accessToken: string): Promis
   });
   await throwIfNotOk(res, 'Código inválido.');
 }
+
+export async function forgotPassword(email: string): Promise<void> {
+  const res = await fetch(`${MOBILE_AUTH_URL}/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  await throwIfNotOk(res, 'No se pudo procesar la solicitud.');
+}
+
+export async function resetPassword(
+  email: string,
+  token: string,
+  newPassword: string,
+): Promise<void> {
+  const res = await fetch(`${MOBILE_AUTH_URL}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ email, token, newPassword }),
+  });
+  await throwIfNotOk(res, 'El enlace no es válido o expiró.');
+}

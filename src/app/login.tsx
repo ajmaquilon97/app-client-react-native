@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { FontSize, FontWeight } from '@/constants/typography';
@@ -26,6 +26,7 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { login } = useAuth();
+  const { reset } = useLocalSearchParams<{ reset?: string }>();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -89,6 +90,12 @@ export default function LoginScreen() {
           <Text style={styles.title}>Bienvenido de nuevo</Text>
           <Text style={styles.subtitle}>Inicia sesión para seguir reservando espacios.</Text>
 
+          {reset === 'success' && (
+            <View style={styles.successBanner}>
+              <Text style={styles.successBannerText}>Contraseña actualizada correctamente.</Text>
+            </View>
+          )}
+
           {!!generalError && (
             <View style={styles.errorBanner}>
               <Text style={styles.errorBannerText}>{generalError}</Text>
@@ -119,6 +126,12 @@ export default function LoginScreen() {
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
             />
+
+            <TouchableOpacity
+              style={styles.forgotPasswordLink}
+              onPress={() => router.push('/olvide-password')}>
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
 
             <AuthButton label="INICIAR SESIÓN" onPress={handleSubmit} loading={loading} />
 
@@ -191,8 +204,28 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: FontWeight.medium,
   },
+  successBanner: {
+    backgroundColor: Colors.tealLight,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  successBannerText: {
+    color: Colors.success,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.medium,
+  },
   form: {
     marginBottom: Spacing.xl,
+  },
+  forgotPasswordLink: {
+    alignSelf: 'flex-end',
+    marginBottom: Spacing.md,
+  },
+  forgotPasswordText: {
+    fontSize: FontSize.sm,
+    color: Colors.accentTeal,
+    fontWeight: FontWeight.semiBold,
   },
   dividerRow: {
     flexDirection: 'row',

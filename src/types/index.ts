@@ -168,3 +168,31 @@ export interface Reserva {
   pago: ReservaPago;
   fechaCreacion: string;
 }
+
+// GET /api/reservas/{id}/factura — estado de las facturas electrónicas (SRI) de la
+// reserva. Una reserva pagada genera dos: fee de plataforma y alquiler del espacio.
+// El swagger no publica un schema formal para `FacturaStatusResponse` (solo la
+// describe en prosa), así que los campos opcionales/nullable son una suposición
+// defensiva hasta confirmar con backend — la UI debe tolerar que cualquiera falte.
+export type EstadoFactura =
+  | 'Procesando'
+  | 'Recibida'
+  | 'Autorizada'
+  | 'Devuelta'
+  | 'No autorizada'
+  | 'Error';
+
+export interface FacturaStatus {
+  id: string;
+  tipoFactura: string | null;
+  estado: EstadoFactura | string;
+  numeroComprobante: string | null;
+  claveAcceso: string | null;
+  fechaEmision: string | null;
+  fechaAutorizacion: string | null;
+  subtotal: number | null;
+  iva: number | null;
+  total: number | null;
+  motivoRechazo: string | null;
+  ridePdfUrl: string | null;
+}
