@@ -196,31 +196,35 @@ export interface FacturaStatus {
   motivoRechazo: string | null;
 }
 
-// GET /api/mobile/reservas/{reservaId}/factura — enlaces de descarga (PDF/XML) para el
-// botón "Descargar factura" del detalle de reserva. Shape confirmado por backend (sí
-// tiene schema formal en el swagger, a diferencia de FacturaStatus arriba). Las URLs
-// son pre-firmadas de S3 y expiran en `urlsExpiranEnSegundos` — hay que volver a llamar
-// a este endpoint cada vez que el usuario quiera descargar, no cachear las URLs.
-export interface FacturaDescargaItem {
+// GET /api/mobile/reservas/{reservaId}/facturas (plural) — arreglo plano de las
+// facturas ya AUTORIZADAS de una reserva, con sus URLs de descarga. Ver
+// docs/feedback-mobile-facturacion.md. Ordenado de la más reciente a la más antigua.
+// pdfUrl/xmlUrl son URLs pre-firmadas de S3 que expiran en `urlsExpiranEnSegundos`
+// (hoy 3600) — pedir fresco justo antes de descargar, nunca cachear.
+export type TipoFactura = 'fee_plataforma' | 'reserva_espacio';
+
+export interface FacturaDescarga {
   facturaId: string;
-  tipoFactura: string | null;
-  descripcion: string | null;
-  numeroComprobante: string | null;
-  claveAcceso: string | null;
+  reservaId: number;
+  codigoReserva: string;
+  tipoFactura: TipoFactura | string;
+  // Ya viene traducido a lenguaje de usuario — usar tal cual, no re-traducir el enum.
+  descripcion: string;
+  emisorRazonSocial: string;
+  // Este sí distingue una factura de otra (el legal es el mismo en las dos) — usar
+  // como título de cada fila, no `tipoFactura`.
+  emisorNombreComercial: string | null;
+  numeroComprobante: string;
+  claveAcceso: string;
   numeroAutorizacion: string | null;
+  // ISO-8601 sin sufijo de zona — el valor está en UTC.
   fechaAutorizacion: string | null;
   subtotal: number;
   iva: number;
   total: number;
   pdfUrl: string | null;
   xmlUrl: string | null;
-  nombreArchivoPdf: string | null;
-  nombreArchivoXml: string | null;
-}
-
-export interface FacturaDescargaResponse {
-  reservaId: number;
-  codigoReserva: string | null;
   urlsExpiranEnSegundos: number;
-  facturas: FacturaDescargaItem[] | null;
+  nombreArchivoPdf: string;
+  nombreArchivoXml: string;
 }

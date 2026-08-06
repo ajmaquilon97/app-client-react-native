@@ -21,7 +21,7 @@ import { useReservaDetalle } from '@/hooks/useReservaDetalle';
 import { useFacturasReserva } from '@/hooks/useFacturasReserva';
 import { useEspacios } from '@/hooks/useEspacios';
 import { useAuth } from '@/context/AuthContext';
-import { descargarFactura } from '@/services/reservas.service';
+import { facturasDescarga } from '@/services/reservas.service';
 import LocationMap from '@/components/space/LocationMap';
 import { formatRangoReserva } from '@/utils/fechas';
 import { getModalidadReserva } from '@/utils/espacioArchetype';
@@ -60,20 +60,15 @@ const ESTADO_PAGO_COLOR: Record<EstadoPago, string> = {
   reembolsado: Colors.gray400,
 };
 
-// El swagger no publica los valores exactos de `tipoFactura` — solo indica que
-// distingue "fee de la plataforma" de "alquiler del espacio" (ver
-// GET /api/reservas/{id}/factura). Mapeo best-effort por palabras clave, con el
-// valor crudo del backend como respaldo si no calza con ninguna.
+// GET /api/reservas/{id}/factura (estado, sin schema formal en swagger) usa el mismo
+// campo `tipoFactura` que el backend ya confirmó para /facturas (ver
+// docs/feedback-mobile-facturacion.md): "fee_plataforma" | "reserva_espacio". Antes de
+// que exista una factura autorizada (con `emisorNombreComercial`, la fuente correcta
+// para el título) esto es lo único que tenemos para distinguir una fila de otra.
 function tipoFacturaLabel(tipo: string | null): string {
-  if (!tipo) return 'Factura';
-  const lower = tipo.toLowerCase();
-  if (lower.includes('fee') || lower.includes('comision') || lower.includes('plataforma')) {
-    return 'Fee de la plataforma';
-  }
-  if (lower.includes('alquiler') || lower.includes('espacio') || lower.includes('renta')) {
-    return 'Alquiler del espacio';
-  }
-  return tipo;
+  if (tipo === 'fee_plataforma') return 'Fee de la plataforma';
+  if (tipo === 'reserva_espacio') return 'Alquiler del espacio';
+  return tipo || 'Factura';
 }
 
 const ESTADO_FACTURA_COLOR: Record<string, string> = {
@@ -109,9 +104,11 @@ function FacturaCard({ reservaId, factura }: { reservaId: number; factura: Factu
     setDescargando(true);
     try {
       // Se pide fresco en cada tap: las URLs son pre-firmadas y expiran en 1 hora
-      // (urlsExpiranEnSegundos), así que no se pueden cachear del lado del cliente.
-      const respuesta = await fetchAuthorized(accessToken => descargarFactura(reservaId, accessToken));
-      const item = respuesta.facturas?.find(f => f.tipoFactura === factura.tipoFactura) ?? respuesta.facturas?.[0];
+      // (urlsExpiranEnSegundos, por ítem), así que no se pueden cachear del lado del
+      // cliente. Nunca se manda el header Authorization al abrir pdfUrl — la firma va
+      // en la propia URL.
+      const facturas = await fetchAuthorized(accessToken => facturasDescarga(reservaId, accessToken));
+      const item = facturas.find(f => f.tipoFactura === factura.tipoFactura) ?? facturas[0];
       if (!item?.pdfUrl) {
         Alert.alert(
           'Comprobante no disponible',
@@ -334,6 +331,9 @@ export default function ReservaDetalleScreen() {
 
             {/* Facturas */}
             <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Facturas</Text>
+            <Text style={styles.facturasHint}>
+              También te las enviamos por correo apenas el SRI las autoriza.
+            </Text>
             {isLoadingFacturas ? (
               <View style={styles.infoBanner}>
                 <ActivityIndicator size="small" color={Colors.gray500} />
@@ -489,6 +489,12 @@ const styles = StyleSheet.create({
   },
   sectionTitleSpaced: {
     marginTop: Spacing.lg,
+  },
+  facturasHint: {
+    fontSize: FontSize.xs,
+    color: Colors.gray500,
+    marginTop: -Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   infoCard: {
     backgroundColor: Colors.white,

@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/config/api';
-import { Disponibilidad, FacturaDescargaResponse, FacturaStatus, Reserva } from '@/types';
+import { Disponibilidad, FacturaDescarga, FacturaStatus, Reserva } from '@/types';
 import { throwIfNotOk } from '@/services/apiError';
 
 const MOBILE_ESPACIOS_URL = `${API_BASE_URL}/mobile/espacios`;
@@ -114,16 +114,19 @@ export async function facturasReserva(id: number, accessToken: string): Promise<
   return res.json();
 }
 
-// GET /api/mobile/reservas/{reservaId}/factura — enlaces de descarga (PDF/XML) para el
-// botón "Descargar factura" del detalle de reserva. A diferencia de facturasReserva
-// (arriba), este sí tiene schema confirmado en swagger. Las URLs pre-firmadas expiran
-// en 1 hora, así que hay que llamarlo justo antes de abrir el PDF, no cachear la
-// respuesta. 400 = la factura todavía se procesa en el SRI o fue rechazada.
-export async function descargarFactura(
+// GET /api/mobile/reservas/{reservaId}/facturas (plural) — enlaces de descarga
+// (PDF/XML) de las facturas ya autorizadas de la reserva. Ver
+// docs/feedback-mobile-facturacion.md. Arreglo plano (no envuelto), a diferencia de
+// facturasReserva (arriba), que solo da el estado. Las URLs pre-firmadas expiran en
+// `urlsExpiranEnSegundos` (por ítem), así que hay que llamarlo justo antes de abrir el
+// PDF, no cachear la respuesta. 400 = las facturas todavía se procesan en el SRI o
+// fueron rechazadas; 404 = la reserva no existe o todavía no tiene facturas emitidas
+// (mensajes ya redactados para mostrar al usuario tal cual).
+export async function facturasDescarga(
   reservaId: number,
   accessToken: string,
-): Promise<FacturaDescargaResponse> {
-  const res = await fetch(`${MOBILE_RESERVAS_URL}/${reservaId}/factura`, {
+): Promise<FacturaDescarga[]> {
+  const res = await fetch(`${MOBILE_RESERVAS_URL}/${reservaId}/facturas`, {
     headers: authHeaders(accessToken),
   });
   await throwIfNotOk(res, 'No se pudo obtener el comprobante de la factura.');
