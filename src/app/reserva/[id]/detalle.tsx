@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Platform,
   Linking,
+  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -19,6 +20,8 @@ import { ArrowLeftIcon, LocationIcon, CalendarIcon } from '@/components/icons';
 import { useReservaDetalle } from '@/hooks/useReservaDetalle';
 import { useFacturasReserva } from '@/hooks/useFacturasReserva';
 import { useEspacios } from '@/hooks/useEspacios';
+import { useAuth } from '@/context/AuthContext';
+import { descargarFactura } from '@/services/reservas.service';
 import LocationMap from '@/components/space/LocationMap';
 import { formatRangoReserva } from '@/utils/fechas';
 import { getModalidadReserva } from '@/utils/espacioArchetype';
@@ -97,7 +100,38 @@ function formatFechaHora(iso: string | null): string | null {
   });
 }
 
-function FacturaCard({ factura }: { factura: FacturaStatus }) {
+function FacturaCard({ reservaId, factura }: { reservaId: number; factura: FacturaStatus }) {
+  const { fetchAuthorized } = useAuth();
+  const [descargando, setDescargando] = useState(false);
+  const autorizada = factura.estado === 'Autorizada';
+
+  const handleDescargar = async () => {
+    setDescargando(true);
+    try {
+      // Se pide fresco en cada tap: las URLs son pre-firmadas y expiran en 1 hora
+      // (urlsExpiranEnSegundos), así que no se pueden cachear del lado del cliente.
+      const respuesta = await fetchAuthorized(accessToken => descargarFactura(reservaId, accessToken));
+      const item = respuesta.facturas?.find(f => f.tipoFactura === factura.tipoFactura) ?? respuesta.facturas?.[0];
+      if (!item?.pdfUrl) {
+        Alert.alert(
+          'Comprobante no disponible',
+          'Todavía no hay un PDF disponible para esta factura. Intenta de nuevo en unos minutos.',
+          [{ text: 'Entendido' }],
+        );
+        return;
+      }
+      await Linking.openURL(item.pdfUrl);
+    } catch (err) {
+      Alert.alert(
+        'No se pudo descargar la factura',
+        err instanceof Error ? err.message : 'Intenta de nuevo.',
+        [{ text: 'Entendido' }],
+      );
+    } finally {
+      setDescargando(false);
+    }
+  };
+
   return (
     <View style={styles.facturaCard}>
       <View style={styles.facturaHeader}>
@@ -136,12 +170,17 @@ function FacturaCard({ factura }: { factura: FacturaStatus }) {
       {!!factura.motivoRechazo && (
         <Text style={styles.facturaMotivo}>⚠️ {factura.motivoRechazo}</Text>
       )}
-      {!!factura.ridePdfUrl && (
+      {autorizada && (
         <TouchableOpacity
           activeOpacity={0.8}
-          style={styles.facturaPdfBtn}
-          onPress={() => Linking.openURL(factura.ridePdfUrl as string)}>
-          <Text style={styles.facturaPdfBtnText}>Ver comprobante (RIDE)</Text>
+          disabled={descargando}
+          style={[styles.facturaPdfBtn, descargando && styles.facturaPdfBtnDisabled]}
+          onPress={handleDescargar}>
+          {descargando ? (
+            <ActivityIndicator size="small" color={Colors.accentTeal} />
+          ) : (
+            <Text style={styles.facturaPdfBtnText}>Descargar factura</Text>
+          )}
         </TouchableOpacity>
       )}
     </View>
@@ -318,7 +357,7 @@ export default function ReservaDetalleScreen() {
             ) : (
               <View style={{ gap: Spacing.sm }}>
                 {facturas.map(factura => (
-                  <FacturaCard key={factura.id} factura={factura} />
+                  <FacturaCard key={factura.id} reservaId={reservaId} factura={factura} />
                 ))}
               </View>
             )}
@@ -658,6 +697,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.md,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  facturaPdfBtnDisabled: {
+    opacity: 0.6,
   },
   facturaPdfBtnText: {
     color: Colors.accentTeal,

@@ -194,5 +194,33 @@ export interface FacturaStatus {
   iva: number | null;
   total: number | null;
   motivoRechazo: string | null;
-  ridePdfUrl: string | null;
+}
+
+// GET /api/mobile/reservas/{reservaId}/factura — enlaces de descarga (PDF/XML) para el
+// botón "Descargar factura" del detalle de reserva. Shape confirmado por backend (sí
+// tiene schema formal en el swagger, a diferencia de FacturaStatus arriba). Las URLs
+// son pre-firmadas de S3 y expiran en `urlsExpiranEnSegundos` — hay que volver a llamar
+// a este endpoint cada vez que el usuario quiera descargar, no cachear las URLs.
+export interface FacturaDescargaItem {
+  facturaId: string;
+  tipoFactura: string | null;
+  descripcion: string | null;
+  numeroComprobante: string | null;
+  claveAcceso: string | null;
+  numeroAutorizacion: string | null;
+  fechaAutorizacion: string | null;
+  subtotal: number;
+  iva: number;
+  total: number;
+  pdfUrl: string | null;
+  xmlUrl: string | null;
+  nombreArchivoPdf: string | null;
+  nombreArchivoXml: string | null;
+}
+
+export interface FacturaDescargaResponse {
+  reservaId: number;
+  codigoReserva: string | null;
+  urlsExpiranEnSegundos: number;
+  facturas: FacturaDescargaItem[] | null;
 }

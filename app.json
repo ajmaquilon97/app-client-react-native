@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "app-client-react-native",
+    "name": "Agora",
     "slug": "app-client-react-native",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,7 +19,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.obsidiantechlab.agora",
-      "versionCode": 2
+      "versionCode": 4
     },
     "web": {
       "output": "static",

@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/config/api';
-import { Disponibilidad, FacturaStatus, Reserva } from '@/types';
+import { Disponibilidad, FacturaDescargaResponse, FacturaStatus, Reserva } from '@/types';
 import { throwIfNotOk } from '@/services/apiError';
 
 const MOBILE_ESPACIOS_URL = `${API_BASE_URL}/mobile/espacios`;
@@ -111,6 +111,22 @@ export async function facturasReserva(id: number, accessToken: string): Promise<
   // sin pagar aún) — no es un error para la UI, simplemente no hay nada que mostrar.
   if (res.status === 404) return [];
   await throwIfNotOk(res, 'No se pudieron obtener las facturas de la reserva.');
+  return res.json();
+}
+
+// GET /api/mobile/reservas/{reservaId}/factura — enlaces de descarga (PDF/XML) para el
+// botón "Descargar factura" del detalle de reserva. A diferencia de facturasReserva
+// (arriba), este sí tiene schema confirmado en swagger. Las URLs pre-firmadas expiran
+// en 1 hora, así que hay que llamarlo justo antes de abrir el PDF, no cachear la
+// respuesta. 400 = la factura todavía se procesa en el SRI o fue rechazada.
+export async function descargarFactura(
+  reservaId: number,
+  accessToken: string,
+): Promise<FacturaDescargaResponse> {
+  const res = await fetch(`${MOBILE_RESERVAS_URL}/${reservaId}/factura`, {
+    headers: authHeaders(accessToken),
+  });
+  await throwIfNotOk(res, 'No se pudo obtener el comprobante de la factura.');
   return res.json();
 }
 

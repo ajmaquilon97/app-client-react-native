@@ -2555,6 +2555,60 @@
         }
       }
     },
+    "/api/mobile/reservas/{reservaId}/factura": {
+      "get": {
+        "tags": [
+          "MobileReservas"
+        ],
+        "summary": "GET /api/mobile/reservas/{reservaId}/factura — Enlaces de descarga de la(s) factura(s)\r\nelectrónica(s) de una reserva, para el botón \"Descargar factura\" del detalle de reserva.\r\nDevuelve una lista porque una reserva pagada genera dos comprobantes: la comisión de la\r\nplataforma (`fee_plataforma`) y el alquiler del espacio (`reserva_espacio`).\r\nLas URLs de PDF y XML son pre-firmadas de S3 y expiran en 1 hora\r\n(`urlsExpiranEnSegundos`): hay que volver a llamar al endpoint para renovarlas, no\r\ncachearlas en el dispositivo.",
+        "parameters": [
+          {
+            "name": "reservaId",
+            "in": "path",
+            "description": "<b>reservaId</b> (int, ruta, requerido) — identificador de la reserva.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`FacturaDescargaResponse` con las facturas autorizadas y sus URLs de descarga.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacturaDescargaResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacturaDescargaResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacturaDescargaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "La factura todavía se está procesando en el SRI, o fue rechazada y no hay comprobante que descargar."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño de la reserva."
+          },
+          "404": {
+            "description": "No existe una reserva con ese ID, o la reserva todavía no generó facturas."
+          }
+        }
+      }
+    },
     "/api/negocios/me": {
       "get": {
         "tags": [
@@ -5125,6 +5179,94 @@
           "code": {
             "minLength": 1,
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FacturaDescargaItem": {
+        "type": "object",
+        "properties": {
+          "facturaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoFactura": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "numeroComprobante": {
+            "type": "string",
+            "nullable": true
+          },
+          "claveAcceso": {
+            "type": "string",
+            "nullable": true
+          },
+          "numeroAutorizacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaAutorizacion": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "iva": {
+            "type": "number",
+            "format": "double"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "pdfUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "xmlUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombreArchivoPdf": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombreArchivoXml": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FacturaDescargaResponse": {
+        "type": "object",
+        "properties": {
+          "reservaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigoReserva": {
+            "type": "string",
+            "nullable": true
+          },
+          "urlsExpiranEnSegundos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "facturas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FacturaDescargaItem"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
