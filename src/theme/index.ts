@@ -35,7 +35,7 @@ import '@/global.css';
 import { useMemo } from 'react';
 import { Platform, StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeMode } from '@/context/ThemeModeContext';
 
 /* -------------------------------------------------------------------------- */
 /*  1. ESCALAS BASE (no dependen del tema)                                     */
@@ -521,8 +521,7 @@ export function getTheme(scheme: ColorScheme): Theme {
 }
 
 export function useAppColorScheme(): ColorScheme {
-  const scheme = useColorScheme();
-  return scheme === 'dark' ? 'dark' : 'light';
+  return useThemeMode().colorScheme;
 }
 
 export function useTheme(): Theme {

@@ -3,7 +3,20 @@ import { View, Text, StatusBar, Platform, TouchableOpacity, ScrollView } from 'r
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
+import { ThemeMode, useThemeMode } from '@/context/ThemeModeContext';
 import { makeStyles, spacing, useTheme } from '@/theme';
+
+const THEME_MODE_LABELS: Record<ThemeMode, string> = {
+  system: 'Sistema',
+  light: 'Claro',
+  dark: 'Oscuro',
+};
+
+const NEXT_THEME_MODE: Record<ThemeMode, ThemeMode> = {
+  system: 'light',
+  light: 'dark',
+  dark: 'system',
+};
 
 interface SettingItemProps {
   label: string;
@@ -35,6 +48,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { mode, setMode } = useThemeMode();
 
   const nombreCompleto = user
     ? [user.nombre, user.apellido].filter(Boolean).join(' ')
@@ -44,6 +58,10 @@ export default function SettingsScreen() {
   const handleLogout = async () => {
     await logout();
     router.replace('/login');
+  };
+
+  const handleCycleTheme = () => {
+    setMode(NEXT_THEME_MODE[mode]);
   };
 
   return (
@@ -76,16 +94,18 @@ export default function SettingsScreen() {
         <Text style={styles.groupLabel}>GENERAL</Text>
         <View style={styles.settingsGroup}>
           <SettingItem label="Notificaciones" onPress={() => {}} />
-          <SettingItem label="Idioma" value="Español" />
-          <SettingItem label="Moneda" value="USD" />
-          <SettingItem label="Tema" value="Claro" isLast />
+          <SettingItem
+            label="Tema"
+            value={THEME_MODE_LABELS[mode]}
+            onPress={handleCycleTheme}
+            isLast
+          />
         </View>
 
         <Text style={styles.groupLabel}>CUENTA</Text>
         <View style={styles.settingsGroup}>
           <SettingItem label="Editar perfil" onPress={() => {}} />
-          <SettingItem label="Cambiar contraseña" onPress={() => {}} />
-          <SettingItem label="Métodos de pago" onPress={() => {}} isLast />
+          <SettingItem label="Cambiar contraseña" onPress={() => {}} isLast />
         </View>
 
         <Text style={styles.groupLabel}>SOPORTE</Text>
