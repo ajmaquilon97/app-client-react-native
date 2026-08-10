@@ -19,8 +19,8 @@ interface EspacioAPI {
   propietarioNombre: string;
   tipoEspacioId: number;
   tipoEspacioNombre: string;
-  ciudad: string;
-  provincia: string;
+  ciudadNombre: string | null;
+  provinciaNombre: string | null;
   linkUbicacion: string;
   referencia: string;
   validarAforo: boolean;
@@ -60,7 +60,9 @@ function mapApiToEspacio(e: EspacioAPI): Espacio {
     descripcion: e.descripcion,
     categoria: mapTipoToCategoria(e.tipoEspacioNombre),
     subcategoria: e.tipoEspacioNombre,
-    ubicacion: `${e.ciudad}, ${e.provincia}`,
+    ubicacion:
+      [e.provinciaNombre, e.ciudadNombre, e.referencia].filter(Boolean).join(', ') ||
+      'Ubicación no disponible',
     precio: e.tarifaHoy?.precio ?? 0,
     unidad: e.tarifaHoy?.unidad ?? 'hora',
     latitud: coords?.latitude ?? null,

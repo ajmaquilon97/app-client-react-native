@@ -135,93 +135,117 @@ export const fonts = Platform.select({
 /*  2. TIPOGRAFÍA — títulos, subtítulos y textos                               */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Estilos de texto listos para usar. No llevan color: el color se aplica
+ * aparte con un token de `colors`, para que el mismo estilo sirva sobre
+ * fondos claros y oscuros.
+ *
+ *   titulo: { ...t.typography.h2, color: t.colors.textPrimary }
+ */
 export const typography = {
+  /** Cifras y números grandes destacados (precios, totales). */
   jumbo: {
     fontSize: fontSize.jumbo,
     lineHeight: 46,
     fontWeight: fontWeight.extraBold,
     letterSpacing: -0.8,
   },
+  /** Título principal de una pantalla de bienvenida / hero. */
   display: {
     fontSize: fontSize.display,
     lineHeight: 38,
     fontWeight: fontWeight.bold,
     letterSpacing: -0.6,
   },
+  /** Título de pantalla (el más usado en cabeceras). */
   h1: {
     fontSize: fontSize.xxxl,
     lineHeight: 34,
     fontWeight: fontWeight.bold,
     letterSpacing: -0.5,
   },
+  /** Título de cabecera de sección grande. */
   h2: {
     fontSize: fontSize.xxl,
     lineHeight: 30,
     fontWeight: fontWeight.bold,
     letterSpacing: -0.5,
   },
+  /** Título de sección / tarjeta destacada. */
   h3: {
     fontSize: fontSize.xl,
     lineHeight: 26,
     fontWeight: fontWeight.bold,
     letterSpacing: -0.3,
   },
+  /** Título de tarjeta, fila o modal. */
   title: {
     fontSize: fontSize.lg,
     lineHeight: 24,
     fontWeight: fontWeight.bold,
     letterSpacing: -0.2,
   },
+  /** Subtítulo: acompaña a un título, un escalón por debajo. */
   subtitle: {
     fontSize: fontSize.md,
     lineHeight: 22,
     fontWeight: fontWeight.semiBold,
   },
+  /** Subtítulo pequeño, para cabeceras con texto secundario. */
   subtitleSm: {
     fontSize: fontSize.base,
     lineHeight: 20,
     fontWeight: fontWeight.medium,
   },
+  /** Texto de párrafo estándar. */
   body: {
     fontSize: fontSize.md,
     lineHeight: 24,
     fontWeight: fontWeight.regular,
   },
+  /** Texto de párrafo resaltado. */
   bodyStrong: {
     fontSize: fontSize.md,
     lineHeight: 24,
     fontWeight: fontWeight.semiBold,
   },
+  /** Texto de párrafo pequeño (el cuerpo más frecuente en listas). */
   bodySm: {
     fontSize: fontSize.base,
     lineHeight: 20,
     fontWeight: fontWeight.regular,
   },
+  /** Texto pequeño resaltado. */
   bodySmStrong: {
     fontSize: fontSize.base,
     lineHeight: 20,
     fontWeight: fontWeight.semiBold,
   },
+  /** Etiqueta de formulario o de campo. */
   label: {
     fontSize: fontSize.base,
     lineHeight: 18,
     fontWeight: fontWeight.semiBold,
   },
+  /** Texto de ayuda, metadatos, timestamps. */
   caption: {
     fontSize: fontSize.sm,
     lineHeight: 16,
     fontWeight: fontWeight.regular,
   },
+  /** Caption resaltado (chips, badges). */
   captionStrong: {
     fontSize: fontSize.sm,
     lineHeight: 16,
     fontWeight: fontWeight.semiBold,
   },
+  /** Texto mínimo (contadores, etiquetas de tab bar). */
   tiny: {
     fontSize: fontSize.xxs,
     lineHeight: 14,
     fontWeight: fontWeight.medium,
   },
+  /** Encabezado de grupo en mayúsculas. */
   overline: {
     fontSize: fontSize.xs,
     lineHeight: 14,
@@ -229,22 +253,26 @@ export const typography = {
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
+  /** Texto de botón. */
   button: {
     fontSize: fontSize.md,
     lineHeight: 20,
     fontWeight: fontWeight.bold,
     letterSpacing: 0.2,
   },
+  /** Texto de botón pequeño. */
   buttonSm: {
     fontSize: fontSize.base,
     lineHeight: 18,
     fontWeight: fontWeight.semiBold,
   },
+  /** Enlaces. */
   link: {
     fontSize: fontSize.base,
     lineHeight: 20,
     fontWeight: fontWeight.semiBold,
   },
+  /** Código / monoespaciado. */
   code: {
     fontFamily: fonts.mono,
     fontSize: fontSize.sm,
@@ -259,6 +287,10 @@ export type TypographyVariant = keyof typeof typography;
 /*  3. PLANTILLA DE COLORES                                                    */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Colores absolutos, iguales en ambos temas. Úsalos solo cuando el color NO
+ * debe cambiar con el tema (p. ej. texto sobre una foto oscura).
+ */
 export const palette = {
   white: '#FFFFFF',
   black: '#000000',
@@ -268,44 +300,73 @@ export const palette = {
 /** Tema claro — la plantilla de marca de Agora. */
 const lightColors = {
   /* --- Marca --- */
-  primary: '#151B2D',
-  primaryStrong: '#242F4C',
+  /**
+   * RELLENO de marca: fondo de cabeceras y botones primarios. Siempre lleva
+   * `onPrimary` encima. En tema oscuro se aclara solo lo justo para seguir
+   * siendo un fondo, no un color de texto — para texto usa `primaryText`.
+   */
+  primary: '#1E3A5F',
+  /** Variante pulsada / hover del relleno primario. */
+  primaryStrong: '#16293F',
+  /** Texto e iconos que van encima de `primary`. */
   onPrimary: '#FFFFFF',
-  primaryText: '#151B2D',
-  primarySoft: 'rgba(21, 27, 45, 0.10)',
-  primaryScrim: 'rgba(21, 27, 45, 0.90)',
+  /**
+   * TEXTO/ICONO en color de marca sobre un fondo normal (`background`,
+   * `surface`). En tema oscuro es un azul claro, legible sobre el fondo.
+   */
+  primaryText: '#1E3A5F',
+  /** Fondo tenue de marca: chips, iconos con fondo. */
+  primarySoft: 'rgba(30, 58, 95, 0.10)',
+  /** Fondo de marca semitransparente sobre imágenes. */
+  primaryScrim: 'rgba(30, 58, 95, 0.90)',
 
-  accent: '#FD548A',
-  accentStrong: '#E34A7B',
+  /** Verde azulado de acento: acciones destacadas, estados activos. */
+  accent: '#14B8A6',
+  accentStrong: '#0D9488',
   onAccent: '#FFFFFF',
-  accentSoft: 'rgba(253, 84, 138, 0.12)',
-  accentSoftStrong: 'rgba(253, 84, 138, 0.22)',
-  accentMuted: '#FFB3CD',
-  accentSurface: '#FFE0EB',
+  accentSoft: 'rgba(20, 184, 166, 0.12)',
+  accentSoftStrong: 'rgba(20, 184, 166, 0.22)',
+  /** Acento claro: texto secundario sobre la cabecera azul. */
+  accentMuted: '#99F6E4',
+  accentSurface: '#CCFBF1',
 
   /* --- Superficies --- */
-  background: '#F8FAFC',
+  /** Fondo general de pantalla. */
+  background: '#F5F7FA',
+  /** Tarjetas, hojas modales, inputs. */
   surface: '#FFFFFF',
-  surfaceAlt: '#F1F5F9',
-  surfaceMuted: '#E2E8F0',
+  /** Superficie ligeramente diferenciada. */
+  surfaceAlt: '#F9FAFB',
+  /** Relleno gris para placeholders, separadores gruesos, chips inactivos. */
+  surfaceMuted: '#F3F4F6',
+  // La cabecera de marca se rellena con `primary`; estos son sus textos.
+  /** Título sobre la cabecera de marca. */
   headerText: '#FFFFFF',
-  headerTextMuted: '#FFB3CD',
-  headerTextSubtle: 'rgba(255, 255, 255, 0.7)',
+  /** Subtítulo sobre la cabecera de marca. */
+  headerTextMuted: '#99F6E4',
+  /** Texto tenue sobre la cabecera (placeholders del buscador). */
+  headerTextSubtle: 'rgba(203, 213, 225, 0.8)',
+  /** Barra de tabs. */
   tabBar: '#FFFFFF',
-  tabBarActive: '#151B2D',
-  tabBarInactive: '#94A3B8',
+  tabBarActive: '#1E3A5F',
+  tabBarInactive: '#9CA3AF',
 
   /* --- Texto --- */
-  textPrimary: '#0F172A',
-  textSecondary: '#64748B',
-  textMuted: '#94A3B8',
+  /** Texto principal. */
+  textPrimary: '#1F2937',
+  /** Texto secundario / descripciones. */
+  textSecondary: '#6B7280',
+  /** Texto atenuado / placeholders / iconos apagados. */
+  textMuted: '#9CA3AF',
+  /** Texto sobre fondos oscuros o de color sólido. */
   textInverse: '#FFFFFF',
-  link: '#3B82F6',
+  /** Enlaces. */
+  link: '#2563EB',
 
   /* --- Bordes --- */
-  border: '#E2E8F0',
+  border: '#E5E7EB',
   borderSubtle: '#F1F5F9',
-  borderStrong: '#CBD5E1',
+  borderStrong: '#D1D5DB',
 
   /* --- Estados semánticos --- */
   success: '#10B981',
@@ -322,71 +383,86 @@ const lightColors = {
   onInfoSoft: '#1D4ED8',
 
   /* --- Elementos concretos --- */
+  /** Estrellas de valoración. */
   star: '#F59E0B',
-  favorite: '#FD548A',
-  favoriteSoft: '#FFE0EB',
-  skeleton: '#E2E8F0',
-  disabled: '#E2E8F0',
-  onDisabled: '#94A3B8',
+  /** Corazón de favoritos. */
+  favorite: '#F43F5E',
+  favoriteSoft: '#FEE2E2',
+  /** Fondo de carga / esqueleto. */
+  skeleton: '#E5E7EB',
+  /** Controles deshabilitados. */
+  disabled: '#E5E7EB',
+  onDisabled: '#9CA3AF',
+  /** Campos de formulario. */
   inputBackground: '#FFFFFF',
-  inputBorder: '#E2E8F0',
-  inputBorderFocused: '#FD548A',
-  inputPlaceholder: '#94A3B8',
+  inputBorder: '#E5E7EB',
+  inputBorderFocused: '#14B8A6',
+  inputPlaceholder: '#9CA3AF',
 
   /* --- Capas y sombras --- */
-  overlay: 'rgba(15, 23, 42, 0.5)',
+  /** Fondo oscuro detrás de un modal. */
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  /** Velo claro sobre imágenes. */
   overlayLight: 'rgba(255, 255, 255, 0.8)',
+  /** Realce translúcido sobre superficies de color. */
   overlayWhite: 'rgba(255, 255, 255, 0.1)',
+  /** Borde translúcido sobre superficies de color. */
   overlayWhiteSubtle: 'rgba(255, 255, 255, 0.08)',
-  textOnMedia: 'rgba(255, 255, 255, 0.95)',
-  shadow: '#0F172A', // Sombra tintada con Slate para máxima armonía
+  /** Texto sobre una foto o el visor de la cámara (siempre fondo oscuro). */
+  textOnMedia: 'rgba(255, 255, 255, 0.85)',
+  /** Color de la sombra proyectada. */
+  shadow: '#000000',
 } as const;
 
 export type ColorScheme = 'light' | 'dark';
+/** Nombre de cada color del tema. La paleta clara es la fuente de verdad. */
 export type ColorToken = keyof typeof lightColors;
+/** Plantilla de colores completa: todo tema debe definir todos los tokens. */
 export type ThemeColors = Record<ColorToken, string>;
 
 /** Tema oscuro — mismos tokens, valores adaptados. */
 const darkColors: ThemeColors = {
   /* --- Marca --- */
-  primary: '#242F4C',
-  primaryStrong: '#3B4A6B',
+  // Relleno: navy legible en oscuro, con texto blanco encima (contraste ~7:1).
+  primary: '#2F5480',
+  primaryStrong: '#3D6A9E',
   onPrimary: '#FFFFFF',
+  // Texto/icono de marca: azul claro, legible sobre `background`.
   primaryText: '#8AB4E8',
-  primarySoft: 'rgba(36, 47, 76, 0.40)',
-  primaryScrim: 'rgba(11, 15, 25, 0.90)',
+  primarySoft: 'rgba(138, 180, 232, 0.14)',
+  primaryScrim: 'rgba(11, 18, 32, 0.90)',
 
-  accent: '#FD548A',
-  accentStrong: '#FF85AE',
-  onAccent: '#FFFFFF',
-  accentSoft: 'rgba(253, 84, 138, 0.16)',
-  accentSoftStrong: 'rgba(253, 84, 138, 0.28)',
-  accentMuted: '#FF85AE',
-  accentSurface: 'rgba(253, 84, 138, 0.20)',
+  accent: '#2DD4BF',
+  accentStrong: '#5EEAD4',
+  onAccent: '#06251F',
+  accentSoft: 'rgba(45, 212, 191, 0.16)',
+  accentSoftStrong: 'rgba(45, 212, 191, 0.28)',
+  accentMuted: '#5EEAD4',
+  accentSurface: 'rgba(45, 212, 191, 0.20)',
 
   /* --- Superficies --- */
-  background: '#0B0F19', // Slate muy oscuro
-  surface: '#151B2D', // El primario se convierte en la superficie oscura
-  surfaceAlt: '#1E293B',
-  surfaceMuted: '#334155',
+  background: '#0B1220',
+  surface: '#151C2A',
+  surfaceAlt: '#1B2434',
+  surfaceMuted: '#222C3D',
   headerText: '#F8FAFC',
-  headerTextMuted: '#FF85AE',
+  headerTextMuted: '#5EEAD4',
   headerTextSubtle: 'rgba(203, 213, 225, 0.75)',
-  tabBar: '#151B2D',
-  tabBarActive: '#FD548A',
-  tabBarInactive: '#64748B',
+  tabBar: '#131A28',
+  tabBarActive: '#8AB4E8',
+  tabBarInactive: '#737D8C',
 
   /* --- Texto --- */
-  textPrimary: '#F8FAFC',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
-  textInverse: '#0B0F19',
+  textPrimary: '#F3F4F6',
+  textSecondary: '#A9B1BE',
+  textMuted: '#737D8C',
+  textInverse: '#FFFFFF',
   link: '#60A5FA',
 
   /* --- Bordes --- */
-  border: '#334155',
-  borderSubtle: '#1E293B',
-  borderStrong: '#475569',
+  border: '#2A3446',
+  borderSubtle: '#1F2836',
+  borderStrong: '#3A465C',
 
   /* --- Estados semánticos --- */
   success: '#34D399',
@@ -404,22 +480,22 @@ const darkColors: ThemeColors = {
 
   /* --- Elementos concretos --- */
   star: '#FBBF24',
-  favorite: '#FF85AE',
-  favoriteSoft: 'rgba(253, 84, 138, 0.18)',
-  skeleton: '#334155',
-  disabled: '#1E293B',
-  onDisabled: '#64748B',
-  inputBackground: '#151B2D',
-  inputBorder: '#334155',
-  inputBorderFocused: '#FD548A',
-  inputPlaceholder: '#64748B',
+  favorite: '#FB7185',
+  favoriteSoft: 'rgba(251, 113, 133, 0.18)',
+  skeleton: '#222C3D',
+  disabled: '#2A3446',
+  onDisabled: '#6B7280',
+  inputBackground: '#151C2A',
+  inputBorder: '#2A3446',
+  inputBorderFocused: '#2DD4BF',
+  inputPlaceholder: '#737D8C',
 
   /* --- Capas y sombras --- */
-  overlay: 'rgba(0, 0, 0, 0.75)',
-  overlayLight: 'rgba(11, 15, 25, 0.85)',
+  overlay: 'rgba(0, 0, 0, 0.65)',
+  overlayLight: 'rgba(21, 28, 42, 0.85)',
   overlayWhite: 'rgba(255, 255, 255, 0.12)',
   overlayWhiteSubtle: 'rgba(255, 255, 255, 0.10)',
-  textOnMedia: 'rgba(255, 255, 255, 0.90)',
+  textOnMedia: 'rgba(255, 255, 255, 0.85)',
   shadow: '#000000',
 };
 
@@ -435,6 +511,7 @@ const colorSchemes: Record<ColorScheme, ThemeColors> = {
 export type ShadowLevel = 'none' | 'sm' | 'md' | 'lg' | 'xl';
 
 function buildShadows(colors: ThemeColors, isDark: boolean): Record<ShadowLevel, ViewStyle> {
+  // En modo oscuro las sombras casi no se perciben, por eso se refuerza la opacidad.
   const opacityFactor = isDark ? 2.2 : 1;
 
   const shadow = (height: number, blur: number, opacity: number, elevation: number): ViewStyle =>
@@ -462,9 +539,13 @@ function buildShadows(colors: ThemeColors, isDark: boolean): Record<ShadowLevel,
 /* -------------------------------------------------------------------------- */
 
 export const layout = {
+  /** Alto de la barra de tabs sin contar el safe area. */
   tabBarHeight: Platform.select({ ios: 50, android: 64 }) ?? 56,
+  /** Ancho máximo del contenido en pantallas anchas / web. */
   maxContentWidth: 800,
+  /** Área táctil mínima recomendada. */
   minTouchTarget: 44,
+  /** Grosor de una línea divisoria. */
   hairline: StyleSheet.hairlineWidth,
 } as const;
 
@@ -476,6 +557,11 @@ export interface Theme {
   scheme: ColorScheme;
   isDark: boolean;
   colors: ThemeColors;
+  /**
+   * `barStyle` para una `StatusBar` que va sobre `background` o `surface`.
+   * Sobre la cabecera de marca (azul oscuro en ambos temas) usa siempre
+   * `"light-content"` en vez de este valor.
+   */
   statusBarStyle: 'light-content' | 'dark-content';
   typography: typeof typography;
   spacing: typeof spacing;
@@ -516,19 +602,34 @@ function buildTheme(scheme: ColorScheme): Theme {
   };
 }
 
+/** Devuelve el tema para un esquema concreto. Útil fuera de componentes. */
 export function getTheme(scheme: ColorScheme): Theme {
   return themes[scheme];
 }
 
+/** Esquema de color activo del sistema ('light' | 'dark'). */
 export function useAppColorScheme(): ColorScheme {
   const scheme = useColorScheme();
   return scheme === 'dark' ? 'dark' : 'light';
 }
 
+/**
+ * Hook principal: devuelve el tema activo.
+ *
+ *   const { colors, spacing } = useTheme();
+ */
 export function useTheme(): Theme {
   return themes[useAppColorScheme()];
 }
 
+/**
+ * Crea un hook de estilos ligado al tema. La hoja de estilos se calcula una
+ * sola vez por esquema de color y se reutiliza en todos los renders.
+ *
+ *   const useStyles = makeStyles((t) => ({
+ *     titulo: { ...t.typography.h1, color: t.colors.textPrimary },
+ *   }));
+ */
 export function makeStyles<T extends StyleSheet.NamedStyles<T>>(
   factory: (theme: Theme) => T & StyleSheet.NamedStyles<T>,
 ): () => T {
