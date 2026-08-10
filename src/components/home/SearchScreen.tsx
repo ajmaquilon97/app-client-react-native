@@ -1,23 +1,11 @@
 import React, { useRef, useCallback, useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Modal,
-  Platform,
-  StatusBar,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Platform, StatusBar } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { useEspacios } from '@/hooks/useEspacios';
 import { ArrowLeftIcon, SearchIcon, CloseCircleIcon, StarIcon, LocationIcon } from '@/components/icons';
+import { makeStyles, useTheme } from '@/theme';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -90,6 +78,8 @@ export default function SearchScreen({
   onClose,
   onSelectEspacio,
 }: SearchScreenProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const [pantallaSugeridos, setPantallaSugeridos] = useState(false);
@@ -124,7 +114,7 @@ export default function SearchScreen({
       onRequestClose={handleClose}
       statusBarTranslucent>
 
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
       <View style={styles.container}>
 
@@ -136,32 +126,32 @@ export default function SearchScreen({
               style={styles.backButton}
               activeOpacity={0.8}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <ArrowLeftIcon size={20} color={Colors.white} strokeWidth={2.5} />
+              <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Buscar Espacio</Text>
           </View>
 
           <View style={styles.inputContainer}>
-            <SearchIcon size={18} color={Colors.teal200} />
+            <SearchIcon size={18} color={colors.accentMuted} />
             <TextInput
               ref={inputRef}
               value={busqueda}
               onChangeText={onChangeText}
               placeholder="Escribe para buscar..."
-              placeholderTextColor="rgba(203, 213, 225, 0.8)"
+              placeholderTextColor={colors.headerTextSubtle}
               style={styles.input}
               autoFocus
               autoCorrect={false}
               autoCapitalize="none"
               returnKeyType="search"
-              selectionColor={Colors.accentTeal}
+              selectionColor={colors.accent}
             />
             {busqueda.length > 0 && (
               <TouchableOpacity
                 onPress={() => onChangeText('')}
                 activeOpacity={0.8}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <CloseCircleIcon size={18} color="rgba(203,213,225,0.8)" />
+                <CloseCircleIcon size={18} color={colors.headerTextSubtle} />
               </TouchableOpacity>
             )}
           </View>
@@ -252,7 +242,7 @@ export default function SearchScreen({
       onRequestClose={() => setPantallaSugeridos(false)}
       statusBarTranslucent>
 
-      <StatusBar barStyle="light-content" backgroundColor={Colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
 
       <View style={styles.container}>
 
@@ -264,7 +254,7 @@ export default function SearchScreen({
               style={styles.backButton}
               activeOpacity={0.8}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <ArrowLeftIcon size={20} color={Colors.white} strokeWidth={2.5} />
+              <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
             </TouchableOpacity>
             <View>
               <Text style={styles.sugeridosTitle}>Lugares Sugeridos</Text>
@@ -318,6 +308,8 @@ export default function SearchScreen({
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
 
 function ResultCard({ espacio, onPress }: { espacio: Espacio; onPress: (e: Espacio) => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       style={styles.resultCard}
@@ -328,14 +320,14 @@ function ResultCard({ espacio, onPress }: { espacio: Espacio; onPress: (e: Espac
         <View style={styles.resultTopRow}>
           <Text style={styles.resultSubcat}>{espacio.subcategoria}</Text>
           <View style={styles.ratingRow}>
-            <StarIcon size={12} />
+            <StarIcon size={12} color={colors.star} />
             <Text style={styles.ratingText}>{espacio.rating}</Text>
           </View>
         </View>
         <Text style={styles.resultNombre} numberOfLines={1}>{espacio.nombre}</Text>
         <View style={styles.resultBottomRow}>
           <View style={styles.distanciaRow}>
-            <LocationIcon size={12} color={Colors.gray400} strokeWidth={1.8} />
+            <LocationIcon size={12} color={colors.textMuted} strokeWidth={1.8} />
             <Text style={styles.distanciaText}>a {espacio.distancia} km</Text>
           </View>
           <Text style={styles.precioText}>
@@ -348,6 +340,8 @@ function ResultCard({ espacio, onPress }: { espacio: Espacio; onPress: (e: Espac
 }
 
 function FuzzyCard({ espacio, onPress }: { espacio: EspacioConCoincidencia; onPress: (e: Espacio) => void }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       style={styles.fuzzyCard}
@@ -368,7 +362,7 @@ function FuzzyCard({ espacio, onPress }: { espacio: EspacioConCoincidencia; onPr
         <Text style={styles.fuzzyDesc} numberOfLines={2}>{espacio.descripcion}</Text>
         <View style={styles.fuzzyFooter}>
           <View style={styles.ratingRow}>
-            <StarIcon size={12} />
+            <StarIcon size={12} color={colors.star} />
             <Text style={styles.ratingText}>{espacio.rating}</Text>
             <Text style={styles.reviewsText}>({espacio.reviews})</Text>
           </View>
@@ -383,107 +377,107 @@ function FuzzyCard({ espacio, onPress }: { espacio: EspacioConCoincidencia; onPr
 
 // ─── Estilos ─────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    backgroundColor: t.colors.primary,
+    paddingHorizontal: t.spacing.lg,
+    paddingBottom: t.spacing.xl,
     ...Platform.select({
-      ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8 },
+      ios: { shadowColor: t.colors.shadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8 },
       android: { elevation: 6 },
     }),
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-    paddingTop: Spacing.sm,
+    gap: t.spacing.sm,
+    marginBottom: t.spacing.md,
+    paddingTop: t.spacing.sm,
   },
   backButton: {
-    padding: Spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.sm,
+    padding: t.spacing.xs,
+    backgroundColor: t.colors.overlayWhite,
+    borderRadius: t.radius.sm,
   },
   headerTitle: {
-    color: Colors.white,
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.bold,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.xl,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? Spacing.sm : Spacing.xs,
-    gap: Spacing.sm,
+    backgroundColor: t.colors.overlayWhite,
+    borderRadius: t.radius.xl,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? t.spacing.sm : t.spacing.xs,
+    gap: t.spacing.sm,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: t.colors.overlayWhiteSubtle,
   },
   input: {
     flex: 1,
-    fontSize: FontSize.base,
-    color: Colors.white,
+    fontSize: t.fontSize.base,
+    color: t.colors.textInverse,
     fontWeight: '500',
     padding: 0,
     margin: 0,
     includeFontPadding: false,
   },
   body: { flex: 1 },
-  bodyContent: { padding: Spacing.lg },
+  bodyContent: { padding: t.spacing.lg },
 
   // Sugerencias
   sectionLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
+    marginBottom: t.spacing.sm,
   },
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.xs,
-    marginBottom: Spacing.xl,
+    gap: t.spacing.xs,
+    marginBottom: t.spacing.xl,
   },
   tag: {
     paddingVertical: 7,
-    paddingHorizontal: Spacing.sm,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.full,
+    paddingHorizontal: t.spacing.sm,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   tagText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray600,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textSecondary,
   },
   hintCard: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    gap: Spacing.sm,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
+    gap: t.spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
   },
   hintEmoji: { fontSize: 20 },
   hintText: { flex: 1 },
   hintTitle: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   hintDesc: {
-    fontSize: FontSize.xs - 1,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs - 1,
+    color: t.colors.textSecondary,
     marginTop: 2,
     lineHeight: 16,
   },
@@ -493,26 +487,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.primaryDarkLight,
+    backgroundColor: t.colors.primarySoft,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.accentTeal,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
+    borderLeftColor: t.colors.accent,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm,
+    paddingHorizontal: t.spacing.md,
+    marginBottom: t.spacing.md,
   },
   buscarBannerText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   buscarBannerQuery: {
-    color: Colors.accentTeal,
+    color: t.colors.accent,
   },
   buscarBannerArrow: {
-    fontSize: FontSize.lg,
-    color: Colors.accentTeal,
-    fontWeight: FontWeight.bold,
+    fontSize: t.fontSize.lg,
+    color: t.colors.accent,
+    fontWeight: t.fontWeight.bold,
   },
 
   // Resultados exactos
@@ -520,111 +514,111 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: t.spacing.md,
   },
   resultsLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.medium,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.medium,
+    color: t.colors.textSecondary,
   },
   resultsCount: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textSecondary,
   },
   resultCard: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    padding: Spacing.sm,
-    marginBottom: Spacing.sm,
-    gap: Spacing.sm,
+    borderColor: t.colors.borderSubtle,
+    padding: t.spacing.sm,
+    marginBottom: t.spacing.sm,
+    gap: t.spacing.sm,
     ...Platform.select({
-      ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
+      ios: { shadowColor: t.colors.shadow, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
       android: { elevation: 1 },
     }),
   },
-  resultImage: { width: 64, height: 64, borderRadius: BorderRadius.lg },
+  resultImage: { width: 64, height: 64, borderRadius: t.radius.lg },
   resultInfo: { flex: 1, justifyContent: 'space-between', paddingVertical: 2 },
   resultTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   resultSubcat: {
-    fontSize: FontSize.xs - 1,
-    fontWeight: FontWeight.bold,
-    color: Colors.accentTeal,
+    fontSize: t.fontSize.xs - 1,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.accent,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  ratingText: { fontSize: FontSize.xs - 1, fontWeight: FontWeight.bold, color: Colors.gray700 },
-  reviewsText: { fontSize: FontSize.xs - 1, color: Colors.gray400 },
-  resultNombre: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primaryDark, marginTop: 2 },
+  ratingText: { fontSize: t.fontSize.xs - 1, fontWeight: t.fontWeight.bold, color: t.colors.textPrimary },
+  reviewsText: { fontSize: t.fontSize.xs - 1, color: t.colors.textMuted },
+  resultNombre: { fontSize: t.fontSize.xs, fontWeight: t.fontWeight.bold, color: t.colors.primaryText, marginTop: 2 },
   resultBottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   distanciaRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  distanciaText: { fontSize: FontSize.xs - 1, color: Colors.gray500 },
-  precioText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.textPrimary },
-  unidadText: { fontSize: FontSize.xs - 1, fontWeight: '400', color: Colors.gray400 },
+  distanciaText: { fontSize: t.fontSize.xs - 1, color: t.colors.textSecondary },
+  precioText: { fontSize: t.fontSize.xs, fontWeight: t.fontWeight.bold, color: t.colors.textPrimary },
+  unidadText: { fontSize: t.fontSize.xs - 1, fontWeight: '400', color: t.colors.textMuted },
 
   // Estado vacío
   emptyState: {
     alignItems: 'center',
-    paddingVertical: Spacing.xxxl,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
+    paddingVertical: t.spacing.xxxl,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.xl,
   },
-  emptyTitle: { fontSize: FontSize.base, fontWeight: FontWeight.bold, color: Colors.primaryDark, marginBottom: Spacing.xs },
-  emptyDesc: { fontSize: FontSize.xs, color: Colors.gray500, textAlign: 'center' },
+  emptyTitle: { fontSize: t.fontSize.base, fontWeight: t.fontWeight.bold, color: t.colors.primaryText, marginBottom: t.spacing.xs },
+  emptyDesc: { fontSize: t.fontSize.xs, color: t.colors.textSecondary, textAlign: 'center' },
 
   // Pantalla sugeridos
   sugeridosHeader: {
-    backgroundColor: Colors.primaryDark,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xl,
+    backgroundColor: t.colors.primary,
+    paddingHorizontal: t.spacing.lg,
+    paddingTop: t.spacing.sm,
+    paddingBottom: t.spacing.xl,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     ...Platform.select({
-      ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8 },
+      ios: { shadowColor: t.colors.shadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8 },
       android: { elevation: 6 },
     }),
   },
-  sugeridosHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  sugeridosTitle: { color: Colors.white, fontSize: FontSize.base, fontWeight: FontWeight.bold },
-  sugeridosSubtitle: { color: Colors.teal200, fontSize: FontSize.xs - 1, letterSpacing: 0.4, marginTop: 1 },
+  sugeridosHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm },
+  sugeridosTitle: { color: t.colors.textInverse, fontSize: t.fontSize.base, fontWeight: t.fontWeight.bold },
+  sugeridosSubtitle: { color: t.colors.accentMuted, fontSize: t.fontSize.xs - 1, letterSpacing: 0.4, marginTop: 1 },
   fuzzyBadge: {
-    backgroundColor: Colors.accentTeal,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.sm,
+    backgroundColor: t.colors.accent,
+    borderRadius: t.radius.full,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 4,
   },
-  fuzzyBadgeText: { color: Colors.white, fontSize: FontSize.xs - 1, fontWeight: FontWeight.bold },
+  fuzzyBadgeText: { color: t.colors.textInverse, fontSize: t.fontSize.xs - 1, fontWeight: t.fontWeight.bold },
 
   // Tarjeta algoritmo
   algorithmCard: {
-    backgroundColor: Colors.primaryDarkLight,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
+    backgroundColor: t.colors.primarySoft,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
+    marginBottom: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
   },
-  algorithmTitle: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primaryDark, marginBottom: 4 },
-  algorithmDesc: { fontSize: FontSize.xs - 1, color: Colors.gray500, lineHeight: 16 },
-  algorithmQuery: { fontWeight: FontWeight.semiBold, color: Colors.primaryDark },
+  algorithmTitle: { fontSize: t.fontSize.xs, fontWeight: t.fontWeight.bold, color: t.colors.primaryText, marginBottom: 4 },
+  algorithmDesc: { fontSize: t.fontSize.xs - 1, color: t.colors.textSecondary, lineHeight: 16 },
+  algorithmQuery: { fontWeight: t.fontWeight.semiBold, color: t.colors.primary },
 
   // Tarjeta fuzzy
   fuzzyCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
     overflow: 'hidden',
-    marginBottom: Spacing.md,
+    marginBottom: t.spacing.md,
     ...Platform.select({
-      ios: { shadowColor: Colors.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6 },
+      ios: { shadowColor: t.colors.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6 },
       android: { elevation: 2 },
     }),
   },
@@ -632,33 +626,33 @@ const styles = StyleSheet.create({
   fuzzyImage: { width: '100%', height: '100%' },
   fuzzyBadgeOverlay: {
     position: 'absolute',
-    top: Spacing.sm,
-    left: Spacing.sm,
-    backgroundColor: Colors.accentTeal,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.sm,
+    top: t.spacing.sm,
+    left: t.spacing.sm,
+    backgroundColor: t.colors.accent,
+    borderRadius: t.radius.full,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 4,
   },
-  fuzzyBadgeOverlayText: { color: Colors.white, fontSize: FontSize.xs - 1, fontWeight: FontWeight.bold },
+  fuzzyBadgeOverlayText: { color: t.colors.textInverse, fontSize: t.fontSize.xs - 1, fontWeight: t.fontWeight.bold },
   distanciaBadge: {
     position: 'absolute',
-    bottom: Spacing.sm,
-    right: Spacing.sm,
-    backgroundColor: Colors.primaryDarkMedium,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.xs,
+    bottom: t.spacing.sm,
+    right: t.spacing.sm,
+    backgroundColor: t.colors.primaryScrim,
+    borderRadius: t.radius.sm,
+    paddingHorizontal: t.spacing.xs,
     paddingVertical: 3,
   },
-  distanciaBadgeText: { color: Colors.white, fontSize: FontSize.xs - 2, fontWeight: FontWeight.bold },
-  fuzzyInfo: { padding: Spacing.md },
-  fuzzyNombre: { fontSize: FontSize.sm, fontWeight: FontWeight.bold, color: Colors.primaryDark, marginTop: 2, marginBottom: Spacing.xs },
-  fuzzyDesc: { fontSize: FontSize.xs - 1, color: Colors.gray500, lineHeight: 16, marginBottom: Spacing.sm },
-  fuzzyFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingTop: Spacing.xs },
+  distanciaBadgeText: { color: t.colors.textInverse, fontSize: t.fontSize.xs - 2, fontWeight: t.fontWeight.bold },
+  fuzzyInfo: { padding: t.spacing.md },
+  fuzzyNombre: { fontSize: t.fontSize.sm, fontWeight: t.fontWeight.bold, color: t.colors.primaryText, marginTop: 2, marginBottom: t.spacing.xs },
+  fuzzyDesc: { fontSize: t.fontSize.xs - 1, color: t.colors.textSecondary, lineHeight: 16, marginBottom: t.spacing.sm },
+  fuzzyFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: t.colors.borderSubtle, paddingTop: t.spacing.xs },
   verDetallesBtn: {
-    backgroundColor: Colors.tealLight,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.sm,
+    backgroundColor: t.colors.accentSoft,
+    borderRadius: t.radius.md,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 6,
   },
-  verDetallesText: { fontSize: FontSize.xs, fontWeight: FontWeight.bold, color: Colors.primaryDark },
-});
+  verDetallesText: { fontSize: t.fontSize.xs, fontWeight: t.fontWeight.bold, color: t.colors.primary },
+}));

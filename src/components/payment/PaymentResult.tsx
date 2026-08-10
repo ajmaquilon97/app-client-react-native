@@ -1,9 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { CheckIcon, CloseCircleIcon } from '@/components/icons';
+import { makeStyles, useTheme } from '@/theme';
 
 export type PaymentResultStatus = 'success' | 'error';
 
@@ -33,6 +31,8 @@ const PaymentResult: React.FC<PaymentResultProps> = ({
   onRetry,
   onCancel,
 }) => {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const PaymentResult: React.FC<PaymentResultProps> = ({
     return (
       <Animated.View style={[styles.overlay, styles.overlaySuccess, { opacity }]}>
         <View style={styles.iconWrapSuccess}>
-          <CheckIcon size={56} color={Colors.accentTeal} strokeWidth={3} />
+          <CheckIcon size={56} color={colors.accent} strokeWidth={3} />
         </View>
         <Text style={styles.titleSuccess}>¡Pago Autorizado!</Text>
         <Text style={styles.subtitleSuccess}>
@@ -90,7 +90,7 @@ const PaymentResult: React.FC<PaymentResultProps> = ({
   return (
     <Animated.View style={[styles.overlay, styles.overlayError, { opacity }]}>
       <View style={styles.iconWrapError}>
-        <CloseCircleIcon size={64} color={Colors.error} />
+        <CloseCircleIcon size={64} color={colors.error} />
       </View>
       <Text style={styles.titleError}>Pago Rechazado</Text>
       <Text style={styles.subtitleError}>
@@ -108,7 +108,7 @@ const PaymentResult: React.FC<PaymentResultProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   overlay: {
     position: 'absolute',
     top: 0,
@@ -117,139 +117,139 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.xl,
+    padding: t.spacing.xl,
     zIndex: 200,
   },
   overlaySuccess: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: t.colors.primary,
   },
   overlayError: {
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   // ── Success ──
   iconWrapSuccess: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: 'rgba(20,184,166,0.12)',
+    backgroundColor: t.colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: t.spacing.lg,
   },
   titleSuccess: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.white,
-    marginBottom: Spacing.xs,
+    fontSize: t.fontSize.xxl,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.textInverse,
+    marginBottom: t.spacing.xs,
     textAlign: 'center',
   },
   subtitleSuccess: {
-    fontSize: FontSize.sm,
-    color: Colors.teal200,
+    fontSize: t.fontSize.sm,
+    color: t.colors.accentMuted,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: Spacing.lg,
+    marginBottom: t.spacing.lg,
     maxWidth: 280,
   },
   detailsCard: {
     width: '100%',
     maxWidth: 300,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    gap: Spacing.xs,
-    marginBottom: Spacing.lg,
+    backgroundColor: t.colors.overlayWhite,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
+    gap: t.spacing.xs,
+    marginBottom: t.spacing.lg,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   detailLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.teal200,
-    fontWeight: FontWeight.semiBold,
+    fontSize: t.fontSize.xs,
+    color: t.colors.accentMuted,
+    fontWeight: t.fontWeight.semiBold,
   },
   detailValue: {
-    fontSize: FontSize.xs,
-    color: Colors.white,
-    fontWeight: FontWeight.bold,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textInverse,
+    fontWeight: t.fontWeight.bold,
   },
   detailValueAccent: {
-    fontSize: FontSize.xs,
-    color: Colors.accentTeal,
-    fontWeight: FontWeight.bold,
+    fontSize: t.fontSize.xs,
+    color: t.colors.accent,
+    fontWeight: t.fontWeight.bold,
   },
   btnContinue: {
-    backgroundColor: Colors.accentTeal,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm + 2,
-    paddingHorizontal: Spacing.xxl,
+    backgroundColor: t.colors.accent,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm + 2,
+    paddingHorizontal: t.spacing.xxl,
     alignItems: 'center',
     minWidth: 220,
   },
   btnContinueTxt: {
-    color: Colors.white,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   redirectHint: {
-    marginTop: Spacing.md,
-    fontSize: FontSize.xs,
-    color: Colors.gray400,
+    marginTop: t.spacing.md,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textMuted,
   },
   // ── Error ──
   iconWrapError: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.errorLight,
+    backgroundColor: t.colors.errorSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: t.spacing.lg,
   },
   titleError: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.xs,
+    fontSize: t.fontSize.xxl,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.xs,
     textAlign: 'center',
   },
   subtitleError: {
-    fontSize: FontSize.sm,
-    color: Colors.gray500,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: Spacing.xl,
+    marginBottom: t.spacing.xl,
     maxWidth: 280,
   },
   btnRetry: {
-    backgroundColor: Colors.primaryDark,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm + 2,
-    paddingHorizontal: Spacing.xxl,
+    backgroundColor: t.colors.primary,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm + 2,
+    paddingHorizontal: t.spacing.xxl,
     alignItems: 'center',
     minWidth: 220,
   },
   btnRetryTxt: {
-    color: Colors.accentTeal,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.accent,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   btnCancel: {
-    marginTop: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
+    marginTop: t.spacing.sm,
+    paddingVertical: t.spacing.sm,
+    paddingHorizontal: t.spacing.xl,
     alignItems: 'center',
   },
   btnCancelTxt: {
-    color: Colors.gray500,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textSecondary,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));
 
 export default PaymentResult;

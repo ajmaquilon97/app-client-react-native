@@ -1,25 +1,17 @@
 import React, { useCallback, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  StatusBar,
-  Platform,
-  ListRenderItemInfo,
-} from 'react-native';
+import { View, Text, FlatList, StatusBar, Platform, ListRenderItemInfo } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { useFavoritesContext } from '@/context/FavoritesContext';
 import { useFavoriteSpaces } from '@/hooks/useFilteredSpaces';
 import SpaceCard from '@/components/home/SpaceCard';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
 import { HeartIcon } from '@/components/icons';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 export default function FavoritesScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   const { isFavorite, toggleFavorite, favorites } = useFavoritesContext();
@@ -54,7 +46,7 @@ export default function FavoritesScreen() {
   const ListEmptyComponent = (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconCircle}>
-        <HeartIcon size={32} color={Colors.gray300} />
+        <HeartIcon size={32} color={colors.borderStrong} />
       </View>
       <Text style={styles.emptyTitle}>Sin favoritos aún</Text>
       <Text style={styles.emptySubtitle}>
@@ -67,11 +59,11 @@ export default function FavoritesScreen() {
     <View style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.primaryDark}
+        backgroundColor={colors.primary}
         translucent={false}
       />
 
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>Mis Favoritos</Text>
         <Text style={styles.headerSubtitle}>
           {favorites.length} espacio{favorites.length !== 1 ? 's' : ''}{' '}
@@ -99,20 +91,20 @@ export default function FavoritesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    borderBottomLeftRadius: BorderRadius.xxl + 4,
-    borderBottomRightRadius: BorderRadius.xxl + 4,
+    backgroundColor: t.colors.primary,
+    paddingHorizontal: t.spacing.lg,
+    paddingBottom: t.spacing.xl,
+    borderBottomLeftRadius: t.radius.xxl + 4,
+    borderBottomRightRadius: t.radius.xxl + 4,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.18,
         shadowRadius: 12,
@@ -123,50 +115,50 @@ const styles = StyleSheet.create({
     }),
   },
   headerTitle: {
-    color: Colors.white,
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xxl,
+    fontWeight: t.fontWeight.bold,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   headerSubtitle: {
-    color: Colors.teal200,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
+    color: t.colors.accentMuted,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.medium,
   },
   listContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: t.spacing.lg,
+    paddingTop: t.spacing.xl,
+    paddingBottom: t.spacing.xl,
     flexGrow: 1,
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.xxxl * 2,
-    paddingHorizontal: Spacing.xl,
+    paddingVertical: t.spacing.xxxl * 2,
+    paddingHorizontal: t.spacing.xl,
   },
   emptyIconCircle: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: Colors.gray100,
+    backgroundColor: t.colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: t.spacing.md,
   },
   emptyTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.xs,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.xs,
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: FontSize.base,
-    color: Colors.gray500,
+    fontSize: t.fontSize.base,
+    color: t.colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
-});
+}));

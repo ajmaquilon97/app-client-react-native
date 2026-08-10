@@ -3,9 +3,6 @@ import CategoryCard from '@/components/home/CategoryCard';
 import EmptyState from '@/components/home/EmptyState';
 import SpaceCard from '@/components/home/SpaceCard';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
-import { Colors } from '@/constants/colors';
-import { BorderRadius, Spacing } from '@/constants/spacing';
-import { FontSize, FontWeight } from '@/constants/typography';
 import { useAuth } from '@/context/AuthContext';
 import { useFavoritesContext } from '@/context/FavoritesContext';
 import { useFilteredSpaces } from '@/hooks/useFilteredSpaces';
@@ -14,24 +11,15 @@ import SearchScreen from '@/components/home/SearchScreen';
 import { Categoria, Espacio, FiltroRapido } from '@/types';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  FlatList,
-  ListRenderItemInfo,
-  Modal,
-  Platform,
-  Pressable,
-  RefreshControl,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { FlatList, ListRenderItemInfo, Modal, Platform, Pressable, RefreshControl, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 const CATEGORIAS: Categoria[] = ['canchas', 'piscinas', 'salones'];
 
 export default function HomeScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -140,12 +128,12 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.primaryDark}
+        backgroundColor={colors.primary}
         translucent={false}
       />
 
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.greeting}>Hola de nuevo</Text>
@@ -192,8 +180,8 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor={Colors.accentTeal}
-            colors={[Colors.accentTeal]}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
           />
         }
       />
@@ -220,7 +208,7 @@ export default function HomeScreen() {
         animationType="fade"
         onRequestClose={() => setMenuVisible(false)}>
         <Pressable style={styles.menuBackdrop} onPress={() => setMenuVisible(false)}>
-          <View style={[styles.menuCard, { top: insets.top + Spacing.md + 48 }]}>
+          <View style={[styles.menuCard, { top: insets.top + spacing.md + 48 }]}>
             <View style={styles.menuUserRow}>
               <Text style={styles.menuUserName} numberOfLines={1}>
                 {user ? [user.nombre, user.apellido].filter(Boolean).join(' ') : ''}
@@ -242,20 +230,20 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    borderBottomLeftRadius: BorderRadius.xxl + 4,
-    borderBottomRightRadius: BorderRadius.xxl + 4,
+    backgroundColor: t.colors.primary,
+    paddingHorizontal: t.spacing.lg,
+    paddingBottom: t.spacing.xl,
+    borderBottomLeftRadius: t.radius.xxl + 4,
+    borderBottomRightRadius: t.radius.xxl + 4,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.18,
         shadowRadius: 12,
@@ -269,20 +257,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: t.spacing.lg,
   },
   greeting: {
-    color: Colors.teal200,
-    fontSize: FontSize.xs,
+    color: t.colors.accentMuted,
+    fontSize: t.fontSize.xs,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    fontWeight: FontWeight.semiBold,
+    fontWeight: t.fontWeight.semiBold,
     marginBottom: 2,
   },
   headerTitle: {
-    color: Colors.white,
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xxl,
+    fontWeight: t.fontWeight.bold,
     letterSpacing: -0.5,
   },
   avatarContainer: {
@@ -292,16 +280,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.accentTeal,
+    backgroundColor: t.colors.accent,
     borderWidth: 2,
-    borderColor: Colors.accentTeal,
+    borderColor: t.colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitial: {
-    color: Colors.white,
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.md,
+    fontWeight: t.fontWeight.bold,
   },
   onlineDot: {
     position: 'absolute',
@@ -310,69 +298,69 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: Colors.success,
+    backgroundColor: t.colors.success,
     borderWidth: 2,
-    borderColor: Colors.primaryDark,
+    borderColor: t.colors.primaryText,
   },
   listContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingHorizontal: t.spacing.lg,
+    paddingBottom: t.spacing.xl,
   },
   listHeader: {
-    paddingTop: Spacing.xl,
+    paddingTop: t.spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: t.spacing.sm,
   },
   sectionTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   verTodo: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.accentTeal,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.accent,
   },
   categoriesRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xl,
+    gap: t.spacing.sm,
+    marginBottom: t.spacing.xl,
   },
   resultsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
-    marginBottom: Spacing.md,
+    marginBottom: t.spacing.md,
   },
   resultsTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   resultsCount: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
   },
   menuBackdrop: {
     flex: 1,
   },
   menuCard: {
     position: 'absolute',
-    right: Spacing.lg,
+    right: t.spacing.lg,
     minWidth: 220,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 12,
@@ -383,28 +371,28 @@ const styles = StyleSheet.create({
     }),
   },
   menuUserRow: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    borderBottomColor: t.colors.borderSubtle,
   },
   menuUserName: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   menuUserEmail: {
-    fontSize: FontSize.sm,
-    color: Colors.gray500,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
     marginTop: 2,
   },
   menuItem: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.sm + 2,
   },
   menuItemText: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.error,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.error,
   },
-});
+}));

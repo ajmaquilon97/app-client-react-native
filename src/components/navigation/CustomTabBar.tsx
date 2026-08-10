@@ -1,9 +1,7 @@
 import { CalendarIcon, HeartIcon, HomeIcon, ReservationsIcon, SettingsIcon } from '@/components/icons';
-import { Colors } from '@/constants/colors';
-import { Spacing } from '@/constants/spacing';
-import { FontSize, FontWeight } from '@/constants/typography';
+import { makeStyles, spacing, useTheme } from '@/theme';
 import React from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TabBarIconProps {
@@ -57,8 +55,10 @@ interface CustomTabBarProps {
 }
 
 export default function CustomTabBar({ state, navigation }: CustomTabBarProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const paddingBottom = Math.max(insets.bottom, Spacing.xs);
+  const paddingBottom = Math.max(insets.bottom, spacing.xs);
 
   return (
     <View style={[styles.tabBar, { paddingBottom }]}>
@@ -77,7 +77,7 @@ export default function CustomTabBar({ state, navigation }: CustomTabBarProps) {
         };
 
         const IconComponent = ICONS[route.name];
-        const iconColor = isFocused ? Colors.primaryDark : Colors.gray400;
+        const iconColor = isFocused ? colors.tabBarActive : colors.tabBarInactive;
 
         return (
           <TouchableOpacity
@@ -100,41 +100,33 @@ export default function CustomTabBar({ state, navigation }: CustomTabBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
+    backgroundColor: t.colors.tabBar,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
+    borderTopColor: t.colors.border,
+    paddingTop: t.spacing.sm,
+    paddingHorizontal: t.spacing.xs,
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.black,
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
+    ...t.shadows.lg,
+    // La sombra de la tab bar se proyecta hacia arriba.
+    shadowOffset: { width: 0, height: -2 },
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: t.spacing.xxs,
   },
   tabLabel: {
-    fontSize: FontSize.xs - 1,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray400,
+    ...t.typography.tiny,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.tabBarInactive,
     textAlign: 'center',
   },
   tabLabelActive: {
-    color: Colors.primaryDark,
-    fontWeight: FontWeight.bold,
+    color: t.colors.tabBarActive,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));

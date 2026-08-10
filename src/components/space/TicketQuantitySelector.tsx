@@ -1,9 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { AforoDia } from '@/types';
+import { makeStyles, useTheme } from '@/theme';
 
 interface TicketQuantitySelectorProps {
   cantidad: number;
@@ -20,6 +18,8 @@ export default function TicketQuantitySelector({
   loading,
   error,
 }: TicketQuantitySelectorProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const disponible = aforo?.disponible ?? null;
   const sinCupo = disponible != null && disponible <= 0;
   const puedeRestar = cantidad > 1;
@@ -29,7 +29,7 @@ export default function TicketQuantitySelector({
     <View>
       {loading && (
         <View style={styles.infoBanner}>
-          <ActivityIndicator size="small" color={Colors.gray500} />
+          <ActivityIndicator size="small" color={colors.textSecondary} />
           <Text style={styles.infoBannerText}>Consultando cupo disponible…</Text>
         </View>
       )}
@@ -81,85 +81,85 @@ export default function TicketQuantitySelector({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
+    gap: t.spacing.xs,
+    backgroundColor: t.colors.background,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
   },
   infoBannerText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
   },
   warningBanner: {
-    backgroundColor: Colors.errorLight,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
+    backgroundColor: t.colors.errorSoft,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
   },
   warningBannerText: {
-    fontSize: FontSize.xs,
-    color: Colors.error,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.error,
+    fontWeight: t.fontWeight.medium,
   },
   aforoRow: {
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
+    backgroundColor: t.colors.background,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
   },
   aforoText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray600,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
   },
   aforoDisponible: {
-    fontWeight: FontWeight.extraBold,
-    color: Colors.accentTeal,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.accent,
   },
   stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.md,
-    paddingVertical: Spacing.xs,
+    gap: t.spacing.md,
+    paddingVertical: t.spacing.xs,
   },
   stepperBtn: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.md,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepperBtnDisabled: {
-    backgroundColor: Colors.gray100,
-    borderColor: Colors.gray100,
+    backgroundColor: t.colors.surfaceMuted,
+    borderColor: t.colors.surfaceMuted,
   },
   stepperBtnText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   stepperBtnTextDisabled: {
-    color: Colors.gray300,
+    color: t.colors.borderStrong,
   },
   stepperValue: {
     alignItems: 'center',
     minWidth: 72,
   },
   stepperValueText: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.xl,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   stepperValueLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
   },
-});
+}));

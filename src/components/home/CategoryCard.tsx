@@ -1,10 +1,8 @@
 import { BuildingIcon2, FootBallIcon, WaterIcon2 } from '@/components/icons';
-import { Colors } from '@/constants/colors';
-import { BorderRadius, Spacing } from '@/constants/spacing';
-import { FontSize, FontWeight } from '@/constants/typography';
+import { makeStyles, useTheme } from '@/theme';
 import { Categoria } from '@/types';
 import React, { useCallback } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface CategoryCardProps {
   categoria: Categoria;
@@ -38,6 +36,8 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   isActive,
   onPress,
 }) => {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const meta = CATEGORY_META[categoria];
   const { Icon } = meta;
 
@@ -45,8 +45,8 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
     onPress(categoria);
   }, [onPress, categoria]);
 
-  const iconColor = isActive ? Colors.accentTeal : Colors.primaryDark;
-  const iconBgColor = isActive ? Colors.tealMedium : Colors.primaryDarkLight;
+  const iconColor = isActive ? colors.accent : colors.primaryText;
+  const iconBgColor = isActive ? colors.accentSoftStrong : colors.primarySoft;
 
   return (
     <TouchableOpacity
@@ -66,55 +66,50 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   card: {
     flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xs,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    paddingVertical: t.spacing.md,
+    paddingHorizontal: t.spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    ...t.shadows.sm,
   },
   cardActive: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: t.colors.primary,
     borderWidth: 2,
-    borderColor: Colors.accentTeal,
-    shadowOpacity: 0.15,
-    elevation: 4,
+    borderColor: t.colors.accent,
+    ...t.shadows.md,
   },
   iconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: t.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: t.spacing.xs,
   },
   label: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.textPrimary,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textPrimary,
     textAlign: 'center',
   },
   labelActive: {
-    color: Colors.white,
+    color: t.colors.onPrimary,
   },
   sublabel: {
-    fontSize: 9,
-    fontWeight: FontWeight.medium,
-    color: Colors.gray400,
+    fontSize: t.fontSize.xxs - 1,
+    fontWeight: t.fontWeight.medium,
+    color: t.colors.textMuted,
     marginTop: 2,
     textAlign: 'center',
   },
   sublabelActive: {
-    color: Colors.teal200,
+    color: t.colors.accentMuted,
   },
-});
+}));
 
 export default React.memo(CategoryCard);

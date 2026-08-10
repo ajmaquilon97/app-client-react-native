@@ -1,15 +1,7 @@
 import React, { useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { makeStyles, useTheme } from '@/theme';
 import { Espacio } from '@/types';
 import { HeartIcon, LocationIcon } from '@/components/icons';
 import StarRating from '@/components/common/StarRating';
@@ -27,6 +19,9 @@ const SpaceCard: React.FC<SpaceCardProps> = ({
   onPress,
   onToggleFavorite,
 }) => {
+  const styles = useStyles();
+  const { colors } = useTheme();
+
   const handlePress = useCallback(() => {
     onPress(espacio);
   }, [onPress, espacio]);
@@ -63,7 +58,7 @@ const SpaceCard: React.FC<SpaceCardProps> = ({
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <HeartIcon
             size={16}
-            color={isFavorite ? Colors.rose : Colors.gray600}
+            color={isFavorite ? colors.favorite : colors.textSecondary}
             filled={isFavorite}
           />
         </TouchableOpacity>
@@ -83,7 +78,7 @@ const SpaceCard: React.FC<SpaceCardProps> = ({
         </Text>
 
         <View style={styles.locationRow}>
-          <LocationIcon size={13} color={Colors.gray400} />
+          <LocationIcon size={13} color={colors.textMuted} />
           <Text style={styles.ubicacion} numberOfLines={1}>
             {espacio.ubicacion}
           </Text>
@@ -108,30 +103,20 @@ const SpaceCard: React.FC<SpaceCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   card: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
     overflow: 'hidden',
-    marginBottom: Spacing.md,
+    marginBottom: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    borderColor: t.colors.borderSubtle,
+    ...t.shadows.md,
   },
   imageContainer: {
     height: 176,
     width: '100%',
-    backgroundColor: Colors.gray200,
+    backgroundColor: t.colors.skeleton,
     position: 'relative',
   },
   image: {
@@ -140,64 +125,64 @@ const styles = StyleSheet.create({
   },
   categoryBadge: {
     position: 'absolute',
-    top: Spacing.sm,
-    left: Spacing.sm,
-    backgroundColor: Colors.primaryDarkMedium,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.full,
+    top: t.spacing.sm,
+    left: t.spacing.sm,
+    backgroundColor: t.colors.primaryScrim,
+    paddingHorizontal: t.spacing.xs,
+    paddingVertical: t.spacing.xxs,
+    borderRadius: t.radius.full,
   },
   categoryBadgeText: {
-    color: Colors.accentTeal,
-    fontSize: 9,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.accent,
+    fontSize: t.fontSize.xxs - 1,
+    fontWeight: t.fontWeight.extraBold,
     letterSpacing: 1.5,
   },
   favoriteButton: {
     position: 'absolute',
-    top: Spacing.sm,
-    right: Spacing.sm,
-    backgroundColor: Colors.overlayLight,
-    borderRadius: BorderRadius.full,
-    padding: Spacing.xs,
+    top: t.spacing.sm,
+    right: t.spacing.sm,
+    backgroundColor: t.colors.overlayLight,
+    borderRadius: t.radius.full,
+    padding: t.spacing.xs,
   },
   info: {
-    padding: Spacing.md,
+    padding: t.spacing.md,
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: t.spacing.xxs,
   },
   subcategoria: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.accentTeal,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.accent,
     flex: 1,
-    marginRight: Spacing.xs,
+    marginRight: t.spacing.xs,
   },
   nombre: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.xs,
+    ...t.typography.subtitle,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.xs,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: Spacing.sm,
+    gap: t.spacing.xxs,
+    marginBottom: t.spacing.sm,
   },
   ubicacion: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     flex: 1,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
-    marginBottom: Spacing.sm,
+    backgroundColor: t.colors.border,
+    marginBottom: t.spacing.sm,
   },
   bottomRow: {
     flexDirection: 'row',
@@ -205,34 +190,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priceLabel: {
-    fontSize: 9,
-    color: Colors.gray400,
-    fontWeight: FontWeight.semiBold,
+    fontSize: t.fontSize.xxs - 1,
+    color: t.colors.textMuted,
+    fontWeight: t.fontWeight.semiBold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
   },
   price: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    color: Colors.textPrimary,
+    ...t.typography.bodySmStrong,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textPrimary,
   },
   priceUnit: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.regular,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.regular,
+    color: t.colors.textSecondary,
   },
   reserveButton: {
-    backgroundColor: Colors.tealLight,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
+    backgroundColor: t.colors.accentSoft,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.xs,
+    borderRadius: t.radius.md,
   },
   reserveButtonText: {
-    color: Colors.accentTeal,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    color: t.colors.accent,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));
 
 export default React.memo(SpaceCard);

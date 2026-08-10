@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TextInputProps,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { View, Text, TextInput, TextInputProps, TouchableOpacity } from 'react-native';
+import { makeStyles, useTheme } from '@/theme';
 import { EyeIcon, EyeOffIcon } from '@/components/icons';
 
 interface AuthTextFieldProps extends Omit<TextInputProps, 'style'> {
@@ -24,6 +15,8 @@ export default function AuthTextField({
   isPassword = false,
   ...inputProps
 }: AuthTextFieldProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -33,18 +26,18 @@ export default function AuthTextField({
         <TextInput
           {...inputProps}
           secureTextEntry={isPassword && !showPassword}
-          placeholderTextColor={Colors.gray400}
-          selectionColor={Colors.accentTeal}
+          placeholderTextColor={colors.inputPlaceholder}
+          selectionColor={colors.accent}
           style={styles.input}
         />
         {isPassword && (
           <TouchableOpacity
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            onPress={() => setShowPassword(prev => !prev)}>
+            onPress={() => setShowPassword((prev) => !prev)}>
             {showPassword ? (
-              <EyeOffIcon size={20} color={Colors.gray400} />
+              <EyeOffIcon size={20} color={colors.textMuted} />
             ) : (
-              <EyeIcon size={20} color={Colors.gray400} />
+              <EyeIcon size={20} color={colors.textMuted} />
             )}
           </TouchableOpacity>
         )}
@@ -54,39 +47,37 @@ export default function AuthTextField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
-    marginBottom: Spacing.md,
+    marginBottom: t.spacing.md,
   },
   label: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray500,
-    textTransform: 'uppercase',
+    ...t.typography.overline,
+    color: t.colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
+    marginBottom: t.spacing.xs,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
+    backgroundColor: t.colors.inputBackground,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.sm,
+    borderColor: t.colors.inputBorder,
+    paddingHorizontal: t.spacing.sm,
   },
   inputWrapperError: {
-    borderColor: Colors.error,
+    borderColor: t.colors.error,
   },
   input: {
     flex: 1,
-    paddingVertical: Spacing.sm,
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    paddingVertical: t.spacing.sm,
+    ...t.typography.bodySm,
+    color: t.colors.textPrimary,
   },
   errorText: {
-    fontSize: FontSize.sm,
-    color: Colors.error,
-    marginTop: Spacing.xxs,
+    ...t.typography.caption,
+    color: t.colors.error,
+    marginTop: t.spacing.xxs,
   },
-});
+}));

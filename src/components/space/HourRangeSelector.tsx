@@ -1,10 +1,8 @@
 import React, { useMemo } from 'react';
-import { ScrollView, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
 import { HoraEstado } from '@/types';
 import { formatHora } from '@/utils/fechas';
+import { makeStyles } from '@/theme';
 
 const HORA_INICIO = 7;
 const HORA_FIN = 22;
@@ -25,6 +23,7 @@ export default function HourRangeSelector({
   onChangeHasta,
   horasEstado = [],
 }: HourRangeSelectorProps) {
+  const styles = useStyles();
   const estadoPorHora = useMemo(() => {
     const map = new Map<number, string>();
     horasEstado.forEach(h => map.set(h.hora, h.estado));
@@ -106,53 +105,53 @@ export default function HourRangeSelector({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   label: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
-    marginBottom: Spacing.xxs,
+    marginBottom: t.spacing.xxs,
   },
   labelSpaced: {
-    marginTop: Spacing.sm,
+    marginTop: t.spacing.sm,
   },
   hint: {
-    fontSize: FontSize.xs,
-    color: Colors.gray400,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textMuted,
     fontStyle: 'italic',
   },
   row: {
-    gap: Spacing.xs,
+    gap: t.spacing.xs,
     paddingVertical: 2,
   },
   chip: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
+    paddingHorizontal: t.spacing.sm,
+    paddingVertical: t.spacing.xs,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
   },
   chipActive: {
-    backgroundColor: Colors.accentTeal,
-    borderColor: Colors.accentTeal,
+    backgroundColor: t.colors.accent,
+    borderColor: t.colors.accent,
   },
   chipDisabled: {
-    backgroundColor: Colors.gray100,
-    borderColor: Colors.gray100,
+    backgroundColor: t.colors.surfaceMuted,
+    borderColor: t.colors.surfaceMuted,
   },
   chipText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray600,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textSecondary,
   },
   chipTextActive: {
-    color: Colors.white,
+    color: t.colors.textInverse,
   },
   chipTextDisabled: {
-    color: Colors.gray300,
+    color: t.colors.borderStrong,
     textDecorationLine: 'line-through',
   },
-});
+}));

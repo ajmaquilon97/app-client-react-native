@@ -1,19 +1,9 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  Platform,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StatusBar, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { useAuth } from '@/context/AuthContext';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 interface SettingItemProps {
   label: string;
@@ -23,6 +13,7 @@ interface SettingItemProps {
 }
 
 function SettingItem({ label, value, onPress, isLast = false }: SettingItemProps) {
+  const styles = useStyles();
   return (
     <TouchableOpacity
       activeOpacity={onPress ? 0.7 : 1}
@@ -39,6 +30,8 @@ function SettingItem({ label, value, onPress, isLast = false }: SettingItemProps
 }
 
 export default function SettingsScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -57,11 +50,11 @@ export default function SettingsScreen() {
     <View style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.primaryDark}
+        backgroundColor={colors.primary}
         translucent={false}
       />
 
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.headerTitle}>Ajustes</Text>
         <Text style={styles.headerSubtitle}>Preferencias de la aplicación</Text>
       </View>
@@ -121,26 +114,26 @@ export default function SettingsScreen() {
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
 
-        <View style={{ height: insets.bottom + Spacing.lg }} />
+        <View style={{ height: insets.bottom + spacing.lg }} />
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    borderBottomLeftRadius: BorderRadius.xxl + 4,
-    borderBottomRightRadius: BorderRadius.xxl + 4,
+    backgroundColor: t.colors.primary,
+    paddingHorizontal: t.spacing.lg,
+    paddingBottom: t.spacing.xl,
+    borderBottomLeftRadius: t.radius.xxl + 4,
+    borderBottomRightRadius: t.radius.xxl + 4,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.18,
         shadowRadius: 12,
@@ -151,33 +144,33 @@ const styles = StyleSheet.create({
     }),
   },
   headerTitle: {
-    color: Colors.white,
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xxl,
+    fontWeight: t.fontWeight.bold,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   headerSubtitle: {
-    color: Colors.teal200,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
+    color: t.colors.accentMuted,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.medium,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
+    paddingHorizontal: t.spacing.lg,
+    paddingTop: t.spacing.xl,
   },
   profileCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: t.spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 6,
@@ -191,47 +184,47 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.accentTeal,
+    backgroundColor: t.colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: Spacing.md,
+    marginRight: t.spacing.md,
   },
   profileAvatarText: {
-    color: Colors.white,
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xl,
+    fontWeight: t.fontWeight.bold,
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.md,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
     marginBottom: 2,
   },
   profileEmail: {
-    fontSize: FontSize.sm,
-    color: Colors.gray500,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
   },
   groupLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray400,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textMuted,
     letterSpacing: 1,
-    marginBottom: Spacing.xs,
-    paddingHorizontal: Spacing.xxs,
+    marginBottom: t.spacing.xs,
+    paddingHorizontal: t.spacing.xxs,
   },
   settingsGroup: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    marginBottom: Spacing.xl,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    marginBottom: t.spacing.xl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
@@ -245,40 +238,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.md,
   },
   settingItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    borderBottomColor: t.colors.borderSubtle,
   },
   settingLabel: {
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.base,
+    color: t.colors.textPrimary,
+    fontWeight: t.fontWeight.medium,
   },
   settingValue: {
-    fontSize: FontSize.sm,
-    color: Colors.gray400,
-    fontWeight: FontWeight.regular,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textMuted,
+    fontWeight: t.fontWeight.regular,
   },
   settingChevron: {
-    fontSize: FontSize.xl,
-    color: Colors.gray300,
-    lineHeight: FontSize.xl + 4,
+    fontSize: t.fontSize.xl,
+    color: t.colors.borderStrong,
+    lineHeight: t.fontSize.xl + 4,
   },
   logoutButton: {
-    backgroundColor: Colors.errorLight,
-    borderRadius: BorderRadius.xl,
-    paddingVertical: Spacing.md,
+    backgroundColor: t.colors.errorSoft,
+    borderRadius: t.radius.xl,
+    paddingVertical: t.spacing.md,
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.error + '30',
+    borderColor: t.colors.error + '30',
   },
   logoutText: {
-    color: Colors.error,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
+    color: t.colors.error,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));

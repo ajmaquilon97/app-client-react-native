@@ -1,21 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { Invitado } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { editarInvitado } from '@/services/invitados.service';
+import { makeStyles, useTheme } from '@/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -34,6 +22,8 @@ export default function EditarInvitadoModal({
   onClose,
   onSaved,
 }: EditarInvitadoModalProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { fetchAuthorized } = useAuth();
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
@@ -89,7 +79,7 @@ export default function EditarInvitadoModal({
             value={nombre}
             onChangeText={setNombre}
             placeholder="Nombre del invitado"
-            placeholderTextColor={Colors.gray400}
+            placeholderTextColor={colors.textMuted}
             style={styles.input}
           />
 
@@ -98,7 +88,7 @@ export default function EditarInvitadoModal({
             value={correo}
             onChangeText={setCorreo}
             placeholder="correo@ejemplo.com"
-            placeholderTextColor={Colors.gray400}
+            placeholderTextColor={colors.textMuted}
             keyboardType="email-address"
             autoCapitalize="none"
             style={styles.input}
@@ -122,7 +112,7 @@ export default function EditarInvitadoModal({
               onPress={handleGuardar}
               disabled={saving}>
               {saving ? (
-                <ActivityIndicator size="small" color={Colors.white} />
+                <ActivityIndicator size="small" color={colors.textInverse} />
               ) : (
                 <Text style={styles.saveBtnText}>Guardar y reenviar</Text>
               )}
@@ -134,84 +124,84 @@ export default function EditarInvitadoModal({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: t.colors.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    gap: Spacing.xs,
+    backgroundColor: t.colors.surface,
+    borderTopLeftRadius: t.radius.xl,
+    borderTopRightRadius: t.radius.xl,
+    padding: t.spacing.lg,
+    gap: t.spacing.xs,
   },
   title: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.xs,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.xs,
   },
   label: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   labelSpaced: {
-    marginTop: Spacing.sm,
+    marginTop: t.spacing.sm,
   },
   input: {
     height: 44,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.white,
+    borderColor: t.colors.border,
+    borderRadius: t.radius.sm,
+    paddingHorizontal: t.spacing.sm,
+    fontSize: t.fontSize.base,
+    color: t.colors.textPrimary,
+    backgroundColor: t.colors.surface,
   },
   errorText: {
-    fontSize: FontSize.xs,
-    color: Colors.error,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.error,
+    fontWeight: t.fontWeight.medium,
   },
   warningBanner: {
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    marginTop: Spacing.xs,
+    backgroundColor: t.colors.background,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
+    marginTop: t.spacing.xs,
   },
   warningText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray600,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
   },
   actions: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
+    gap: t.spacing.sm,
+    marginTop: t.spacing.md,
   },
   cancelBtn: {
     flex: 1,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
+    paddingVertical: t.spacing.sm,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelBtnText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray600,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textSecondary,
   },
   saveBtn: {
     flex: 2,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.primaryDark,
+    paddingVertical: t.spacing.sm,
+    borderRadius: t.radius.md,
+    backgroundColor: t.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 40,
@@ -220,8 +210,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   saveBtnText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.white,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.textInverse,
   },
-});
+}));

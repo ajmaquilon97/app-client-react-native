@@ -1,15 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing } from '@/constants/spacing';
 import { useKioskAuth } from '@/context/KioskAuthContext';
 import AuthTextField from '@/components/auth/AuthTextField';
 import AuthButton from '@/components/auth/AuthButton';
+import { makeStyles, spacing } from '@/theme';
 
 export default function RecepcionLoginScreen() {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { loginKiosk } = useKioskAuth();
@@ -52,7 +51,7 @@ export default function RecepcionLoginScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: insets.top + Spacing.xxl, paddingBottom: insets.bottom + Spacing.xl },
+            { paddingTop: insets.top + spacing.xxl, paddingBottom: insets.bottom + spacing.xl },
           ]}
           keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Ingreso Recepción</Text>
@@ -84,35 +83,35 @@ export default function RecepcionLoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: t.spacing.lg,
     flexGrow: 1,
   },
   title: {
-    fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.xxs,
+    fontSize: t.fontSize.xxxl,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.xxs,
   },
   subtitle: {
-    fontSize: FontSize.base,
-    color: Colors.gray500,
-    marginBottom: Spacing.xl,
+    fontSize: t.fontSize.base,
+    color: t.colors.textSecondary,
+    marginBottom: t.spacing.xl,
   },
   errorBanner: {
-    backgroundColor: Colors.errorLight,
+    backgroundColor: t.colors.errorSoft,
     borderRadius: 12,
-    padding: Spacing.sm,
-    marginBottom: Spacing.md,
+    padding: t.spacing.sm,
+    marginBottom: t.spacing.md,
   },
   errorBannerText: {
-    color: Colors.error,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
+    color: t.colors.error,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.medium,
   },
-});
+}));

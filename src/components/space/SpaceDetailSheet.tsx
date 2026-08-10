@@ -1,24 +1,9 @@
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  KeyboardAvoidingView,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  Modal,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Platform, KeyboardAvoidingView, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { AforoDia, Disponibilidad, Espacio, Reserva } from '@/types';
 import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/components/icons';
 import PaymentModal from '@/components/payment/PaymentModal';
@@ -47,6 +32,7 @@ import DaySelector from '@/components/space/DaySelector';
 import HourRangeSelector from '@/components/space/HourRangeSelector';
 import TicketQuantitySelector from '@/components/space/TicketQuantitySelector';
 import { MIS_RESERVAS_QUERY_KEY } from '@/hooks/useMisReservas';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 // Si el cliente no completa los datos de facturación, se manda como
 // "consumidor final" (identificación genérica estándar en Ecuador para
@@ -72,6 +58,8 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   onToggleFavorite,
   onClose,
 }) => {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -399,11 +387,11 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity activeOpacity={0.8} onPress={onClose} style={styles.headerBtn}>
-            <ArrowLeftIcon size={20} color={Colors.white} strokeWidth={2.5} />
+            <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={styles.headerTitle} numberOfLines={1}>Detalle del Espacio</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={handleFavoritePress} style={styles.headerBtn}>
-            <HeartIcon size={20} color={isFavorite ? Colors.rose : Colors.white} filled={isFavorite} />
+            <HeartIcon size={20} color={isFavorite ? colors.favorite : colors.surface} filled={isFavorite} />
           </TouchableOpacity>
         </View>
 
@@ -412,7 +400,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
           <ScrollView
-            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.xxxl }]}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xxxl }]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled">
 
@@ -483,7 +471,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
               <View style={styles.servicesGrid}>
                 {espacio.servicios.map((servicio, index) => (
                   <View key={index} style={styles.serviceItem}>
-                    <CheckIcon size={14} color={Colors.accentTeal} />
+                    <CheckIcon size={14} color={colors.accent} />
                     <Text style={styles.serviceText} numberOfLines={1}>{servicio}</Text>
                   </View>
                 ))}
@@ -499,12 +487,12 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   />
                 ) : (
                   <View style={styles.mapUnavailable}>
-                    <LocationIcon size={20} color={Colors.gray400} />
+                    <LocationIcon size={20} color={colors.textMuted} />
                     <Text style={styles.mapUnavailableText}>Ubicación no disponible</Text>
                   </View>
                 )}
                 <View style={styles.mapLabel}>
-                  <LocationIcon size={10} color={Colors.white} />
+                  <LocationIcon size={10} color={colors.textInverse} />
                   <Text style={styles.mapLabelText}>{espacio.ubicacion}</Text>
                 </View>
               </View>
@@ -536,7 +524,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   <>
                     {disponibilidadLoading && (
                       <View style={styles.infoBanner}>
-                        <ActivityIndicator size="small" color={Colors.gray500} />
+                        <ActivityIndicator size="small" color={colors.textSecondary} />
                         <Text style={styles.infoBannerText}>Consultando tarifa y disponibilidad…</Text>
                       </View>
                     )}
@@ -616,7 +604,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                       value={identificacionFacturacion}
                       onChangeText={setIdentificacionFacturacion}
                       placeholder="Ej. 0102030405"
-                      placeholderTextColor={Colors.gray400}
+                      placeholderTextColor={colors.textMuted}
                       keyboardType="number-pad"
                       maxLength={13}
                       style={styles.facturacionInput}
@@ -627,7 +615,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                       value={razonSocialFacturacion}
                       onChangeText={setRazonSocialFacturacion}
                       placeholder="Nombre o empresa a facturar"
-                      placeholderTextColor={Colors.gray400}
+                      placeholderTextColor={colors.textMuted}
                       style={styles.facturacionInput}
                     />
 
@@ -636,7 +624,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                       value={correoFacturacion}
                       onChangeText={setCorreoFacturacion}
                       placeholder="correo@ejemplo.com"
-                      placeholderTextColor={Colors.gray400}
+                      placeholderTextColor={colors.textMuted}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       style={styles.facturacionInput}
@@ -650,7 +638,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   disabled={creandoReserva}
                   style={[styles.reserveButton, creandoReserva && styles.reserveButtonDisabled]}>
                   {creandoReserva ? (
-                    <ActivityIndicator size="small" color={Colors.accentTeal} />
+                    <ActivityIndicator size="small" color={colors.accent} />
                   ) : (
                     <Text style={styles.reserveButtonText}>CONTINUAR AL PAGO →</Text>
                   )}
@@ -699,24 +687,24 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   flex: {
     flex: 1,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: t.colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.sm,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 6,
@@ -725,25 +713,25 @@ const styles = StyleSheet.create({
     }),
   },
   headerBtn: {
-    padding: Spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.md,
+    padding: t.spacing.xs,
+    backgroundColor: t.colors.overlayWhite,
+    borderRadius: t.radius.md,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: Colors.white,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    marginHorizontal: Spacing.sm,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    marginHorizontal: t.spacing.sm,
   },
   scrollContent: {
-    paddingBottom: Spacing.xxxl,
+    paddingBottom: t.spacing.xxxl,
   },
   imageContainer: {
     height: 240,
     width: '100%',
-    backgroundColor: Colors.gray200,
+    backgroundColor: t.colors.skeleton,
     position: 'relative',
   },
   image: {
@@ -752,310 +740,310 @@ const styles = StyleSheet.create({
   },
   subcategoryBadge: {
     position: 'absolute',
-    bottom: Spacing.md,
-    left: Spacing.md,
-    backgroundColor: 'rgba(30,58,95,0.9)',
-    paddingHorizontal: Spacing.sm,
+    bottom: t.spacing.md,
+    left: t.spacing.md,
+    backgroundColor: t.colors.primaryScrim,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 5,
-    borderRadius: BorderRadius.full,
+    borderRadius: t.radius.full,
   },
   subcategoryText: {
-    color: Colors.accentTeal,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.accent,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.extraBold,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   disponibleBadge: {
     position: 'absolute',
-    bottom: Spacing.md,
-    right: Spacing.md,
-    backgroundColor: Colors.accentTeal,
-    paddingHorizontal: Spacing.sm,
+    bottom: t.spacing.md,
+    right: t.spacing.md,
+    backgroundColor: t.colors.accent,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 5,
-    borderRadius: BorderRadius.md,
+    borderRadius: t.radius.md,
   },
   disponibleText: {
-    color: Colors.white,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
   },
   body: {
-    padding: Spacing.xl,
+    padding: t.spacing.xl,
   },
   nombre: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.xl,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
     lineHeight: 28,
-    marginBottom: Spacing.xs,
+    marginBottom: t.spacing.xs,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: 4,
-    marginBottom: Spacing.md,
+    marginBottom: t.spacing.md,
   },
   rating: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.amber,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.star,
   },
   metaDot: {
-    color: Colors.gray400,
-    fontSize: FontSize.sm,
+    color: t.colors.textMuted,
+    fontSize: t.fontSize.sm,
   },
   reviewsLink: {
-    fontSize: FontSize.sm,
-    color: Colors.gray600,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
   },
   distancia: {
-    fontSize: FontSize.sm,
-    color: Colors.primaryDark,
-    fontWeight: FontWeight.semiBold,
+    fontSize: t.fontSize.sm,
+    color: t.colors.primaryText,
+    fontWeight: t.fontWeight.semiBold,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: Spacing.md,
+    backgroundColor: t.colors.border,
+    marginVertical: t.spacing.md,
   },
   hostCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    gap: Spacing.sm,
+    borderColor: t.colors.borderSubtle,
+    gap: t.spacing.sm,
   },
   hostAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: Colors.accentTeal,
+    borderColor: t.colors.accent,
   },
   hostInfo: {
     flex: 1,
   },
   hostLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray400,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   hostName: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
     marginTop: 1,
   },
   hostSince: {
-    fontSize: FontSize.xs,
-    color: Colors.gray400,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textMuted,
   },
   contactBtn: {
-    backgroundColor: Colors.tealLight,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
+    backgroundColor: t.colors.accentSoft,
+    paddingHorizontal: t.spacing.sm,
+    paddingVertical: t.spacing.xs,
+    borderRadius: t.radius.md,
   },
   contactBtnText: {
-    color: Colors.accentTeal,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    color: t.colors.accent,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
   },
   sectionTitle: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
+    marginBottom: t.spacing.sm,
   },
   sectionTitleSpaced: {
-    marginTop: Spacing.lg,
+    marginTop: t.spacing.lg,
   },
   descCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
   },
   descripcion: {
-    fontSize: FontSize.xs,
-    color: Colors.gray600,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     lineHeight: 20,
   },
   servicesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.xs,
+    gap: t.spacing.xs,
   },
   serviceItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
+    backgroundColor: t.colors.surface,
+    paddingHorizontal: t.spacing.sm,
+    paddingVertical: t.spacing.xs,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
     gap: 6,
     width: '47%',
   },
   serviceText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray700,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textPrimary,
     flex: 1,
   },
   mapContainer: {
     height: 140,
-    borderRadius: BorderRadius.xl,
+    borderRadius: t.radius.xl,
     overflow: 'hidden',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: t.colors.successSoft,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
     position: 'relative',
   },
   mapLabel: {
     position: 'absolute',
-    bottom: Spacing.xs,
-    right: Spacing.xs,
-    backgroundColor: Colors.primaryDark,
+    bottom: t.spacing.xs,
+    right: t.spacing.xs,
+    backgroundColor: t.colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 4,
-    borderRadius: BorderRadius.md,
+    borderRadius: t.radius.md,
   },
   mapLabelText: {
-    color: Colors.white,
+    color: t.colors.textInverse,
     fontSize: 9,
-    fontWeight: FontWeight.bold,
+    fontWeight: t.fontWeight.bold,
   },
   mapUnavailable: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xxs,
+    gap: t.spacing.xxs,
   },
   mapUnavailableText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray400,
-    fontWeight: FontWeight.semiBold,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textMuted,
+    fontWeight: t.fontWeight.semiBold,
   },
   normasCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    gap: Spacing.xs,
+    borderColor: t.colors.borderSubtle,
+    gap: t.spacing.xs,
   },
   normaRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: Spacing.xs,
+    gap: t.spacing.xs,
   },
   normaDot: {
-    color: Colors.amber,
-    fontSize: FontSize.base,
+    color: t.colors.star,
+    fontSize: t.fontSize.base,
     lineHeight: 18,
   },
   normaText: {
     flex: 1,
-    fontSize: FontSize.xs,
-    color: Colors.gray600,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     lineHeight: 18,
   },
   bookingCard: {
-    marginTop: Spacing.lg,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    marginTop: t.spacing.lg,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
     borderWidth: 2,
-    borderColor: 'rgba(30,58,95,0.2)',
-    gap: Spacing.sm,
+    borderColor: t.colors.primarySoft,
+    gap: t.spacing.sm,
   },
   bookingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: Spacing.sm,
+    paddingBottom: t.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: t.colors.border,
   },
   bookingHeaderLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.gray400,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   bookingHeaderPrice: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   bookingPriceUnit: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.regular,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.regular,
+    color: t.colors.textSecondary,
   },
   inputLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
-    marginBottom: -Spacing.xs,
+    marginBottom: -t.spacing.xs,
   },
   inputLabelSpaced: {
-    marginTop: Spacing.sm,
+    marginTop: t.spacing.sm,
   },
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    marginTop: Spacing.xs,
+    gap: t.spacing.xs,
+    backgroundColor: t.colors.background,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
+    marginTop: t.spacing.xs,
   },
   infoBannerText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
   },
   warningBanner: {
-    backgroundColor: Colors.errorLight,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    marginTop: Spacing.xs,
+    backgroundColor: t.colors.errorSoft,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
+    marginTop: t.spacing.xs,
   },
   warningBannerText: {
-    fontSize: FontSize.xs,
-    color: Colors.error,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.error,
+    fontWeight: t.fontWeight.medium,
   },
   costBreakdown: {
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
+    backgroundColor: t.colors.background,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     gap: 6,
   },
   costBreakdownSpaced: {
-    marginTop: Spacing.sm,
+    marginTop: t.spacing.sm,
   },
   costRow: {
     flexDirection: 'row',
@@ -1063,41 +1051,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   costLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.gray600,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
   },
   costValue: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray700,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textPrimary,
   },
   costDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
   },
   costTotal: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   costTotalValue: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   facturacionDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
     marginTop: 4,
   },
   facturacionTitle: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray700,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textPrimary,
   },
   facturacionHelper: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     marginTop: -4,
   },
   facturacionInputLabel: {
@@ -1107,22 +1095,22 @@ const styles = StyleSheet.create({
   facturacionInput: {
     height: 40,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.white,
+    borderColor: t.colors.border,
+    borderRadius: t.radius.sm,
+    paddingHorizontal: t.spacing.sm,
+    fontSize: t.fontSize.base,
+    color: t.colors.textPrimary,
+    backgroundColor: t.colors.surface,
   },
   reserveButton: {
-    backgroundColor: Colors.primaryDark,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm,
+    backgroundColor: t.colors.primary,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 40,
     ...Platform.select({
-      ios: { shadowColor: Colors.primaryDark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+      ios: { shadowColor: t.colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
       android: { elevation: 4 },
     }),
   },
@@ -1130,29 +1118,29 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   reserveButtonText: {
-    color: Colors.accentTeal,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.accent,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
     letterSpacing: 1.2,
   },
   successBanner: {
-    backgroundColor: Colors.accentTeal,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm,
+    backgroundColor: t.colors.accent,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm,
     alignItems: 'center',
   },
   successText: {
-    color: Colors.white,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
   },
   reviewCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    marginBottom: Spacing.sm,
+    borderColor: t.colors.borderSubtle,
+    marginBottom: t.spacing.sm,
     gap: 6,
   },
   reviewHeader: {
@@ -1161,24 +1149,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   reviewUser: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   reviewDate: {
-    fontSize: FontSize.xs,
-    color: Colors.gray400,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textMuted,
   },
   reviewStars: {
-    fontSize: FontSize.sm,
-    color: Colors.amber,
+    fontSize: t.fontSize.sm,
+    color: t.colors.star,
   },
   reviewText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray600,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     lineHeight: 18,
     fontStyle: 'italic',
   },
-});
+}));
 
 export default React.memo(SpaceDetailSheet);

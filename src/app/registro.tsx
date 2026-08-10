@@ -11,14 +11,12 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { ArrowLeftIcon, CheckIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 import AuthTextField from '@/components/auth/AuthTextField';
 import AuthButton from '@/components/auth/AuthButton';
 import GoogleButton from '@/components/auth/GoogleButton';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -32,6 +30,8 @@ interface FormErrors {
 }
 
 export default function RegistroScreen() {
+  const styles = useStyles();
+  const { colors, statusBarStyle } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { registro } = useAuth();
@@ -87,14 +87,14 @@ export default function RegistroScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <StatusBar barStyle={statusBarStyle} backgroundColor={colors.background} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: insets.top + Spacing.md, paddingBottom: insets.bottom + Spacing.xl },
+            { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.xl },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
@@ -102,7 +102,7 @@ export default function RegistroScreen() {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.backButton}
             onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))}>
-            <ArrowLeftIcon size={20} color={Colors.primaryDark} strokeWidth={2.5} />
+            <ArrowLeftIcon size={20} color={colors.primaryText} strokeWidth={2.5} />
           </TouchableOpacity>
 
           <Text style={styles.title}>Crea tu cuenta</Text>
@@ -179,7 +179,7 @@ export default function RegistroScreen() {
                 setErrors(prev => ({ ...prev, aceptaTerminos: undefined }));
               }}>
               <View style={[styles.checkbox, aceptaTerminos && styles.checkboxChecked]}>
-                {aceptaTerminos && <CheckIcon size={14} color={Colors.white} strokeWidth={3} />}
+                {aceptaTerminos && <CheckIcon size={14} color={colors.textInverse} strokeWidth={3} />}
               </View>
               <Text style={styles.termsText}>
                 He leído y acepto los{' '}
@@ -237,116 +237,116 @@ export default function RegistroScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: t.spacing.lg,
     flexGrow: 1,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.white,
+    borderRadius: t.radius.full,
+    backgroundColor: t.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: t.spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   title: {
-    fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.xxs,
+    fontSize: t.fontSize.xxxl,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.xxs,
   },
   subtitle: {
-    fontSize: FontSize.base,
-    color: Colors.gray500,
-    marginBottom: Spacing.xl,
+    fontSize: t.fontSize.base,
+    color: t.colors.textSecondary,
+    marginBottom: t.spacing.xl,
   },
   errorBanner: {
-    backgroundColor: Colors.errorLight,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    marginBottom: Spacing.md,
+    backgroundColor: t.colors.errorSoft,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
+    marginBottom: t.spacing.md,
   },
   errorBannerText: {
-    color: Colors.error,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
+    color: t.colors.error,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.medium,
   },
   form: {
-    marginBottom: Spacing.xl,
+    marginBottom: t.spacing.xl,
   },
   termsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.md,
-    gap: Spacing.sm,
+    marginTop: t.spacing.xs,
+    marginBottom: t.spacing.md,
+    gap: t.spacing.sm,
   },
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: BorderRadius.sm,
+    borderRadius: t.radius.sm,
     borderWidth: 1.5,
-    borderColor: Colors.gray300,
+    borderColor: t.colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
   },
   checkboxChecked: {
-    backgroundColor: Colors.accentTeal,
-    borderColor: Colors.accentTeal,
+    backgroundColor: t.colors.accent,
+    borderColor: t.colors.accent,
   },
   termsText: {
     flex: 1,
-    fontSize: FontSize.sm,
-    color: Colors.gray600,
-    lineHeight: FontSize.sm * 1.4,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
+    lineHeight: t.fontSize.sm * 1.4,
   },
   termsLink: {
-    color: Colors.accentTeal,
-    fontWeight: FontWeight.semiBold,
+    color: t.colors.accent,
+    fontWeight: t.fontWeight.semiBold,
   },
   termsError: {
-    color: Colors.error,
-    fontSize: FontSize.sm,
-    marginBottom: Spacing.md,
-    marginTop: -Spacing.xs,
+    color: t.colors.error,
+    fontSize: t.fontSize.sm,
+    marginBottom: t.spacing.md,
+    marginTop: -t.spacing.xs,
   },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: Spacing.lg,
+    marginVertical: t.spacing.lg,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
   },
   dividerText: {
-    marginHorizontal: Spacing.sm,
-    fontSize: FontSize.sm,
-    color: Colors.gray400,
+    marginHorizontal: t.spacing.sm,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textMuted,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 'auto',
-    paddingTop: Spacing.lg,
+    paddingTop: t.spacing.lg,
   },
   footerText: {
-    fontSize: FontSize.base,
-    color: Colors.gray500,
+    fontSize: t.fontSize.base,
+    color: t.colors.textSecondary,
   },
   footerLink: {
-    fontSize: FontSize.base,
-    color: Colors.accentTeal,
-    fontWeight: FontWeight.bold,
+    fontSize: t.fontSize.base,
+    color: t.colors.accent,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));

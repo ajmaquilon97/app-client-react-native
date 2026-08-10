@@ -1,6 +1,13 @@
 import React from 'react';
 import Svg, { Path } from 'react-native-svg';
 
+import { getTheme } from '@/theme';
+
+// Colores por defecto, tomados del tema claro para no duplicar hexadecimales.
+// Todo icono visible en pantalla debe recibir `color` explícito (normalmente
+// desde `useTheme()`) para que se adapte también al modo oscuro.
+const fallback = getTheme('light').colors;
+
 interface IconProps {
   size?: number;
   color?: string;
@@ -9,7 +16,7 @@ interface IconProps {
 
 export const HomeIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1F2937',
+  color = fallback.textPrimary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -25,7 +32,7 @@ export const HomeIcon: React.FC<IconProps> = ({
 
 export const CalendarIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1F2937',
+  color = fallback.textPrimary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -41,7 +48,7 @@ export const CalendarIcon: React.FC<IconProps> = ({
 
 export const HeartIcon: React.FC<IconProps & { filled?: boolean }> = ({
   size = 24,
-  color = '#1F2937',
+  color = fallback.textPrimary,
   strokeWidth = 2,
   filled = false,
 }) => (
@@ -58,7 +65,7 @@ export const HeartIcon: React.FC<IconProps & { filled?: boolean }> = ({
 
 export const SettingsIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1F2937',
+  color = fallback.textPrimary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -81,7 +88,7 @@ export const SettingsIcon: React.FC<IconProps> = ({
 
 export const SearchIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1F2937',
+  color = fallback.textPrimary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -97,7 +104,7 @@ export const SearchIcon: React.FC<IconProps> = ({
 
 export const LocationIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1F2937',
+  color = fallback.textPrimary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -120,7 +127,7 @@ export const LocationIcon: React.FC<IconProps> = ({
 
 export const StarIcon: React.FC<IconProps & { filled?: boolean }> = ({
   size = 24,
-  color = '#F59E0B',
+  color = fallback.star,
   filled = true,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 20 20" fill={filled ? color : 'none'}>
@@ -134,7 +141,7 @@ export const StarIcon: React.FC<IconProps & { filled?: boolean }> = ({
 
 export const CheckIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#14B8A6',
+  color = fallback.accent,
   strokeWidth = 2.5,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -150,7 +157,7 @@ export const CheckIcon: React.FC<IconProps> = ({
 
 export const PlusIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#FFFFFF',
+  color = fallback.textInverse,
   strokeWidth = 2.5,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -166,7 +173,7 @@ export const PlusIcon: React.FC<IconProps> = ({
 
 export const ArrowLeftIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#FFFFFF',
+  color = fallback.textInverse,
   strokeWidth = 2.5,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -182,7 +189,7 @@ export const ArrowLeftIcon: React.FC<IconProps> = ({
 
 export const CloseCircleIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#9CA3AF',
+  color = fallback.textMuted,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 20 20" fill={color}>
     <Path
@@ -195,7 +202,7 @@ export const CloseCircleIcon: React.FC<IconProps> = ({
 
 export const SportIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1E3A5F',
+  color = fallback.primary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -218,7 +225,7 @@ export const SportIcon: React.FC<IconProps> = ({
 
 export const FootBallIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1E3A5F',
+  color = fallback.primary,
   strokeWidth = 2,
 }) => (
   <Svg
@@ -239,7 +246,7 @@ export const FootBallIcon: React.FC<IconProps> = ({
 
 export const WaterIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1E3A5F',
+  color = fallback.primary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -262,7 +269,7 @@ export const WaterIcon: React.FC<IconProps> = ({
 
 export const WaterIcon2: React.FC<IconProps> = ({
   size = 24,
-  color = '#1E3A5F',
+  color = fallback.primary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -278,7 +285,7 @@ export const WaterIcon2: React.FC<IconProps> = ({
 
 export const BuildingIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1E3A5F',
+  color = fallback.primary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -294,7 +301,7 @@ export const BuildingIcon: React.FC<IconProps> = ({
 
 export const BuildingIcon2: React.FC<IconProps> = ({
   size = 24,
-  color = '#1E3A5F',
+  color = fallback.primary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -317,7 +324,7 @@ export const BuildingIcon2: React.FC<IconProps> = ({
 
 export const ReservationsIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#1F2937',
+  color = fallback.textPrimary,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -333,7 +340,7 @@ export const ReservationsIcon: React.FC<IconProps> = ({
 
 export const EyeIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#9CA3AF',
+  color = fallback.textMuted,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -356,7 +363,7 @@ export const EyeIcon: React.FC<IconProps> = ({
 
 export const EyeOffIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#9CA3AF',
+  color = fallback.textMuted,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -393,7 +400,7 @@ export const GoogleIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
 
 export const SadFaceIcon: React.FC<IconProps> = ({
   size = 24,
-  color = '#9CA3AF',
+  color = fallback.textMuted,
   strokeWidth = 2,
 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

@@ -1,21 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-  Platform,
-  Linking,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Platform, Linking, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { ArrowLeftIcon, LocationIcon, CalendarIcon } from '@/components/icons';
 import { useReservaDetalle } from '@/hooks/useReservaDetalle';
 import { useFacturasReserva } from '@/hooks/useFacturasReserva';
@@ -26,6 +13,7 @@ import LocationMap from '@/components/space/LocationMap';
 import { formatRangoReserva } from '@/utils/fechas';
 import { getModalidadReserva } from '@/utils/espacioArchetype';
 import { EstadoPago, EstadoReserva, FacturaStatus } from '@/types';
+import { ColorToken, makeStyles, spacing, useTheme } from '@/theme';
 
 const IMAGEN_FALLBACK =
   'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80';
@@ -38,12 +26,12 @@ const ESTADO_RESERVA_LABEL: Record<EstadoReserva, string> = {
   finalizada: 'Finalizada',
 };
 
-const ESTADO_RESERVA_COLOR: Record<EstadoReserva, string> = {
-  pendiente: Colors.amber,
-  confirmada: Colors.accentTeal,
-  reagendada: Colors.accentTeal,
-  cancelada: Colors.gray400,
-  finalizada: Colors.gray400,
+const ESTADO_RESERVA_COLOR: Record<EstadoReserva, ColorToken> = {
+  pendiente: 'star',
+  confirmada: 'accent',
+  reagendada: 'accent',
+  cancelada: 'textMuted',
+  finalizada: 'textMuted',
 };
 
 const ESTADO_PAGO_LABEL: Record<EstadoPago, string> = {
@@ -53,11 +41,11 @@ const ESTADO_PAGO_LABEL: Record<EstadoPago, string> = {
   reembolsado: 'Reembolsado',
 };
 
-const ESTADO_PAGO_COLOR: Record<EstadoPago, string> = {
-  pendiente: Colors.amber,
-  pagado_parcialmente: Colors.amber,
-  pagado: Colors.success,
-  reembolsado: Colors.gray400,
+const ESTADO_PAGO_COLOR: Record<EstadoPago, ColorToken> = {
+  pendiente: 'star',
+  pagado_parcialmente: 'star',
+  pagado: 'success',
+  reembolsado: 'textMuted',
 };
 
 // GET /api/reservas/{id}/factura (estado, sin schema formal en swagger) usa el mismo
@@ -71,17 +59,17 @@ function tipoFacturaLabel(tipo: string | null): string {
   return tipo || 'Factura';
 }
 
-const ESTADO_FACTURA_COLOR: Record<string, string> = {
-  Procesando: Colors.amber,
-  Recibida: Colors.amber,
-  Autorizada: Colors.success,
-  Devuelta: Colors.error,
-  'No autorizada': Colors.error,
-  Error: Colors.error,
+const ESTADO_FACTURA_COLOR: Record<string, ColorToken> = {
+  Procesando: 'star',
+  Recibida: 'star',
+  Autorizada: 'success',
+  Devuelta: 'error',
+  'No autorizada': 'error',
+  Error: 'error',
 };
 
-function estadoFacturaColor(estado: string): string {
-  return ESTADO_FACTURA_COLOR[estado] ?? Colors.gray400;
+function estadoFacturaToken(estado: string): ColorToken {
+  return ESTADO_FACTURA_COLOR[estado] ?? 'textMuted';
 }
 
 function formatFechaHora(iso: string | null): string | null {
@@ -96,6 +84,8 @@ function formatFechaHora(iso: string | null): string | null {
 }
 
 function FacturaCard({ reservaId, factura }: { reservaId: number; factura: FacturaStatus }) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { fetchAuthorized } = useAuth();
   const [descargando, setDescargando] = useState(false);
   const autorizada = factura.estado === 'Autorizada';
@@ -133,7 +123,7 @@ function FacturaCard({ reservaId, factura }: { reservaId: number; factura: Factu
     <View style={styles.facturaCard}>
       <View style={styles.facturaHeader}>
         <Text style={styles.facturaTipo}>{tipoFacturaLabel(factura.tipoFactura)}</Text>
-        <View style={[styles.facturaEstadoBadge, { backgroundColor: estadoFacturaColor(factura.estado) }]}>
+        <View style={[styles.facturaEstadoBadge, { backgroundColor: colors[estadoFacturaToken(factura.estado)] }]}>
           <Text style={styles.facturaEstadoText}>{factura.estado}</Text>
         </View>
       </View>
@@ -174,7 +164,7 @@ function FacturaCard({ reservaId, factura }: { reservaId: number; factura: Factu
           style={[styles.facturaPdfBtn, descargando && styles.facturaPdfBtnDisabled]}
           onPress={handleDescargar}>
           {descargando ? (
-            <ActivityIndicator size="small" color={Colors.accentTeal} />
+            <ActivityIndicator size="small" color={colors.accent} />
           ) : (
             <Text style={styles.facturaPdfBtnText}>Descargar factura</Text>
           )}
@@ -185,6 +175,8 @@ function FacturaCard({ reservaId, factura }: { reservaId: number; factura: Factu
 }
 
 export default function ReservaDetalleScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id, titulo } = useLocalSearchParams<{ id: string; titulo?: string }>();
@@ -215,7 +207,7 @@ export default function ReservaDetalleScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.headerBtn}>
-          <ArrowLeftIcon size={20} color={Colors.white} strokeWidth={2.5} />
+          <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {reserva?.espacioTitulo ?? titulo ?? 'Detalle de tu reserva'}
@@ -225,7 +217,7 @@ export default function ReservaDetalleScreen() {
 
       {isLoading ? (
         <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={Colors.accentTeal} />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : isError || !reserva ? (
         <View style={styles.centerContent}>
@@ -236,7 +228,7 @@ export default function ReservaDetalleScreen() {
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.xxxl }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xxxl }]}
           showsVerticalScrollIndicator={false}>
           {/* Portada + estado */}
           <View style={styles.imageContainer}>
@@ -245,7 +237,7 @@ export default function ReservaDetalleScreen() {
               style={styles.image}
               contentFit="cover"
             />
-            <View style={[styles.estadoBadge, { backgroundColor: ESTADO_RESERVA_COLOR[reserva.estado] }]}>
+            <View style={[styles.estadoBadge, { backgroundColor: colors[ESTADO_RESERVA_COLOR[reserva.estado]] }]}>
               <Text style={styles.estadoBadgeText}>{ESTADO_RESERVA_LABEL[reserva.estado]}</Text>
             </View>
           </View>
@@ -261,7 +253,7 @@ export default function ReservaDetalleScreen() {
             <Text style={styles.sectionTitle}>Fecha de tu reserva</Text>
             <View style={styles.infoCard}>
               <View style={styles.infoRow}>
-                <CalendarIcon size={15} color={Colors.accentTeal} strokeWidth={2} />
+                <CalendarIcon size={15} color={colors.accent} strokeWidth={2} />
                 <Text style={styles.infoRowText}>
                   {formatRangoReserva(reserva.fechaInicio, reserva.fechaFin)}
                 </Text>
@@ -280,13 +272,13 @@ export default function ReservaDetalleScreen() {
                 <LocationMap latitude={espacioCoords.latitude} longitude={espacioCoords.longitude} />
               ) : (
                 <View style={styles.mapUnavailable}>
-                  <LocationIcon size={20} color={Colors.gray400} />
+                  <LocationIcon size={20} color={colors.textMuted} />
                   <Text style={styles.mapUnavailableText}>Ubicación no disponible</Text>
                 </View>
               )}
               {!!espacio?.ubicacion && (
                 <View style={styles.mapLabel}>
-                  <LocationIcon size={10} color={Colors.white} />
+                  <LocationIcon size={10} color={colors.textInverse} />
                   <Text style={styles.mapLabelText}>{espacio.ubicacion}</Text>
                 </View>
               )}
@@ -323,7 +315,7 @@ export default function ReservaDetalleScreen() {
               <View
                 style={[
                   styles.estadoPagoBadge,
-                  { backgroundColor: ESTADO_PAGO_COLOR[reserva.estadoPago] },
+                  { backgroundColor: colors[ESTADO_PAGO_COLOR[reserva.estadoPago]] },
                 ]}>
                 <Text style={styles.estadoPagoText}>{ESTADO_PAGO_LABEL[reserva.estadoPago]}</Text>
               </View>
@@ -336,7 +328,7 @@ export default function ReservaDetalleScreen() {
             </Text>
             {isLoadingFacturas ? (
               <View style={styles.infoBanner}>
-                <ActivityIndicator size="small" color={Colors.gray500} />
+                <ActivityIndicator size="small" color={colors.textSecondary} />
                 <Text style={styles.infoBannerText}>Consultando facturas…</Text>
               </View>
             ) : isErrorFacturas ? (
@@ -355,7 +347,7 @@ export default function ReservaDetalleScreen() {
                 </Text>
               </View>
             ) : (
-              <View style={{ gap: Spacing.sm }}>
+              <View style={{ gap: spacing.sm }}>
                 {facturas.map(factura => (
                   <FacturaCard key={factura.id} reservaId={reservaId} factura={factura} />
                 ))}
@@ -368,21 +360,21 @@ export default function ReservaDetalleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: t.colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.sm,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 6,
@@ -393,49 +385,49 @@ const styles = StyleSheet.create({
   headerBtn: {
     width: 36,
     height: 36,
-    padding: Spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.md,
+    padding: t.spacing.xs,
+    backgroundColor: t.colors.overlayWhite,
+    borderRadius: t.radius.md,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: Colors.white,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    marginHorizontal: Spacing.sm,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    marginHorizontal: t.spacing.sm,
   },
   centerContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.xxl,
+    paddingHorizontal: t.spacing.xxl,
   },
   errorTitle: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.md,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.md,
     textAlign: 'center',
   },
   retryBtn: {
-    backgroundColor: Colors.primaryDark,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm + 2,
-    paddingHorizontal: Spacing.xxl,
+    backgroundColor: t.colors.primary,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm + 2,
+    paddingHorizontal: t.spacing.xxl,
   },
   retryBtnText: {
-    color: Colors.white,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
   },
   scrollContent: {
-    paddingBottom: Spacing.xxxl,
+    paddingBottom: t.spacing.xxxl,
   },
   imageContainer: {
     height: 200,
     width: '100%',
-    backgroundColor: Colors.gray200,
+    backgroundColor: t.colors.skeleton,
     position: 'relative',
   },
   image: {
@@ -444,116 +436,116 @@ const styles = StyleSheet.create({
   },
   estadoBadge: {
     position: 'absolute',
-    bottom: Spacing.md,
-    left: Spacing.md,
-    paddingHorizontal: Spacing.sm,
+    bottom: t.spacing.md,
+    left: t.spacing.md,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 5,
-    borderRadius: BorderRadius.full,
+    borderRadius: t.radius.full,
   },
   estadoBadgeText: {
-    color: Colors.white,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.extraBold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   body: {
-    padding: Spacing.xl,
+    padding: t.spacing.xl,
   },
   subcategoria: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.accentTeal,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.accent,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   nombre: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.xl,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
     marginTop: 2,
   },
   codigo: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
     marginTop: 2,
   },
   sectionTitle: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
+    marginBottom: t.spacing.sm,
   },
   sectionTitleSpaced: {
-    marginTop: Spacing.lg,
+    marginTop: t.spacing.lg,
   },
   facturasHint: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    marginTop: -Spacing.xs,
-    marginBottom: Spacing.sm,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    marginTop: -t.spacing.xs,
+    marginBottom: t.spacing.sm,
   },
   infoCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    gap: Spacing.xs,
+    borderColor: t.colors.borderSubtle,
+    gap: t.spacing.xs,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: t.spacing.xs,
   },
   infoRowText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray700,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textPrimary,
   },
   infoRowSub: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
   },
   mapContainer: {
     height: 140,
-    borderRadius: BorderRadius.xl,
+    borderRadius: t.radius.xl,
     overflow: 'hidden',
-    backgroundColor: '#F0FDF4',
+    backgroundColor: t.colors.successSoft,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
     position: 'relative',
   },
   mapLabel: {
     position: 'absolute',
-    bottom: Spacing.xs,
-    right: Spacing.xs,
-    backgroundColor: Colors.primaryDark,
+    bottom: t.spacing.xs,
+    right: t.spacing.xs,
+    backgroundColor: t.colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 4,
-    borderRadius: BorderRadius.md,
+    borderRadius: t.radius.md,
   },
   mapLabelText: {
-    color: Colors.white,
+    color: t.colors.textInverse,
     fontSize: 9,
-    fontWeight: FontWeight.bold,
+    fontWeight: t.fontWeight.bold,
   },
   mapUnavailable: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xxs,
+    gap: t.spacing.xxs,
   },
   mapUnavailableText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray400,
-    fontWeight: FontWeight.semiBold,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textMuted,
+    fontWeight: t.fontWeight.semiBold,
   },
   costRow: {
     flexDirection: 'row',
@@ -561,91 +553,91 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   costLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.gray600,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
   },
   costValue: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray700,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textPrimary,
   },
   costPendiente: {
-    color: Colors.error,
+    color: t.colors.error,
   },
   costDivider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: t.colors.border,
     marginVertical: 2,
   },
   costTotal: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   costTotalValue: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   estadoPagoBadge: {
     alignSelf: 'flex-start',
-    marginTop: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
+    marginTop: t.spacing.xs,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 4,
-    borderRadius: BorderRadius.full,
+    borderRadius: t.radius.full,
   },
   estadoPagoText: {
-    color: Colors.white,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
   },
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
+    gap: t.spacing.xs,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
   },
   infoBannerText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
   },
   warningBanner: {
-    backgroundColor: Colors.errorLight,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
+    backgroundColor: t.colors.errorSoft,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
     gap: 4,
   },
   warningBannerText: {
-    fontSize: FontSize.xs,
-    color: Colors.error,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.error,
+    fontWeight: t.fontWeight.medium,
   },
   retryText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   emptyState: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.lg,
+    padding: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
   },
   emptyText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     lineHeight: 18,
   },
   facturaCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
     gap: 6,
   },
   facturaHeader: {
@@ -655,54 +647,54 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   facturaTipo: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   facturaEstadoBadge: {
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 3,
-    borderRadius: BorderRadius.full,
+    borderRadius: t.radius.full,
   },
   facturaEstadoText: {
-    color: Colors.white,
+    color: t.colors.textInverse,
     fontSize: 10,
-    fontWeight: FontWeight.bold,
+    fontWeight: t.fontWeight.bold,
   },
   facturaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: t.spacing.sm,
   },
   facturaLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
   },
   facturaValue: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray700,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textPrimary,
     flexShrink: 1,
     textAlign: 'right',
   },
   facturaValueBold: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   facturaMotivo: {
-    fontSize: FontSize.xs,
-    color: Colors.error,
+    fontSize: t.fontSize.xs,
+    color: t.colors.error,
     marginTop: 2,
   },
   facturaPdfBtn: {
-    marginTop: Spacing.xs,
+    marginTop: t.spacing.xs,
     alignSelf: 'flex-start',
-    backgroundColor: Colors.tealLight,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
+    backgroundColor: t.colors.accentSoft,
+    paddingHorizontal: t.spacing.sm,
+    paddingVertical: t.spacing.xs,
+    borderRadius: t.radius.md,
     minWidth: 100,
     alignItems: 'center',
   },
@@ -710,8 +702,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   facturaPdfBtnText: {
-    color: Colors.accentTeal,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    color: t.colors.accent,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));

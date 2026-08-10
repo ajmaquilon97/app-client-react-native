@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Invitado } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { reenviarInvitado, InvitadoApiError } from '@/services/invitados.service';
 import EditarInvitadoModal from '@/components/invitados/EditarInvitadoModal';
+import { makeStyles, useTheme } from '@/theme';
 
 const DEFAULT_COOLDOWN_SECONDS = 300;
 
@@ -17,6 +15,8 @@ interface InvitadoRowProps {
 }
 
 export default function InvitadoRow({ reservaId, invitado, onUpdated }: InvitadoRowProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { fetchAuthorized } = useAuth();
   const [reenviando, setReenviando] = useState(false);
   const [limiteAlcanzado, setLimiteAlcanzado] = useState(false);
@@ -102,7 +102,7 @@ export default function InvitadoRow({ reservaId, invitado, onUpdated }: Invitado
           onPress={handleReenviar}
           style={styles.actionBtn}>
           {reenviando ? (
-            <ActivityIndicator size="small" color={Colors.gray500} />
+            <ActivityIndicator size="small" color={colors.textSecondary} />
           ) : (
             <Text style={[styles.actionText, (limiteAlcanzado || enCooldown) && styles.actionTextDisabled]}>
               {enCooldown ? `Reenviar (${segundosRestantes}s)` : 'Reenviar'}
@@ -128,52 +128,52 @@ export default function InvitadoRow({ reservaId, invitado, onUpdated }: Invitado
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   row: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    padding: Spacing.sm,
-    gap: Spacing.xs,
+    borderColor: t.colors.borderSubtle,
+    padding: t.spacing.sm,
+    gap: t.spacing.xs,
   },
   info: {
     gap: 1,
   },
   nombre: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   correo: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
   },
   chip: {
     alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 3,
-    borderRadius: BorderRadius.full,
+    borderRadius: t.radius.full,
   },
   chipEnviado: {
-    backgroundColor: Colors.gray100,
+    backgroundColor: t.colors.surfaceMuted,
   },
   chipIngresado: {
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    backgroundColor: t.colors.successSoft,
   },
   chipText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
   },
   chipTextEnviado: {
-    color: Colors.gray600,
+    color: t.colors.textSecondary,
   },
   chipTextIngresado: {
-    color: Colors.success,
+    color: t.colors.success,
   },
   actions: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: t.spacing.md,
     marginTop: 2,
   },
   actionBtn: {
@@ -181,11 +181,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.accentTeal,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.accent,
   },
   actionTextDisabled: {
-    color: Colors.gray300,
+    color: t.colors.borderStrong,
   },
-});
+}));

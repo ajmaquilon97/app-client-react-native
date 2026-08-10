@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert, Platform, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   GoogleSignin,
@@ -7,9 +7,7 @@ import {
   isSuccessResponse,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { makeStyles, useTheme } from '@/theme';
 import { GoogleIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
 import { GOOGLE_WEB_CLIENT_ID } from '@/config/googleAuthConfig';
@@ -22,6 +20,8 @@ interface GoogleButtonProps {
 }
 
 export default function GoogleButton({ label }: GoogleButtonProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const router = useRouter();
   const { loginWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -78,7 +78,7 @@ export default function GoogleButton({ label }: GoogleButtonProps) {
       disabled={loading}
       style={styles.button}>
       {loading ? (
-        <ActivityIndicator color={Colors.textPrimary} />
+        <ActivityIndicator color={colors.textPrimary} />
       ) : (
         <>
           <GoogleIcon size={20} />
@@ -89,30 +89,21 @@ export default function GoogleButton({ label }: GoogleButtonProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xs,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
+    gap: t.spacing.xs,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    paddingVertical: Spacing.sm + 2,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.black,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: { elevation: 1 },
-    }),
+    borderColor: t.colors.border,
+    paddingVertical: t.spacing.sm + 2,
+    ...t.shadows.sm,
   },
   label: {
-    color: Colors.textPrimary,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.semiBold,
+    ...t.typography.bodySmStrong,
+    color: t.colors.textPrimary,
   },
-});
+}));

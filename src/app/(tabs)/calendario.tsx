@@ -1,22 +1,8 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  Platform,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  ListRenderItemInfo,
-} from 'react-native';
+import { View, Text, StatusBar, Platform, FlatList, TouchableOpacity, ActivityIndicator, Alert, ListRenderItemInfo } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { CalendarIcon } from '@/components/icons';
 import { useMisReservas } from '@/hooks/useMisReservas';
 import { useEspacios } from '@/hooks/useEspacios';
@@ -27,6 +13,7 @@ import { DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/config/paymentConfig';
 import { formatRangoReserva } from '@/utils/fechas';
 import { getModalidadReserva } from '@/utils/espacioArchetype';
 import { EstadoReserva, Espacio, Reserva } from '@/types';
+import { ColorToken, makeStyles, spacing, useTheme } from '@/theme';
 
 const ESTADOS_CANCELABLES: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];
 const ESTADOS_ACTIVOS: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];
@@ -39,18 +26,22 @@ const ESTADO_LABEL: Record<EstadoReserva, string> = {
   finalizada: 'Finalizada',
 };
 
-const ESTADO_COLOR: Record<EstadoReserva, string> = {
-  pendiente: Colors.amber,
-  confirmada: Colors.accentTeal,
-  reagendada: Colors.accentTeal,
-  cancelada: Colors.gray400,
-  finalizada: Colors.gray400,
+// Guarda el nombre del token, no el color: el valor real depende del tema activo
+// y solo se puede resolver dentro del componente.
+const ESTADO_COLOR: Record<EstadoReserva, ColorToken> = {
+  pendiente: 'star',
+  confirmada: 'accent',
+  reagendada: 'accent',
+  cancelada: 'textMuted',
+  finalizada: 'textMuted',
 };
 
 const IMAGEN_FALLBACK =
   'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80';
 
 export default function CalendarScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { fetchAuthorized } = useAuth();
@@ -170,7 +161,7 @@ export default function CalendarScreen() {
               {item.espacioTitulo}
             </Text>
             <View style={styles.cardMetaRow}>
-              <CalendarIcon size={13} color={Colors.gray400} strokeWidth={2} />
+              <CalendarIcon size={13} color={colors.textMuted} strokeWidth={2} />
               <Text style={styles.cardFecha}>
                 {formatRangoReserva(item.fechaInicio, item.fechaFin)}
               </Text>
@@ -190,7 +181,7 @@ export default function CalendarScreen() {
           </View>
 
           <View style={styles.cardFooter}>
-            <Text style={[styles.cardEstado, { color: ESTADO_COLOR[item.estado] }]}>
+            <Text style={[styles.cardEstado, { color: colors[ESTADO_COLOR[item.estado]] }]}>
               {ESTADO_LABEL[item.estado]}
             </Text>
             <View style={styles.cardFooterActions}>
@@ -215,11 +206,11 @@ export default function CalendarScreen() {
     <View style={styles.container}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.primaryDark}
+        backgroundColor={colors.primary}
         translucent={false}
       />
 
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.headerTitle}>Mis Reservas</Text>
@@ -235,7 +226,7 @@ export default function CalendarScreen() {
 
       {isLoading ? (
         <View style={styles.content}>
-          <ActivityIndicator size="large" color={Colors.accentTeal} />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       ) : isError ? (
         <View style={styles.content}>
@@ -255,7 +246,7 @@ export default function CalendarScreen() {
       ) : (
         <View style={styles.content}>
           <View style={styles.iconCircle}>
-            <CalendarIcon size={44} color={Colors.gray300} strokeWidth={1.5} />
+            <CalendarIcon size={44} color={colors.borderStrong} strokeWidth={1.5} />
           </View>
           <Text style={styles.title}>Sin reservas</Text>
           <Text style={styles.subtitle}>
@@ -274,20 +265,20 @@ export default function CalendarScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    borderBottomLeftRadius: BorderRadius.xxl + 4,
-    borderBottomRightRadius: BorderRadius.xxl + 4,
+    backgroundColor: t.colors.primary,
+    paddingHorizontal: t.spacing.lg,
+    paddingBottom: t.spacing.xl,
+    borderBottomLeftRadius: t.radius.xxl + 4,
+    borderBottomRightRadius: t.radius.xxl + 4,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.18,
         shadowRadius: 12,
@@ -303,43 +294,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    color: Colors.white,
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xxl,
+    fontWeight: t.fontWeight.bold,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   headerSubtitle: {
-    color: Colors.teal200,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
+    color: t.colors.accentMuted,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.medium,
   },
   badge: {
-    backgroundColor: Colors.accentTeal,
-    paddingHorizontal: Spacing.sm,
+    backgroundColor: t.colors.accent,
+    paddingHorizontal: t.spacing.sm,
     paddingVertical: 6,
-    borderRadius: BorderRadius.full,
+    borderRadius: t.radius.full,
   },
   badgeText: {
-    color: Colors.white,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
   },
   listContent: {
-    padding: Spacing.lg,
-    gap: Spacing.md,
+    padding: t.spacing.lg,
+    gap: t.spacing.md,
   },
   card: {
     flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    padding: Spacing.md,
-    gap: Spacing.md,
+    borderColor: t.colors.borderSubtle,
+    padding: t.spacing.md,
+    gap: t.spacing.md,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
@@ -350,29 +341,29 @@ const styles = StyleSheet.create({
   cardImage: {
     width: 80,
     height: 80,
-    borderRadius: BorderRadius.lg,
+    borderRadius: t.radius.lg,
   },
   cardBody: {
     flex: 1,
     justifyContent: 'space-between',
   },
   cardSubcat: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.accentTeal,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.accent,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   cardName: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
     marginTop: 1,
   },
   cardCodigo: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
     marginTop: 2,
   },
   cardMetaRow: {
@@ -382,49 +373,49 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   cardFecha: {
-    fontSize: FontSize.xs,
-    color: Colors.gray700,
-    fontWeight: FontWeight.semiBold,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textPrimary,
+    fontWeight: t.fontWeight.semiBold,
   },
   cardDetail: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     marginTop: 4,
   },
   cardDetailBold: {
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.xs,
+    marginTop: t.spacing.sm,
+    paddingTop: t.spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
+    borderTopColor: t.colors.borderSubtle,
   },
   cardEstado: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   cardCancel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.rose,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.favorite,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   cardFooterActions: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    gap: t.spacing.md,
   },
   cardInvitados: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.accentTeal,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.accent,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -432,40 +423,40 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.xxl,
+    paddingHorizontal: t.spacing.xxl,
   },
   iconCircle: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.gray100,
+    backgroundColor: t.colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: t.spacing.xl,
   },
   title: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.sm,
+    fontSize: t.fontSize.xxl,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.sm,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: FontSize.base,
-    color: Colors.gray500,
+    fontSize: t.fontSize.base,
+    color: t.colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: Spacing.xl,
+    marginBottom: t.spacing.xl,
   },
   exploreBtn: {
-    backgroundColor: Colors.primaryDark,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm + 2,
-    paddingHorizontal: Spacing.xxl,
+    backgroundColor: t.colors.primary,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm + 2,
+    paddingHorizontal: t.spacing.xxl,
   },
   exploreBtnText: {
-    color: Colors.white,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));

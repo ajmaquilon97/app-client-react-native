@@ -1,18 +1,18 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, FlatList, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, FlatList, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { ArrowLeftIcon } from '@/components/icons';
 import { useInvitados, invitadosQueryKey } from '@/hooks/useInvitados';
 import InvitadoRow from '@/components/invitados/InvitadoRow';
 import AsignarInvitadosForm from '@/components/invitados/AsignarInvitadosForm';
 import { Invitado } from '@/types';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 export default function InvitadosScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -46,7 +46,7 @@ export default function InvitadosScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.headerBtn}>
-          <ArrowLeftIcon size={20} color={Colors.white} strokeWidth={2.5} />
+          <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {titulo || 'Invitados'}
@@ -57,13 +57,13 @@ export default function InvitadosScreen() {
       <FlatList
         data={invitados}
         keyExtractor={item => item.id}
-        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + Spacing.xxxl }]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + spacing.xxxl }]}
         renderItem={({ item }) => <InvitadoRow reservaId={reservaId} invitado={item} onUpdated={handleUpdated} />}
-        ItemSeparatorComponent={() => <View style={{ height: Spacing.xs }} />}
+        ItemSeparatorComponent={() => <View style={{ height: spacing.xs }} />}
         ListHeaderComponent={
           isLoading ? (
             <View style={styles.infoBanner}>
-              <ActivityIndicator size="small" color={Colors.gray500} />
+              <ActivityIndicator size="small" color={colors.textSecondary} />
               <Text style={styles.infoBannerText}>Cargando invitados…</Text>
             </View>
           ) : isError ? (
@@ -101,21 +101,21 @@ export default function InvitadosScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: t.colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.sm,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 6,
@@ -126,77 +126,77 @@ const styles = StyleSheet.create({
   headerBtn: {
     width: 36,
     height: 36,
-    padding: Spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.md,
+    padding: t.spacing.xs,
+    backgroundColor: t.colors.overlayWhite,
+    borderRadius: t.radius.md,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: Colors.white,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    marginHorizontal: Spacing.sm,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    marginHorizontal: t.spacing.sm,
   },
   listContent: {
-    padding: Spacing.lg,
-    gap: Spacing.xs,
+    padding: t.spacing.lg,
+    gap: t.spacing.xs,
   },
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    marginBottom: Spacing.sm,
+    gap: t.spacing.xs,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
+    marginBottom: t.spacing.sm,
   },
   infoBannerText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.medium,
   },
   warningBanner: {
-    backgroundColor: Colors.errorLight,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    marginBottom: Spacing.sm,
+    backgroundColor: t.colors.errorSoft,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
+    marginBottom: t.spacing.sm,
     gap: 4,
   },
   warningBannerText: {
-    fontSize: FontSize.xs,
-    color: Colors.error,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.error,
+    fontWeight: t.fontWeight.medium,
   },
   retryText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   emptyState: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.lg,
+    padding: t.spacing.lg,
     alignItems: 'center',
-    marginBottom: Spacing.sm,
-    gap: Spacing.xxs,
+    marginBottom: t.spacing.sm,
+    gap: t.spacing.xxs,
   },
   emptyTitle: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   emptyText: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     textAlign: 'center',
   },
   formCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    marginTop: Spacing.md,
+    backgroundColor: t.colors.surface,
+    borderRadius: t.radius.xl,
+    padding: t.spacing.md,
+    marginTop: t.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: t.colors.borderSubtle,
   },
-});
+}));

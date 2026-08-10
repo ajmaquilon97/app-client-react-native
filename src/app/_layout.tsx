@@ -1,24 +1,31 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { KioskAuthProvider, useKioskAuth } from '@/context/KioskAuthContext';
-import { Colors } from '@/constants/colors';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { LocationProvider } from '@/context/LocationContext';
+import { makeStyles, useTheme } from '@/theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 
 const queryClient = new QueryClient();
 
+const useStyles = makeStyles((t) => ({
+  splash: {
+    flex: 1,
+    backgroundColor: t.colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+}));
+
 function SplashLoading() {
+  const styles = useStyles();
+  const { colors } = useTheme();
+
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: Colors.background,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-      <ActivityIndicator color={Colors.accentTeal} size="large" />
+    <View style={styles.splash}>
+      <ActivityIndicator color={colors.accent} size="large" />
     </View>
   );
 }
@@ -65,6 +72,7 @@ export default function RootLayout() {
         <KioskAuthProvider>
           <FavoritesProvider>
             <LocationProvider>
+              <StatusBar style="auto" />
               <RootNavigator />
             </LocationProvider>
           </FavoritesProvider>

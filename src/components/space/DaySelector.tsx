@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { ScrollView, TouchableOpacity, Text } from 'react-native';
+import { makeStyles } from '@/theme';
 
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DIAS_A_MOSTRAR = 14;
@@ -22,6 +20,7 @@ interface DaySelectorProps {
 }
 
 export default function DaySelector({ hoy, selectedDate, onSelect }: DaySelectorProps) {
+  const styles = useStyles();
   const dias = useMemo(
     () =>
       Array.from({ length: DIAS_A_MOSTRAR }, (_, i) => {
@@ -58,41 +57,41 @@ export default function DaySelector({ hoy, selectedDate, onSelect }: DaySelector
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
-    gap: Spacing.xs,
-    paddingVertical: Spacing.xxs,
+    gap: t.spacing.xs,
+    paddingVertical: t.spacing.xxs,
   },
   chip: {
     alignItems: 'center',
     justifyContent: 'center',
     width: 48,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
+    paddingVertical: t.spacing.xs,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
     gap: 2,
   },
   chipActive: {
-    backgroundColor: Colors.accentTeal,
-    borderColor: Colors.accentTeal,
+    backgroundColor: t.colors.accent,
+    borderColor: t.colors.accent,
   },
   dayLabel: {
-    fontSize: FontSize.xs - 1,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs - 1,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textSecondary,
     textTransform: 'uppercase',
   },
   dayLabelActive: {
-    color: Colors.white,
+    color: t.colors.textInverse,
   },
   dayNumber: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
   },
   dayNumberActive: {
-    color: Colors.white,
+    color: t.colors.textInverse,
   },
-});
+}));

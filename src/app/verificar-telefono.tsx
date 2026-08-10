@@ -1,26 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  TextInput,
-  NativeSyntheticEvent,
-  TextInputKeyPressEventData,
-} from 'react-native';
+import { View, Text, StatusBar, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, TextInput, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { ArrowLeftIcon } from '@/components/icons';
 import AuthButton from '@/components/auth/AuthButton';
 import { useAuth } from '@/context/AuthContext';
 import { enviarSmsOtp, verificarSmsOtp } from '@/services/auth.service';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 const RESEND_COOLDOWN_SECONDS = 30;
 const OTP_LENGTH = 6;
@@ -29,6 +15,8 @@ const PHONE_REGEX = /^9\d{8}$/;
 type Paso = 'telefono' | 'otp';
 
 export default function VerificarTelefonoScreen() {
+  const styles = useStyles();
+  const { colors, statusBarStyle } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { fetchAuthorized } = useAuth();
@@ -132,14 +120,14 @@ export default function VerificarTelefonoScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <StatusBar barStyle={statusBarStyle} backgroundColor={colors.background} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: insets.top + Spacing.md, paddingBottom: insets.bottom + Spacing.xl },
+            { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.xl },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
@@ -147,7 +135,7 @@ export default function VerificarTelefonoScreen() {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.backButton}
             onPress={() => (paso === 'otp' ? setPaso('telefono') : router.back())}>
-            <ArrowLeftIcon size={20} color={Colors.primaryDark} strokeWidth={2.5} />
+            <ArrowLeftIcon size={20} color={colors.primaryText} strokeWidth={2.5} />
           </TouchableOpacity>
 
           {paso === 'telefono' ? (
@@ -166,10 +154,10 @@ export default function VerificarTelefonoScreen() {
                   value={telefono}
                   onChangeText={text => setTelefono(text.replace(/[^0-9]/g, '').slice(0, 9))}
                   placeholder="9XXXXXXXX"
-                  placeholderTextColor={Colors.gray400}
+                  placeholderTextColor={colors.textMuted}
                   keyboardType="number-pad"
                   maxLength={9}
-                  selectionColor={Colors.accentTeal}
+                  selectionColor={colors.accent}
                   style={styles.phoneInput}
                   returnKeyType="done"
                   onSubmitEditing={handleEnviarCodigo}
@@ -204,7 +192,7 @@ export default function VerificarTelefonoScreen() {
                     onKeyPress={e => handleKeyPress(e, index)}
                     keyboardType="number-pad"
                     maxLength={1}
-                    selectionColor={Colors.accentTeal}
+                    selectionColor={colors.accent}
                     style={[styles.otpBox, !!otpError && styles.otpBoxError]}
                     editable={!verificando}
                   />
@@ -231,115 +219,115 @@ export default function VerificarTelefonoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: t.spacing.lg,
     flexGrow: 1,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.white,
+    borderRadius: t.radius.full,
+    backgroundColor: t.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: t.spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   title: {
-    fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    marginBottom: Spacing.xxs,
+    fontSize: t.fontSize.xxxl,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.xxs,
   },
   subtitle: {
-    fontSize: FontSize.base,
-    color: Colors.gray500,
-    marginBottom: Spacing.xl,
+    fontSize: t.fontSize.base,
+    color: t.colors.textSecondary,
+    marginBottom: t.spacing.xl,
   },
   label: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
+    marginBottom: t.spacing.xs,
   },
   phoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
+    backgroundColor: t.colors.background,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
     overflow: 'hidden',
   },
   inputWrapperError: {
-    borderColor: Colors.error,
+    borderColor: t.colors.error,
   },
   prefixBox: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    backgroundColor: Colors.gray100,
+    paddingHorizontal: t.spacing.sm,
+    paddingVertical: t.spacing.sm,
+    backgroundColor: t.colors.surfaceMuted,
     borderRightWidth: 1,
-    borderRightColor: Colors.border,
+    borderRightColor: t.colors.border,
   },
   prefixText: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray700,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textPrimary,
   },
   phoneInput: {
     flex: 1,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
+    paddingHorizontal: t.spacing.sm,
+    paddingVertical: t.spacing.sm,
+    fontSize: t.fontSize.base,
+    color: t.colors.textPrimary,
   },
   errorText: {
-    fontSize: FontSize.sm,
-    color: Colors.error,
-    marginTop: Spacing.xxs,
+    fontSize: t.fontSize.sm,
+    color: t.colors.error,
+    marginTop: t.spacing.xxs,
   },
   actions: {
-    marginTop: Spacing.xl,
+    marginTop: t.spacing.xl,
   },
   otpRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
+    marginBottom: t.spacing.sm,
   },
   otpBox: {
     width: 46,
     height: 56,
-    borderRadius: BorderRadius.md,
+    borderRadius: t.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.background,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.background,
     textAlign: 'center',
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
-    color: Colors.textPrimary,
+    fontSize: t.fontSize.xl,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textPrimary,
   },
   otpBoxError: {
-    borderColor: Colors.error,
+    borderColor: t.colors.error,
   },
   resendRow: {
     alignItems: 'center',
-    marginTop: Spacing.sm,
+    marginTop: t.spacing.sm,
   },
   resendText: {
-    fontSize: FontSize.sm,
-    color: Colors.gray500,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
   },
   resendLink: {
-    fontSize: FontSize.sm,
-    color: Colors.accentTeal,
-    fontWeight: FontWeight.bold,
+    fontSize: t.fontSize.sm,
+    color: t.colors.accent,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));

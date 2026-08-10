@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { InvitacionAsignada, InvitadoInput } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { asignarInvitados, InvitadoApiError } from '@/services/invitados.service';
+import { makeStyles, useTheme } from '@/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,6 +28,8 @@ export default function AsignarInvitadosForm({
   disponibleEstimado,
   onAsignados,
 }: AsignarInvitadosFormProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const { fetchAuthorized } = useAuth();
   const [filas, setFilas] = useState<FilaInvitado[]>([filaVacia()]);
   const [enviando, setEnviando] = useState(false);
@@ -108,14 +108,14 @@ export default function AsignarInvitadosForm({
             value={fila.nombre}
             onChangeText={v => actualizarFila(fila.key, 'nombre', v)}
             placeholder="Nombre"
-            placeholderTextColor={Colors.gray400}
+            placeholderTextColor={colors.textMuted}
             style={styles.input}
           />
           <TextInput
             value={fila.correo}
             onChangeText={v => actualizarFila(fila.key, 'correo', v)}
             placeholder="correo@ejemplo.com"
-            placeholderTextColor={Colors.gray400}
+            placeholderTextColor={colors.textMuted}
             keyboardType="email-address"
             autoCapitalize="none"
             style={styles.input}
@@ -140,7 +140,7 @@ export default function AsignarInvitadosForm({
           disabled={enviando}
           style={[styles.submitBtn, enviando && styles.submitBtnDisabled]}>
           {enviando ? (
-            <ActivityIndicator size="small" color={Colors.white} />
+            <ActivityIndicator size="small" color={colors.textInverse} />
           ) : (
             <Text style={styles.submitBtnText}>Asignar invitados</Text>
           )}
@@ -150,27 +150,27 @@ export default function AsignarInvitadosForm({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
-    gap: Spacing.sm,
+    gap: t.spacing.sm,
   },
   title: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   helper: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
-    marginTop: -Spacing.xs,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
+    marginTop: -t.spacing.xs,
   },
   filaCard: {
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    gap: Spacing.xs,
+    backgroundColor: t.colors.background,
+    borderRadius: t.radius.md,
+    padding: t.spacing.sm,
+    gap: t.spacing.xs,
   },
   filaHeader: {
     flexDirection: 'row',
@@ -178,53 +178,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filaLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textSecondary,
   },
   quitarText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.error,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.error,
   },
   input: {
     height: 40,
     borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.white,
+    borderColor: t.colors.border,
+    borderRadius: t.radius.sm,
+    paddingHorizontal: t.spacing.sm,
+    fontSize: t.fontSize.base,
+    color: t.colors.textPrimary,
+    backgroundColor: t.colors.surface,
   },
   errorText: {
-    fontSize: FontSize.xs,
-    color: Colors.error,
-    fontWeight: FontWeight.medium,
+    fontSize: t.fontSize.xs,
+    color: t.colors.error,
+    fontWeight: t.fontWeight.medium,
   },
   formActions: {
-    gap: Spacing.sm,
-    marginTop: Spacing.xs,
+    gap: t.spacing.sm,
+    marginTop: t.spacing.xs,
   },
   addBtn: {
     alignItems: 'center',
-    paddingVertical: Spacing.xs,
+    paddingVertical: t.spacing.xs,
   },
   addBtnDisabled: {
     opacity: 0.5,
   },
   addBtnText: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    color: Colors.accentTeal,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.accent,
   },
   addBtnTextDisabled: {
-    color: Colors.gray400,
+    color: t.colors.textMuted,
   },
   submitBtn: {
-    backgroundColor: Colors.primaryDark,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm,
+    backgroundColor: t.colors.primary,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 40,
@@ -233,8 +233,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   submitBtnText: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.white,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.textInverse,
   },
-});
+}));

@@ -1,8 +1,6 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { ScrollView, TouchableOpacity, Text } from 'react-native';
+import { makeStyles } from '@/theme';
 import { FiltroRapido } from '@/types';
 
 interface QuickFilterOption {
@@ -23,6 +21,8 @@ interface QuickFiltersProps {
 }
 
 export default function QuickFilters({ active, onSelect }: QuickFiltersProps) {
+  const styles = useStyles();
+
   return (
     <ScrollView
       horizontal
@@ -47,35 +47,35 @@ export default function QuickFilters({ active, onSelect }: QuickFiltersProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    gap: t.spacing.sm,
+    paddingVertical: t.spacing.xs,
   },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.full,
+    paddingVertical: t.spacing.xs,
+    paddingHorizontal: t.spacing.md,
+    borderRadius: t.radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    borderColor: t.colors.border,
+    backgroundColor: t.colors.surface,
   },
   pillActive: {
-    backgroundColor: Colors.accentTeal,
-    borderColor: Colors.accentTeal,
+    backgroundColor: t.colors.accent,
+    borderColor: t.colors.accent,
   },
   emoji: {
-    fontSize: FontSize.sm,
+    fontSize: t.fontSize.sm,
   },
   label: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semiBold,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textSecondary,
   },
   labelActive: {
-    color: Colors.white,
+    color: t.colors.onAccent,
   },
-});
+}));

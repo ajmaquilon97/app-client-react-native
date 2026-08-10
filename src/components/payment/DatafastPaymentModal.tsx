@@ -1,19 +1,8 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  Modal,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Modal, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { ShouldStartLoadRequest, WebViewNavigation } from 'react-native-webview/lib/WebViewTypes';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { ArrowLeftIcon } from '@/components/icons';
 import { useAuth } from '@/context/AuthContext';
@@ -26,6 +15,7 @@ import {
   UAT_DIRECT_WIDGET_BASE_URL,
 } from '@/services/datafastDirectUat';
 import PaymentResult from './PaymentResult';
+import { fontSize, fontWeight, makeStyles, radius, spacing, useTheme } from '@/theme';
 
 type PaymentStatus = 'loading-checkout' | 'widget' | 'verifying' | 'success' | 'error';
 
@@ -59,6 +49,8 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { fetchAuthorized } = useAuth();
   const requestIdRef = useRef(0);
@@ -226,28 +218,28 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: ${Colors.background};
-          padding: ${Spacing.md}px;
+          background: ${colors.background};
+          padding: ${spacing.md}px;
         }
 
         /* Estilo "plano" (style=plain): el widget deja de traer su propio look
            y estas reglas son las que realmente definen la apariencia. */
         .wpwl-form {
-          background: ${Colors.white};
-          border-radius: ${BorderRadius.lg}px;
-          padding: ${Spacing.md}px;
+          background: ${colors.surface};
+          border-radius: ${radius.lg}px;
+          padding: ${spacing.md}px;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .wpwl-label {
-          font-size: ${FontSize.sm}px;
-          font-weight: ${FontWeight.semiBold};
-          color: ${Colors.gray700};
-          margin-bottom: ${Spacing.xxs}px;
+          font-size: ${fontSize.sm}px;
+          font-weight: ${fontWeight.semiBold};
+          color: ${colors.textPrimary};
+          margin-bottom: ${spacing.xxs}px;
         }
 
         .wpwl-group {
-          margin-bottom: ${Spacing.sm}px;
+          margin-bottom: ${spacing.sm}px;
         }
 
         /* Campos de texto (cardHolder/expiry, inputs normales) e iframes de
@@ -261,10 +253,10 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         .wpwl-wrapper-cvv {
           height: 44px;
           width: 100%;
-          border: 1px solid ${Colors.border};
-          border-radius: ${BorderRadius.sm}px;
-          padding: 0 ${Spacing.sm}px;
-          font-size: ${FontSize.md}px;
+          border: 1px solid ${colors.border};
+          border-radius: ${radius.sm}px;
+          padding: 0 ${spacing.sm}px;
+          font-size: ${fontSize.md}px;
         }
 
         .wpwl-wrapper-cardNumber .wpwl-control,
@@ -278,23 +270,23 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         .wpwl-control:focus,
         .wpwl-wrapper-cardNumber:focus-within,
         .wpwl-wrapper-cvv:focus-within {
-          border-color: ${Colors.accentTeal};
+          border-color: ${colors.accent};
         }
 
         .wpwl-hint,
         .wpwl-copyright {
-          font-size: ${FontSize.xs}px;
-          color: ${Colors.gray500};
+          font-size: ${fontSize.xs}px;
+          color: ${colors.textSecondary};
         }
 
         .wpwl-button-pay {
           height: 44px;
           width: 100%;
-          border-radius: ${BorderRadius.sm}px;
-          background: ${Colors.primaryDark} !important;
-          color: ${Colors.white} !important;
-          font-size: ${FontSize.md}px;
-          font-weight: ${FontWeight.bold};
+          border-radius: ${radius.sm}px;
+          background: ${colors.primary} !important;
+          color: ${colors.surface} !important;
+          font-size: ${fontSize.md}px;
+          font-weight: ${fontWeight.bold};
           border: none;
         }
 
@@ -313,13 +305,13 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
           locale: 'es',
           iframeStyles: {
             'card-number-placeholder': {
-              'color': '${Colors.gray400}',
-              'font-size': '${FontSize.md}px',
+              'color': '${colors.textMuted}',
+              'font-size': '${fontSize.md}px',
               'font-family': '-apple-system, BlinkMacSystemFont, Roboto, sans-serif'
             },
             'cvv-placeholder': {
-              'color': '${Colors.gray400}',
-              'font-size': '${FontSize.md}px',
+              'color': '${colors.textMuted}',
+              'font-size': '${fontSize.md}px',
               'font-family': '-apple-system, BlinkMacSystemFont, Roboto, sans-serif'
             }
           }
@@ -350,7 +342,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
             style={styles.headerBtn}>
             <ArrowLeftIcon
               size={20}
-              color={canClose ? Colors.white : Colors.gray500}
+              color={canClose ? colors.surface : colors.textSecondary}
               strokeWidth={2.5}
             />
           </TouchableOpacity>
@@ -369,7 +361,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
 
         {(status === 'loading-checkout' || (status === 'widget' && webViewLoading)) && (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.accentTeal} />
+            <ActivityIndicator size="large" color={colors.accent} />
             <Text style={styles.loadingText}>
               {status === 'loading-checkout'
                 ? 'Iniciando pago con Datafast…'
@@ -397,7 +389,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
 
         {status === 'verifying' && (
           <View style={styles.processingOverlay}>
-            <ActivityIndicator size="large" color={Colors.accentTeal} />
+            <ActivityIndicator size="large" color={colors.accent} />
             <Text style={styles.processingText}>Verificando el pago con Datafast…</Text>
           </View>
         )}
@@ -419,32 +411,32 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   diagnosticoBanner: {
-    backgroundColor: Colors.warning,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+    backgroundColor: t.colors.warning,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.xs,
   },
   diagnosticoBannerText: {
-    color: Colors.black,
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textPrimary,
+    fontSize: t.fontSize.xs,
+    fontWeight: t.fontWeight.bold,
     textAlign: 'center',
   },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: t.colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.sm,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 6,
@@ -453,29 +445,29 @@ const styles = StyleSheet.create({
     }),
   },
   headerBtn: {
-    padding: Spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.md,
+    padding: t.spacing.xs,
+    backgroundColor: t.colors.overlayWhite,
+    borderRadius: t.radius.md,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: Colors.white,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    marginHorizontal: Spacing.sm,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    marginHorizontal: t.spacing.sm,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   loadingText: {
-    marginTop: Spacing.md,
-    fontSize: FontSize.sm,
-    color: Colors.gray600,
-    fontWeight: FontWeight.semiBold,
+    marginTop: t.spacing.md,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.semiBold,
   },
   processingOverlay: {
     position: 'absolute',
@@ -483,17 +475,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(30, 58, 95, 0.9)',
+    backgroundColor: t.colors.primaryScrim,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
   },
   processingText: {
-    marginTop: Spacing.md,
-    color: Colors.accentTeal,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    marginTop: t.spacing.md,
+    color: t.colors.accent,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));
 
 export default DatafastPaymentModal;

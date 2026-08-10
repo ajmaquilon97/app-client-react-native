@@ -1,23 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  BackHandler,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, BackHandler } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { useKioskAuth } from '@/context/KioskAuthContext';
 import { validarQr } from '@/services/recepcion.service';
 import { ApiError } from '@/services/apiError';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 type Resultado =
   | { tipo: 'success'; nombre: string }
@@ -26,6 +15,8 @@ type Resultado =
 const AUTO_DISMISS_MS = 2000;
 
 export default function RecepcionScanScreen() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   useKeepAwake();
   const { fetchAuthorizedKiosk, logoutKiosk } = useKioskAuth();
@@ -91,7 +82,7 @@ export default function RecepcionScanScreen() {
   if (!permission) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={Colors.accentTeal} size="large" />
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
@@ -123,7 +114,7 @@ export default function RecepcionScanScreen() {
 
       {procesando && !resultado && (
         <View style={styles.processingOverlay}>
-          <ActivityIndicator color={Colors.white} size="large" />
+          <ActivityIndicator color={colors.textInverse} size="large" />
         </View>
       )}
 
@@ -151,12 +142,12 @@ export default function RecepcionScanScreen() {
         </TouchableOpacity>
       )}
 
-      <View style={[styles.manualBar, { paddingBottom: insets.bottom + Spacing.sm }]}>
+      <View style={[styles.manualBar, { paddingBottom: insets.bottom + spacing.sm }]}>
         <TextInput
           value={codigoManual}
           onChangeText={setCodigoManual}
           placeholder="Código corto (6 caracteres)"
-          placeholderTextColor={Colors.gray400}
+          placeholderTextColor={colors.textMuted}
           autoCapitalize="characters"
           maxLength={6}
           style={styles.manualInput}
@@ -174,10 +165,10 @@ export default function RecepcionScanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: t.colors.textPrimary,
   },
   camera: {
     flex: 1,
@@ -186,32 +177,32 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
-    padding: Spacing.xl,
-    gap: Spacing.sm,
+    backgroundColor: t.colors.background,
+    padding: t.spacing.xl,
+    gap: t.spacing.sm,
   },
   permissionTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
     textAlign: 'center',
   },
   permissionText: {
-    fontSize: FontSize.sm,
-    color: Colors.gray500,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
     textAlign: 'center',
   },
   permissionBtn: {
-    marginTop: Spacing.md,
-    backgroundColor: Colors.primaryDark,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
+    marginTop: t.spacing.md,
+    backgroundColor: t.colors.primary,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm,
+    paddingHorizontal: t.spacing.xl,
   },
   permissionBtnText: {
-    color: Colors.accentTeal,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.accent,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
   },
   processingOverlay: {
     position: 'absolute',
@@ -221,7 +212,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: t.colors.overlay,
   },
   resultOverlay: {
     position: 'absolute',
@@ -231,63 +222,63 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.xl,
+    gap: t.spacing.sm,
+    padding: t.spacing.xl,
   },
   resultSuccess: {
-    backgroundColor: Colors.success,
+    backgroundColor: t.colors.success,
   },
   resultError: {
-    backgroundColor: Colors.error,
+    backgroundColor: t.colors.error,
   },
   resultWarning: {
-    backgroundColor: Colors.warning,
+    backgroundColor: t.colors.warning,
   },
   resultIcon: {
     fontSize: 64,
-    color: Colors.white,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.textInverse,
+    fontWeight: t.fontWeight.extraBold,
   },
   resultNombre: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.extraBold,
-    color: Colors.white,
+    fontSize: t.fontSize.xxl,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.textInverse,
     textAlign: 'center',
   },
   resultSubtext: {
-    fontSize: FontSize.base,
-    color: Colors.white,
+    fontSize: t.fontSize.base,
+    color: t.colors.textInverse,
   },
   resultMensaje: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.textInverse,
     textAlign: 'center',
   },
   resultTapText: {
-    fontSize: FontSize.sm,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: Spacing.md,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textOnMedia,
+    marginTop: t.spacing.md,
   },
   manualBar: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    padding: Spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    gap: t.spacing.sm,
+    padding: t.spacing.sm,
+    backgroundColor: t.colors.overlay,
   },
   manualInput: {
     flex: 1,
     height: 44,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    backgroundColor: Colors.white,
-    color: Colors.textPrimary,
-    fontSize: FontSize.base,
+    borderRadius: t.radius.sm,
+    paddingHorizontal: t.spacing.sm,
+    backgroundColor: t.colors.surface,
+    color: t.colors.textPrimary,
+    fontSize: t.fontSize.base,
   },
   manualBtn: {
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.accentTeal,
+    paddingHorizontal: t.spacing.md,
+    borderRadius: t.radius.sm,
+    backgroundColor: t.colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -295,8 +286,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   manualBtnText: {
-    color: Colors.white,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extraBold,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.extraBold,
   },
-});
+}));

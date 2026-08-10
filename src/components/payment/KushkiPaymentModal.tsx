@@ -1,22 +1,11 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  Modal,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Modal, ActivityIndicator, Alert } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { Espacio } from '@/types';
 import { ArrowLeftIcon } from '@/components/icons';
 import PaymentResult from './PaymentResult';
+import { makeStyles, useTheme } from '@/theme';
 
 /** Tarjeta de prueba que fuerza un rechazo (para probar el flujo de error). */
 const DECLINE_TEST_CARD = '4000000000000002';
@@ -43,6 +32,8 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(false);
@@ -396,7 +387,7 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
             style={styles.headerBtn}>
             <ArrowLeftIcon
               size={20}
-              color={canClose ? Colors.white : Colors.gray500}
+              color={canClose ? colors.surface : colors.textSecondary}
               strokeWidth={2.5}
             />
           </TouchableOpacity>
@@ -407,7 +398,7 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
         {/* WebView con formulario de pago */}
         {loading && (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.accentTeal} />
+            <ActivityIndicator size="large" color={colors.accent} />
             <Text style={styles.loadingText}>Cargando formulario de pago...</Text>
           </View>
         )}
@@ -429,7 +420,7 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
         {/* Overlay de procesamiento */}
         {procesando && (
           <View style={styles.processingOverlay}>
-            <ActivityIndicator size="large" color={Colors.accentTeal} />
+            <ActivityIndicator size="large" color={colors.accent} />
             <Text style={styles.processingText}>Procesando pago seguro...</Text>
           </View>
         )}
@@ -451,21 +442,21 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
-    backgroundColor: Colors.primaryDark,
+    backgroundColor: t.colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.sm,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.black,
+        shadowColor: t.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 6,
@@ -474,29 +465,29 @@ const styles = StyleSheet.create({
     }),
   },
   headerBtn: {
-    padding: Spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.md,
+    padding: t.spacing.xs,
+    backgroundColor: t.colors.overlayWhite,
+    borderRadius: t.radius.md,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: Colors.white,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    marginHorizontal: Spacing.sm,
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    marginHorizontal: t.spacing.sm,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   loadingText: {
-    marginTop: Spacing.md,
-    fontSize: FontSize.sm,
-    color: Colors.gray600,
-    fontWeight: FontWeight.semiBold,
+    marginTop: t.spacing.md,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.semiBold,
   },
   processingOverlay: {
     position: 'absolute',
@@ -504,17 +495,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(30, 58, 95, 0.9)',
+    backgroundColor: t.colors.primaryScrim,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
   },
   processingText: {
-    marginTop: Spacing.md,
-    color: Colors.accentTeal,
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
+    marginTop: t.spacing.md,
+    color: t.colors.accent,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
   },
-});
+}));
 
 export default KushkiPaymentModal;

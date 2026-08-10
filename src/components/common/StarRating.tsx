@@ -1,8 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing } from '@/constants/spacing';
+import { View, Text } from 'react-native';
+import { makeStyles, useTheme } from '@/theme';
 import { StarIcon } from '@/components/icons';
 
 interface StarRatingProps {
@@ -18,12 +16,14 @@ const StarRating: React.FC<StarRatingProps> = ({
   size = 'sm',
   showCount = false,
 }) => {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const iconSize = size === 'sm' ? 12 : 16;
   const textStyle = size === 'sm' ? styles.ratingTextSm : styles.ratingTextMd;
 
   return (
     <View style={styles.container}>
-      <StarIcon size={iconSize} color={Colors.amber} filled />
+      <StarIcon size={iconSize} color={colors.star} filled />
       <Text style={[textStyle, styles.ratingValue]}>{rating.toFixed(1)}</Text>
       {showCount && reviews !== undefined && (
         <Text style={[textStyle, styles.reviewCount]}>({reviews} reseñas)</Text>
@@ -32,26 +32,26 @@ const StarRating: React.FC<StarRatingProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xxs,
+    gap: t.spacing.xxs,
   },
   ratingValue: {
-    color: Colors.textPrimary,
-    fontWeight: FontWeight.bold,
+    color: t.colors.textPrimary,
+    fontWeight: t.fontWeight.bold,
   },
   reviewCount: {
-    color: Colors.gray500,
-    fontWeight: FontWeight.regular,
+    color: t.colors.textSecondary,
+    fontWeight: t.fontWeight.regular,
   },
   ratingTextSm: {
-    fontSize: FontSize.xs,
+    fontSize: t.fontSize.xs,
   },
   ratingTextMd: {
-    fontSize: FontSize.sm,
+    fontSize: t.fontSize.sm,
   },
-});
+}));
 
 export default React.memo(StarRating);

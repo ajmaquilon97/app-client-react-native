@@ -1,11 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StatusBar, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight, LineHeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
 import { ArrowLeftIcon } from '@/components/icons';
+import { makeStyles, spacing, useTheme } from '@/theme';
 
 const HEADING_REGEX = /^\d+(\.\d+)*\.?\s+\S/;
 
@@ -20,19 +18,21 @@ export default function LegalDocumentScreen({
   versionLabel,
   content,
 }: LegalDocumentScreenProps) {
+  const styles = useStyles();
+  const { colors, statusBarStyle } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <StatusBar barStyle={statusBarStyle} backgroundColor={colors.background} />
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={styles.backButton}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))}>
-          <ArrowLeftIcon size={20} color={Colors.primaryDark} strokeWidth={2.5} />
+          <ArrowLeftIcon size={20} color={colors.primaryText} strokeWidth={2.5} />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
           <Text style={styles.headerTitle}>{title}</Text>
@@ -41,7 +41,7 @@ export default function LegalDocumentScreen({
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.xl }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xl }]}
         showsVerticalScrollIndicator={false}>
         {paragraphs.map((paragraph, index) => {
           const isHeading = HEADING_REGEX.test(paragraph);
@@ -58,56 +58,56 @@ export default function LegalDocumentScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: t.colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-    gap: Spacing.sm,
+    paddingHorizontal: t.spacing.lg,
+    paddingBottom: t.spacing.md,
+    gap: t.spacing.sm,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.white,
+    borderRadius: t.radius.full,
+    backgroundColor: t.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: t.colors.border,
   },
   headerTextWrap: {
     flex: 1,
   },
   headerTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
   },
   headerVersion: {
-    fontSize: FontSize.xs,
-    color: Colors.gray500,
+    fontSize: t.fontSize.xs,
+    color: t.colors.textSecondary,
     marginTop: 2,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: t.spacing.lg,
   },
   headingText: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    color: Colors.primaryDark,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xs,
-    lineHeight: FontSize.base * LineHeight.tight,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.primaryText,
+    marginTop: t.spacing.lg,
+    marginBottom: t.spacing.xs,
+    lineHeight: t.fontSize.base * t.lineHeight.tight,
   },
   bodyText: {
-    fontSize: FontSize.base,
-    color: Colors.textPrimary,
-    lineHeight: FontSize.base * LineHeight.relaxed,
-    marginBottom: Spacing.sm,
+    fontSize: t.fontSize.base,
+    color: t.colors.textPrimary,
+    lineHeight: t.fontSize.base * t.lineHeight.relaxed,
+    marginBottom: t.spacing.sm,
   },
-});
+}));

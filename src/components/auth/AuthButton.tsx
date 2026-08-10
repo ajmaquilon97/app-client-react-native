@@ -1,14 +1,6 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-  Platform,
-} from 'react-native';
-import { Colors } from '@/constants/colors';
-import { FontSize, FontWeight } from '@/constants/typography';
-import { Spacing, BorderRadius } from '@/constants/spacing';
+import { TouchableOpacity, Text, ActivityIndicator, Platform } from 'react-native';
+import { makeStyles, useTheme } from '@/theme';
 
 interface AuthButtonProps {
   label: string;
@@ -23,6 +15,8 @@ export default function AuthButton({
   loading = false,
   disabled = false,
 }: AuthButtonProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const isDisabled = disabled || loading;
 
   return (
@@ -32,7 +26,7 @@ export default function AuthButton({
       disabled={isDisabled}
       style={[styles.button, isDisabled && styles.buttonDisabled]}>
       {loading ? (
-        <ActivityIndicator color={Colors.accentTeal} />
+        <ActivityIndicator color={colors.accent} />
       ) : (
         <Text style={styles.label}>{label}</Text>
       )}
@@ -40,30 +34,32 @@ export default function AuthButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => ({
   button: {
-    backgroundColor: Colors.primaryDark,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm + 2,
+    backgroundColor: t.colors.primary,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.sm + 2,
     alignItems: 'center',
     justifyContent: 'center',
+    // Sombra teñida con el color de marca, no gris.
     ...Platform.select({
-      ios: {
-        shadowColor: Colors.primaryDark,
+      android: { elevation: 4, shadowColor: t.colors.primary },
+      default: {
+        shadowColor: t.colors.primary,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: t.isDark ? 0.5 : 0.3,
         shadowRadius: 8,
       },
-      android: { elevation: 4 },
     }),
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   label: {
-    color: Colors.accentTeal,
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.extraBold,
+    ...t.typography.button,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.accent,
     letterSpacing: 1,
   },
-});
+}));
