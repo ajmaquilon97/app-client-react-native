@@ -1,0 +1,188 @@
+import React, { useState } from 'react';
+import { Modal, View, Text, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
+import { ListaFavoritos } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { marcarFavorito } from '@/services/favoritos.service';
+import { useListasFavoritos, LISTAS_FAVORITOS_QUERY_KEY } from '@/hooks/useListasFavoritos';
+import { FAVORITOS_QUERY_KEY } from '@/hooks/useFavoritos';
+import { PlusIcon, CheckIcon } from '@/components/icons';
+import { makeStyles, useTheme } from '@/theme';
+import CrearListaModal from '@/components/space/CrearListaModal';
+
+interface SaveToListSheetProps {
+  visible: boolean;
+  espacioId: number | null;
+  onClose: () => void;
+}
+
+export default function SaveToListSheet({ visible, espacioId, onClose }: SaveToListSheetProps) {
+  const styles = useStyles();
+  const { colors } = useTheme();
+  const { fetchAuthorized } = useAuth();
+  const queryClient = useQueryClient();
+  const { data: listas = [], isLoading } = useListasFavoritos();
+  const [guardandoListaId, setGuardandoListaId] = useState<number | null>(null);
+  const [guardadaListaId, setGuardadaListaId] = useState<number | null>(null);
+  const [crearListaVisible, setCrearListaVisible] = useState(false);
+
+  const invalidar = () => {
+    queryClient.invalidateQueries({ queryKey: FAVORITOS_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: LISTAS_FAVORITOS_QUERY_KEY });
+  };
+
+  const handleGuardarEn = async (lista: ListaFavoritos) => {
+    if (espacioId == null || guardandoListaId != null) return;
+    setGuardandoListaId(lista.id);
+    try {
+      await fetchAuthorized(accessToken => marcarFavorito(espacioId, lista.id, accessToken));
+      invalidar();
+      setGuardadaListaId(lista.id);
+    } catch {
+      // best effort: el usuario puede reintentar tocando la lista de nuevo
+    } finally {
+      setGuardandoListaId(null);
+    }
+  };
+
+  const handleListaCreada = async (lista: ListaFavoritos) => {
+    setCrearListaVisible(false);
+    await handleGuardarEn(lista);
+  };
+
+  const handleClose = () => {
+    setGuardadaListaId(null);
+    onClose();
+  };
+
+  return (
+    <>
+      <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
+        <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose}>
+          <TouchableOpacity activeOpacity={1} style={styles.sheet} onPress={() => {}}>
+            <Text style={styles.title}>Guardar en…</Text>
+
+            {isLoading ? (
+              <ActivityIndicator color={colors.accent} style={styles.loading} />
+            ) : (
+              <FlatList
+                data={listas}
+                keyExtractor={item => String(item.id)}
+                style={styles.list}
+                renderItem={({ item }) => {
+                  const guardando = guardandoListaId === item.id;
+                  const guardada = guardadaListaId === item.id;
+                  return (
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      style={styles.row}
+                      onPress={() => handleGuardarEn(item)}
+                      disabled={guardando}>
+                      <View style={styles.rowInfo}>
+                        <Text style={styles.rowNombre}>{item.nombre}</Text>
+                        <Text style={styles.rowCount}>
+                          {item.cantidadEspacios} espacio{item.cantidadEspacios !== 1 ? 's' : ''}
+                        </Text>
+                      </View>
+                      {guardando ? (
+                        <ActivityIndicator size="small" color={colors.accent} />
+                      ) : guardada ? (
+                        <CheckIcon size={18} color={colors.accent} strokeWidth={3} />
+                      ) : null}
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={
+                  <Text style={styles.emptyText}>Aún no tienes listas de favoritos.</Text>
+                }
+              />
+            )}
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={styles.nuevaListaBtn}
+              onPress={() => setCrearListaVisible(true)}>
+              <PlusIcon size={16} color={colors.accent} strokeWidth={2.5} />
+              <Text style={styles.nuevaListaText}>Crear nueva lista</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      <CrearListaModal
+        visible={crearListaVisible}
+        onClose={() => setCrearListaVisible(false)}
+        onCreated={handleListaCreada}
+      />
+    </>
+  );
+}
+
+const useStyles = makeStyles((t) => ({
+  backdrop: {
+    flex: 1,
+    backgroundColor: t.colors.overlay,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: t.colors.surface,
+    borderTopLeftRadius: t.radius.xl,
+    borderTopRightRadius: t.radius.xl,
+    padding: t.spacing.lg,
+    maxHeight: '70%',
+  },
+  title: {
+    fontSize: t.fontSize.lg,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.primaryText,
+    marginBottom: t.spacing.sm,
+  },
+  loading: {
+    paddingVertical: t.spacing.lg,
+  },
+  list: {
+    flexGrow: 0,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: t.spacing.sm + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: t.colors.borderSubtle,
+  },
+  rowInfo: {
+    flex: 1,
+  },
+  rowNombre: {
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.semiBold,
+    color: t.colors.textPrimary,
+  },
+  rowCount: {
+    fontSize: t.fontSize.xs,
+    color: t.colors.textMuted,
+    marginTop: 1,
+  },
+  emptyText: {
+    fontSize: t.fontSize.sm,
+    color: t.colors.textMuted,
+    paddingVertical: t.spacing.md,
+  },
+  nuevaListaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: t.spacing.xs,
+    paddingVertical: t.spacing.sm + 2,
+    marginTop: t.spacing.xs,
+    borderRadius: t.radius.md,
+    borderWidth: 1,
+    borderColor: t.colors.accent,
+  },
+  nuevaListaText: {
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
+    color: t.colors.accent,
+  },
+}));

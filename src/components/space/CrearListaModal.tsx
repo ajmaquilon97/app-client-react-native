@@ -1,120 +1,92 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
-import { Invitado } from '@/types';
+import { useQueryClient } from '@tanstack/react-query';
+import { ListaFavoritos } from '@/types';
 import { useAuth } from '@/context/AuthContext';
-import { editarInvitado } from '@/services/invitados.service';
+import { crearListaFavoritos } from '@/services/favoritos.service';
+import { LISTAS_FAVORITOS_QUERY_KEY } from '@/hooks/useListasFavoritos';
 import { makeStyles, useTheme } from '@/theme';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Backend: 400 si el nombre viene vacío, en blanco o supera 100 caracteres
+// (docs/backend_response/favoritos-listas-response.md §3) — se limita acá para
+// no depender del error.
+const NOMBRE_MAX_LENGTH = 100;
 
-interface EditarInvitadoModalProps {
+interface CrearListaModalProps {
   visible: boolean;
-  reservaId: number;
-  invitado: Invitado | null;
   onClose: () => void;
-  onSaved: (invitado: Invitado) => void;
+  onCreated: (lista: ListaFavoritos) => void;
 }
 
-export default function EditarInvitadoModal({
-  visible,
-  reservaId,
-  invitado,
-  onClose,
-  onSaved,
-}: EditarInvitadoModalProps) {
+export default function CrearListaModal({ visible, onClose, onCreated }: CrearListaModalProps) {
   const styles = useStyles();
   const { colors } = useTheme();
   const { fetchAuthorized } = useAuth();
+  const queryClient = useQueryClient();
   const [nombre, setNombre] = useState('');
-  const [correo, setCorreo] = useState('');
   const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [creando, setCreando] = useState(false);
 
-  useEffect(() => {
-    if (visible && invitado) {
-      setNombre(invitado.nombre);
-      setCorreo(invitado.correo);
-      setError('');
-    }
-  }, [visible, invitado]);
+  const handleClose = () => {
+    setNombre('');
+    setError('');
+    onClose();
+  };
 
-  const handleGuardar = async () => {
-    if (!invitado) return;
+  const handleCrear = async () => {
     const nombreTrim = nombre.trim();
-    const correoTrim = correo.trim();
     if (!nombreTrim) {
-      setError('El nombre no puede estar vacío.');
-      return;
-    }
-    if (!EMAIL_REGEX.test(correoTrim)) {
-      setError('Ingresa un correo válido.');
+      setError('Ponle un nombre a la lista.');
       return;
     }
 
     setError('');
-    setSaving(true);
+    setCreando(true);
     try {
-      const actualizado = await fetchAuthorized(accessToken =>
-        editarInvitado(reservaId, invitado.id, { nombre: nombreTrim, correo: correoTrim }, accessToken),
-      );
-      onSaved(actualizado);
-      onClose();
+      const lista = await fetchAuthorized(accessToken => crearListaFavoritos(nombreTrim, accessToken));
+      queryClient.invalidateQueries({ queryKey: LISTAS_FAVORITOS_QUERY_KEY });
+      setNombre('');
+      onCreated(lista);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo editar el invitado.');
+      setError(err instanceof Error ? err.message : 'No se pudo crear la lista.');
     } finally {
-      setSaving(false);
+      setCreando(false);
     }
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
       <KeyboardAvoidingView
         style={styles.backdrop}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>Corregir invitado</Text>
+          <Text style={styles.title}>Nueva lista</Text>
 
-          <Text style={styles.label}>Nombre</Text>
           <TextInput
             value={nombre}
             onChangeText={setNombre}
-            placeholder="Nombre del invitado"
+            placeholder="Ej. Cumpleaños, Mis Canchas…"
             placeholderTextColor={colors.textMuted}
-            style={styles.input}
-          />
-
-          <Text style={[styles.label, styles.labelSpaced]}>Correo</Text>
-          <TextInput
-            value={correo}
-            onChangeText={setCorreo}
-            placeholder="correo@ejemplo.com"
-            placeholderTextColor={colors.textMuted}
-            keyboardType="email-address"
-            autoCapitalize="none"
+            maxLength={NOMBRE_MAX_LENGTH}
+            autoFocus
             style={styles.input}
           />
 
           {!!error && <Text style={styles.errorText}>{error}</Text>}
 
-          <View style={styles.warningBanner}>
-            <Text style={styles.warningText}>
-              Se enviará una invitación nueva a esta dirección y la anterior dejará de ser válida.
-            </Text>
-          </View>
-
           <View style={styles.actions}>
-            <TouchableOpacity activeOpacity={0.8} style={styles.cancelBtn} onPress={onClose} disabled={saving}>
+            <TouchableOpacity activeOpacity={0.8} style={styles.cancelBtn} onPress={handleClose} disabled={creando}>
               <Text style={styles.cancelBtnText}>Cancelar</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.85}
-              style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
-              onPress={handleGuardar}
-              disabled={saving}>
-              {saving ? (
+              style={[styles.createBtn, creando && styles.createBtnDisabled]}
+              onPress={handleCrear}
+              disabled={creando}>
+              {creando ? (
                 <ActivityIndicator size="small" color={colors.onPrimary} />
               ) : (
-                <Text style={styles.saveBtnText}>Guardar y reenviar</Text>
+                <Text style={styles.createBtnText}>Crear lista</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -143,16 +115,6 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.primaryText,
     marginBottom: t.spacing.xs,
   },
-  label: {
-    fontSize: t.fontSize.xs,
-    fontWeight: t.fontWeight.bold,
-    color: t.colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  labelSpaced: {
-    marginTop: t.spacing.sm,
-  },
   input: {
     height: 44,
     borderWidth: 1,
@@ -167,16 +129,6 @@ const useStyles = makeStyles((t) => ({
     fontSize: t.fontSize.xs,
     color: t.colors.error,
     fontWeight: t.fontWeight.medium,
-  },
-  warningBanner: {
-    backgroundColor: t.colors.background,
-    borderRadius: t.radius.md,
-    padding: t.spacing.sm,
-    marginTop: t.spacing.xs,
-  },
-  warningText: {
-    fontSize: t.fontSize.xs,
-    color: t.colors.textSecondary,
   },
   actions: {
     flexDirection: 'row',
@@ -197,7 +149,7 @@ const useStyles = makeStyles((t) => ({
     fontWeight: t.fontWeight.semiBold,
     color: t.colors.textSecondary,
   },
-  saveBtn: {
+  createBtn: {
     flex: 2,
     paddingVertical: t.spacing.sm,
     borderRadius: t.radius.md,
@@ -206,10 +158,10 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'center',
     minHeight: 40,
   },
-  saveBtnDisabled: {
+  createBtnDisabled: {
     opacity: 0.7,
   },
-  saveBtnText: {
+  createBtnText: {
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.extraBold,
     color: t.colors.onPrimary,

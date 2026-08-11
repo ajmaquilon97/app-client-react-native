@@ -207,7 +207,7 @@ export default function ReservaDetalleScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.headerBtn}>
-          <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
+          <ArrowLeftIcon size={20} color={colors.headerText} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {reserva?.espacioTitulo ?? titulo ?? 'Detalle de tu reserva'}
@@ -278,7 +278,7 @@ export default function ReservaDetalleScreen() {
               )}
               {!!espacio?.ubicacion && (
                 <View style={styles.mapLabel}>
-                  <LocationIcon size={10} color={colors.textInverse} />
+                  <LocationIcon size={10} color={colors.headerText} />
                   <Text style={styles.mapLabelText}>{espacio.ubicacion}</Text>
                 </View>
               )}
@@ -392,7 +392,7 @@ const useStyles = makeStyles((t) => ({
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: t.fontSize.base,
     fontWeight: t.fontWeight.bold,
     marginHorizontal: t.spacing.sm,
@@ -417,7 +417,7 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.xxl,
   },
   retryBtnText: {
-    color: t.colors.textInverse,
+    color: t.colors.onPrimary,
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.bold,
   },
@@ -532,7 +532,7 @@ const useStyles = makeStyles((t) => ({
     borderRadius: t.radius.md,
   },
   mapLabelText: {
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: 9,
     fontWeight: t.fontWeight.bold,
   },

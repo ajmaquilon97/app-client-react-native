@@ -67,3 +67,14 @@ export function useFavoriteSpaces(favorites: number[]): Espacio[] {
     [data, favorites],
   );
 }
+
+// A diferencia de useFavoriteSpaces (sin orden garantizado), preserva el
+// orden de `ids` — para el detalle de una lista de favoritos, que backend
+// devuelve del guardado más reciente al más antiguo.
+export function useEspaciosPorIds(ids: number[]): Espacio[] {
+  const { data = [] } = useEspacios();
+  return useMemo(() => {
+    const porId = new Map(data.map(e => [e.id, e]));
+    return ids.map(id => porId.get(id)).filter((e): e is Espacio => !!e);
+  }, [data, ids]);
+}

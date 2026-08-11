@@ -179,7 +179,7 @@ export default function RegistroScreen() {
                 setErrors(prev => ({ ...prev, aceptaTerminos: undefined }));
               }}>
               <View style={[styles.checkbox, aceptaTerminos && styles.checkboxChecked]}>
-                {aceptaTerminos && <CheckIcon size={14} color={colors.textInverse} strokeWidth={3} />}
+                {aceptaTerminos && <CheckIcon size={14} color={colors.onAccent} strokeWidth={3} />}
               </View>
               <Text style={styles.termsText}>
                 He leído y acepto los{' '}

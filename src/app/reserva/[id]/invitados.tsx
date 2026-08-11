@@ -46,7 +46,7 @@ export default function InvitadosScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()} style={styles.headerBtn}>
-          <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
+          <ArrowLeftIcon size={20} color={colors.headerText} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
           {titulo || 'Invitados'}
@@ -133,7 +133,7 @@ const useStyles = makeStyles((t) => ({
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: t.fontSize.base,
     fontWeight: t.fontWeight.bold,
     marginHorizontal: t.spacing.sm,

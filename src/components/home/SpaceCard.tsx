@@ -11,6 +11,7 @@ interface SpaceCardProps {
   isFavorite: boolean;
   onPress: (espacio: Espacio) => void;
   onToggleFavorite: (id: number) => void;
+  onLongPressFavorite?: (id: number) => void;
 }
 
 const SpaceCard: React.FC<SpaceCardProps> = ({
@@ -18,6 +19,7 @@ const SpaceCard: React.FC<SpaceCardProps> = ({
   isFavorite,
   onPress,
   onToggleFavorite,
+  onLongPressFavorite,
 }) => {
   const styles = useStyles();
   const { colors } = useTheme();
@@ -29,6 +31,10 @@ const SpaceCard: React.FC<SpaceCardProps> = ({
   const handleFavoritePress = useCallback(() => {
     onToggleFavorite(espacio.id);
   }, [onToggleFavorite, espacio.id]);
+
+  const handleFavoriteLongPress = useCallback(() => {
+    onLongPressFavorite?.(espacio.id);
+  }, [onLongPressFavorite, espacio.id]);
 
   return (
     <TouchableOpacity
@@ -54,6 +60,7 @@ const SpaceCard: React.FC<SpaceCardProps> = ({
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleFavoritePress}
+          onLongPress={onLongPressFavorite ? handleFavoriteLongPress : undefined}
           style={styles.favoriteButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <HeartIcon

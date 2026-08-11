@@ -31,6 +31,7 @@ import LocationMap from '@/components/space/LocationMap';
 import DaySelector from '@/components/space/DaySelector';
 import HourRangeSelector from '@/components/space/HourRangeSelector';
 import TicketQuantitySelector from '@/components/space/TicketQuantitySelector';
+import SaveToListSheet from '@/components/space/SaveToListSheet';
 import { MIS_RESERVAS_QUERY_KEY } from '@/hooks/useMisReservas';
 import { makeStyles, spacing, useTheme } from '@/theme';
 
@@ -107,6 +108,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
       setDisponibilidadError(null);
       setAforo(null);
       setAforoError(null);
+      setGuardarEnListaVisible(false);
     }
   }, [visible]);
 
@@ -201,9 +203,15 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     return haversineDistanceKm(userCoords, espacioCoords);
   }, [userCoords, espacioCoords]);
 
+  const [guardarEnListaVisible, setGuardarEnListaVisible] = useState(false);
+
   const handleFavoritePress = useCallback(() => {
     if (espacio) onToggleFavorite(espacio.id);
   }, [espacio, onToggleFavorite]);
+
+  const handleFavoriteLongPress = useCallback(() => {
+    if (espacio) setGuardarEnListaVisible(true);
+  }, [espacio]);
 
   const handleReservar = useCallback(async () => {
     if (!espacio) return;
@@ -387,10 +395,14 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity activeOpacity={0.8} onPress={onClose} style={styles.headerBtn}>
-            <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
+            <ArrowLeftIcon size={20} color={colors.headerText} strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={styles.headerTitle} numberOfLines={1}>Detalle del Espacio</Text>
-          <TouchableOpacity activeOpacity={0.8} onPress={handleFavoritePress} style={styles.headerBtn}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleFavoritePress}
+            onLongPress={handleFavoriteLongPress}
+            style={styles.headerBtn}>
             <HeartIcon size={20} color={isFavorite ? colors.favorite : colors.surface} filled={isFavorite} />
           </TouchableOpacity>
         </View>
@@ -492,7 +504,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   </View>
                 )}
                 <View style={styles.mapLabel}>
-                  <LocationIcon size={10} color={colors.textInverse} />
+                  <LocationIcon size={10} color={colors.headerText} />
                   <Text style={styles.mapLabelText}>{espacio.ubicacion}</Text>
                 </View>
               </View>
@@ -683,6 +695,12 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
           onSuccess={handlePaymentSuccess}
         />
       )}
+
+      <SaveToListSheet
+        visible={guardarEnListaVisible}
+        espacioId={espacio?.id ?? null}
+        onClose={() => setGuardarEnListaVisible(false)}
+      />
     </Modal>
   );
 };
@@ -720,7 +738,7 @@ const useStyles = makeStyles((t) => ({
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: t.fontSize.base,
     fontWeight: t.fontWeight.bold,
     marginHorizontal: t.spacing.sm,
@@ -764,7 +782,7 @@ const useStyles = makeStyles((t) => ({
     borderRadius: t.radius.md,
   },
   disponibleText: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
     fontSize: t.fontSize.xs,
     fontWeight: t.fontWeight.bold,
   },
@@ -925,7 +943,7 @@ const useStyles = makeStyles((t) => ({
     borderRadius: t.radius.md,
   },
   mapLabelText: {
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: 9,
     fontWeight: t.fontWeight.bold,
   },
@@ -1130,7 +1148,7 @@ const useStyles = makeStyles((t) => ({
     alignItems: 'center',
   },
   successText: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.bold,
   },

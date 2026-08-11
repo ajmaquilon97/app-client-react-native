@@ -294,14 +294,14 @@ const useStyles = makeStyles((t) => ({
     alignItems: 'center',
   },
   headerTitle: {
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: t.fontSize.xxl,
     fontWeight: t.fontWeight.bold,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   headerSubtitle: {
-    color: t.colors.accentMuted,
+    color: t.colors.headerTextMuted,
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.medium,
   },
@@ -312,7 +312,7 @@ const useStyles = makeStyles((t) => ({
     borderRadius: t.radius.full,
   },
   badgeText: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
     fontSize: t.fontSize.xs,
     fontWeight: t.fontWeight.bold,
   },
@@ -390,6 +390,7 @@ const useStyles = makeStyles((t) => ({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: t.spacing.sm,
     marginTop: t.spacing.sm,
     paddingTop: t.spacing.xs,
     borderTopWidth: 1,
@@ -455,7 +456,7 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.xxl,
   },
   exploreBtnText: {
-    color: t.colors.textInverse,
+    color: t.colors.onPrimary,
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.bold,
   },

@@ -3,6 +3,7 @@ import CategoryCard from '@/components/home/CategoryCard';
 import EmptyState from '@/components/home/EmptyState';
 import SpaceCard from '@/components/home/SpaceCard';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
+import SaveToListSheet from '@/components/space/SaveToListSheet';
 import { useAuth } from '@/context/AuthContext';
 import { useFavoritesContext } from '@/context/FavoritesContext';
 import { useFilteredSpaces } from '@/hooks/useFilteredSpaces';
@@ -32,6 +33,7 @@ export default function HomeScreen() {
   const [filtroRapido, setFiltroRapido] = useState<FiltroRapido | null>(null);
   const [pantallaBusqueda, setPantallaBusqueda] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [guardarEnListaId, setGuardarEnListaId] = useState<number | null>(null);
 
   const { isFavorite, toggleFavorite } = useFavoritesContext();
   const { espacios, total, isRefetching, refetch } = useFilteredSpaces({
@@ -78,6 +80,7 @@ export default function HomeScreen() {
         isFavorite={isFavorite(item.id)}
         onPress={handleCardPress}
         onToggleFavorite={toggleFavorite}
+        onLongPressFavorite={setGuardarEnListaId}
       />
     ),
     [isFavorite, handleCardPress, toggleFavorite],
@@ -202,6 +205,12 @@ export default function HomeScreen() {
         onSelectEspacio={handleCardPress}
       />
 
+      <SaveToListSheet
+        visible={guardarEnListaId != null}
+        espacioId={guardarEnListaId}
+        onClose={() => setGuardarEnListaId(null)}
+      />
+
       <Modal
         visible={menuVisible}
         transparent
@@ -260,7 +269,7 @@ const useStyles = makeStyles((t) => ({
     marginBottom: t.spacing.lg,
   },
   greeting: {
-    color: t.colors.accentMuted,
+    color: t.colors.headerTextMuted,
     fontSize: t.fontSize.xs,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -268,7 +277,7 @@ const useStyles = makeStyles((t) => ({
     marginBottom: 2,
   },
   headerTitle: {
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: t.fontSize.xxl,
     fontWeight: t.fontWeight.bold,
     letterSpacing: -0.5,
@@ -287,7 +296,7 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'center',
   },
   avatarInitial: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
     fontSize: t.fontSize.md,
     fontWeight: t.fontWeight.bold,
   },

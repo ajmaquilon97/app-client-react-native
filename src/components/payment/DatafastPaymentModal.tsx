@@ -342,7 +342,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
             style={styles.headerBtn}>
             <ArrowLeftIcon
               size={20}
-              color={canClose ? colors.surface : colors.textSecondary}
+              color={canClose ? colors.headerText : colors.textSecondary}
               strokeWidth={2.5}
             />
           </TouchableOpacity>
@@ -452,7 +452,7 @@ const useStyles = makeStyles((t) => ({
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: t.fontSize.base,
     fontWeight: t.fontWeight.bold,
     marginHorizontal: t.spacing.sm,

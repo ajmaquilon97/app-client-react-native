@@ -140,7 +140,7 @@ export default function AsignarInvitadosForm({
           disabled={enviando}
           style={[styles.submitBtn, enviando && styles.submitBtnDisabled]}>
           {enviando ? (
-            <ActivityIndicator size="small" color={colors.textInverse} />
+            <ActivityIndicator size="small" color={colors.onPrimary} />
           ) : (
             <Text style={styles.submitBtnText}>Asignar invitados</Text>
           )}
@@ -235,6 +235,6 @@ const useStyles = makeStyles((t) => ({
   submitBtnText: {
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.extraBold,
-    color: t.colors.textInverse,
+    color: t.colors.onPrimary,
   },
 }));

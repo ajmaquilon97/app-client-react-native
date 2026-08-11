@@ -139,13 +139,13 @@ const useStyles = makeStyles((t) => ({
   titleSuccess: {
     fontSize: t.fontSize.xxl,
     fontWeight: t.fontWeight.extraBold,
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     marginBottom: t.spacing.xs,
     textAlign: 'center',
   },
   subtitleSuccess: {
     fontSize: t.fontSize.sm,
-    color: t.colors.accentMuted,
+    color: t.colors.headerTextMuted,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: t.spacing.lg,
@@ -166,12 +166,12 @@ const useStyles = makeStyles((t) => ({
   },
   detailLabel: {
     fontSize: t.fontSize.xs,
-    color: t.colors.accentMuted,
+    color: t.colors.headerTextMuted,
     fontWeight: t.fontWeight.semiBold,
   },
   detailValue: {
     fontSize: t.fontSize.xs,
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontWeight: t.fontWeight.bold,
   },
   detailValueAccent: {
@@ -188,7 +188,7 @@ const useStyles = makeStyles((t) => ({
     minWidth: 220,
   },
   btnContinueTxt: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.extraBold,
     textTransform: 'uppercase',

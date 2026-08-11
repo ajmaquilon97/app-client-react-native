@@ -84,7 +84,7 @@ const useStyles = makeStyles((t) => ({
     textTransform: 'uppercase',
   },
   dayLabelActive: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
   },
   dayNumber: {
     fontSize: t.fontSize.base,
@@ -92,6 +92,6 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.primaryText,
   },
   dayNumberActive: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
   },
 }));

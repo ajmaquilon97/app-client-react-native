@@ -126,13 +126,13 @@ export default function SearchScreen({
               style={styles.backButton}
               activeOpacity={0.8}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
+              <ArrowLeftIcon size={20} color={colors.headerText} strokeWidth={2.5} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Buscar Espacio</Text>
           </View>
 
           <View style={styles.inputContainer}>
-            <SearchIcon size={18} color={colors.accentMuted} />
+            <SearchIcon size={18} color={colors.headerTextMuted} />
             <TextInput
               ref={inputRef}
               value={busqueda}
@@ -254,7 +254,7 @@ export default function SearchScreen({
               style={styles.backButton}
               activeOpacity={0.8}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <ArrowLeftIcon size={20} color={colors.textInverse} strokeWidth={2.5} />
+              <ArrowLeftIcon size={20} color={colors.headerText} strokeWidth={2.5} />
             </TouchableOpacity>
             <View>
               <Text style={styles.sugeridosTitle}>Lugares Sugeridos</Text>
@@ -404,7 +404,7 @@ const useStyles = makeStyles((t) => ({
     borderRadius: t.radius.sm,
   },
   headerTitle: {
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: t.fontSize.lg,
     fontWeight: t.fontWeight.bold,
   },
@@ -422,7 +422,7 @@ const useStyles = makeStyles((t) => ({
   input: {
     flex: 1,
     fontSize: t.fontSize.base,
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontWeight: '500',
     padding: 0,
     margin: 0,
@@ -586,15 +586,15 @@ const useStyles = makeStyles((t) => ({
     }),
   },
   sugeridosHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm },
-  sugeridosTitle: { color: t.colors.textInverse, fontSize: t.fontSize.base, fontWeight: t.fontWeight.bold },
-  sugeridosSubtitle: { color: t.colors.accentMuted, fontSize: t.fontSize.xs - 1, letterSpacing: 0.4, marginTop: 1 },
+  sugeridosTitle: { color: t.colors.headerText, fontSize: t.fontSize.base, fontWeight: t.fontWeight.bold },
+  sugeridosSubtitle: { color: t.colors.headerTextMuted, fontSize: t.fontSize.xs - 1, letterSpacing: 0.4, marginTop: 1 },
   fuzzyBadge: {
     backgroundColor: t.colors.accent,
     borderRadius: t.radius.full,
     paddingHorizontal: t.spacing.sm,
     paddingVertical: 4,
   },
-  fuzzyBadgeText: { color: t.colors.textInverse, fontSize: t.fontSize.xs - 1, fontWeight: t.fontWeight.bold },
+  fuzzyBadgeText: { color: t.colors.onAccent, fontSize: t.fontSize.xs - 1, fontWeight: t.fontWeight.bold },
 
   // Tarjeta algoritmo
   algorithmCard: {
@@ -633,7 +633,7 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.sm,
     paddingVertical: 4,
   },
-  fuzzyBadgeOverlayText: { color: t.colors.textInverse, fontSize: t.fontSize.xs - 1, fontWeight: t.fontWeight.bold },
+  fuzzyBadgeOverlayText: { color: t.colors.onAccent, fontSize: t.fontSize.xs - 1, fontWeight: t.fontWeight.bold },
   distanciaBadge: {
     position: 'absolute',
     bottom: t.spacing.sm,
@@ -643,7 +643,7 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.xs,
     paddingVertical: 3,
   },
-  distanciaBadgeText: { color: t.colors.textInverse, fontSize: t.fontSize.xs - 2, fontWeight: t.fontWeight.bold },
+  distanciaBadgeText: { color: t.colors.headerText, fontSize: t.fontSize.xs - 2, fontWeight: t.fontWeight.bold },
   fuzzyInfo: { padding: t.spacing.md },
   fuzzyNombre: { fontSize: t.fontSize.sm, fontWeight: t.fontWeight.bold, color: t.colors.primaryText, marginTop: 2, marginBottom: t.spacing.xs },
   fuzzyDesc: { fontSize: t.fontSize.xs - 1, color: t.colors.textSecondary, lineHeight: 16, marginBottom: t.spacing.sm },

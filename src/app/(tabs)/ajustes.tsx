@@ -164,14 +164,14 @@ const useStyles = makeStyles((t) => ({
     }),
   },
   headerTitle: {
-    color: t.colors.textInverse,
+    color: t.colors.headerText,
     fontSize: t.fontSize.xxl,
     fontWeight: t.fontWeight.bold,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   headerSubtitle: {
-    color: t.colors.accentMuted,
+    color: t.colors.headerTextMuted,
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.medium,
   },
@@ -210,7 +210,7 @@ const useStyles = makeStyles((t) => ({
     marginRight: t.spacing.md,
   },
   profileAvatarText: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
     fontSize: t.fontSize.xl,
     fontWeight: t.fontWeight.bold,
   },

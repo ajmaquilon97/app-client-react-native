@@ -148,7 +148,7 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.textSecondary,
   },
   chipTextActive: {
-    color: t.colors.textInverse,
+    color: t.colors.onAccent,
   },
   chipTextDisabled: {
     color: t.colors.borderStrong,
