@@ -1,10 +1,10 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
-import { makeStyles, useTheme } from '@/theme';
+import { makeStyles, useTheme } from '@/shared/theme';
 import { Espacio } from '@/types';
-import { HeartIcon, LocationIcon } from '@/components/icons';
-import StarRating from '@/components/common/StarRating';
+import { HeartIcon, LocationIcon } from '@/shared/ui/icons';
+import StarRating from '@/shared/ui/StarRating';
 
 interface SpaceCardProps {
   espacio: Espacio;

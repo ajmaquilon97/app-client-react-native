@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '@/config/api';
+import { API_BASE_URL } from '@/shared/config/api';
 import { RecepcionLoginResult, ValidarQrResult } from '@/types';
-import { throwIfNotOk } from '@/services/apiError';
+import { throwIfNotOk } from '@/shared/api/errors';
 
 const MOBILE_AUTH_URL = `${API_BASE_URL}/mobile/auth`;
 const MOBILE_RECEPCION_URL = `${API_BASE_URL}/mobile/recepcion`;

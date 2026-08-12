@@ -212,6 +212,8 @@ export interface FacturaStatus {
   motivoRechazo: string | null;
 }
 
+// Los tipos de reseñas viven ahora en src/features/resenas/types.ts.
+
 // GET /api/mobile/reservas/{reservaId}/facturas (plural) — arreglo plano de las
 // facturas ya AUTORIZADAS de una reserva, con sus URLs de descarga. Ver
 // docs/feedback-mobile-facturacion.md. Ordenado de la más reciente a la más antigua.

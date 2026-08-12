@@ -3,17 +3,17 @@ import { View, Text, StatusBar, Platform, FlatList, TouchableOpacity, ActivityIn
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CalendarIcon } from '@/components/icons';
+import { CalendarIcon } from '@/shared/ui/icons';
 import { useMisReservas } from '@/hooks/useMisReservas';
 import { useEspacios } from '@/hooks/useEspacios';
 import { useAuth } from '@/context/AuthContext';
 import { cancelarReserva } from '@/services/reservas.service';
 import { reversarPagoDatafastDirecto, obtenerTransaccionDirecta } from '@/services/datafastDirectUat';
-import { DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/config/paymentConfig';
-import { formatRangoReserva } from '@/utils/fechas';
-import { getModalidadReserva } from '@/utils/espacioArchetype';
+import { DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/shared/config/paymentConfig';
+import { formatRangoReserva } from '@/shared/utils/fechas';
+import { getModalidadReserva } from '@/shared/utils/espacioArchetype';
 import { EstadoReserva, Espacio, Reserva } from '@/types';
-import { ColorToken, makeStyles, spacing, useTheme } from '@/theme';
+import { ColorToken, makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const ESTADOS_CANCELABLES: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];
 const ESTADOS_ACTIVOS: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];

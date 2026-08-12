@@ -1,6 +1,6 @@
 import { AforoDia } from '@/types';
-import { API_BASE_URL } from '@/config/api';
-import { throwIfNotOk } from '@/services/apiError';
+import { API_BASE_URL } from '@/shared/config/api';
+import { throwIfNotOk } from '@/shared/api/errors';
 
 const AFORO_URL = `${API_BASE_URL}/aforo`;
 

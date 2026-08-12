@@ -1,5 +1,5 @@
-import { BuildingIcon2, FootBallIcon, WaterIcon2 } from '@/components/icons';
-import { makeStyles, useTheme } from '@/theme';
+import { BuildingIcon2, FootBallIcon, WaterIcon2 } from '@/shared/ui/icons';
+import { makeStyles, useTheme } from '@/shared/theme';
 import { Categoria } from '@/types';
 import React, { useCallback } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';

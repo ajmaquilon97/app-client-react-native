@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { makeStyles, useTheme } from '@/theme';
-import { SadFaceIcon } from '@/components/icons';
+import { makeStyles, useTheme } from '@/shared/theme';
+import { SadFaceIcon } from '@/shared/ui/icons';
 
 interface EmptyStateProps {
   onReset: () => void;

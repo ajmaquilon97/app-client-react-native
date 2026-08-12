@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
 import { HoraEstado } from '@/types';
-import { formatHora } from '@/utils/fechas';
-import { makeStyles } from '@/theme';
+import { formatHora } from '@/shared/utils/fechas';
+import { makeStyles } from '@/shared/theme';
 
 const HORA_INICIO = 7;
 const HORA_FIN = 22;

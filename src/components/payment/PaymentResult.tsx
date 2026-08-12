@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated } from 'react-native';
-import { CheckIcon, CloseCircleIcon } from '@/components/icons';
-import { makeStyles, useTheme } from '@/theme';
+import { CheckIcon, CloseCircleIcon } from '@/shared/ui/icons';
+import { makeStyles, useTheme } from '@/shared/theme';
 
 export type PaymentResultStatus = 'success' | 'error';
 

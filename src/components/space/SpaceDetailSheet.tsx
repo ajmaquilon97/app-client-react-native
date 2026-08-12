@@ -5,18 +5,18 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AforoDia, Disponibilidad, Espacio, Reserva } from '@/types';
-import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/components/icons';
+import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/shared/ui/icons';
 import PaymentModal from '@/components/payment/PaymentModal';
 import { useAuth } from '@/context/AuthContext';
 import { useLocationContext } from '@/context/LocationContext';
-import { haversineDistanceKm, formatDistanceKm } from '@/utils/geo';
+import { haversineDistanceKm, formatDistanceKm } from '@/shared/utils/geo';
 import {
   esMismoDia,
   formatFecha,
   formatHora,
   toDateOnlyString,
   toLocalDateTimeString,
-} from '@/utils/fechas';
+} from '@/shared/utils/fechas';
 import {
   fetchDisponibilidad,
   crearReserva,
@@ -25,15 +25,15 @@ import {
   FacturacionInput,
 } from '@/services/reservas.service';
 import { fetchAforoDia } from '@/services/aforo.service';
-import { getModalidadReserva } from '@/utils/espacioArchetype';
-import { SERVICE_FEE_RATE } from '@/config/paymentConfig';
+import { getModalidadReserva } from '@/shared/utils/espacioArchetype';
+import { SERVICE_FEE_RATE } from '@/shared/config/paymentConfig';
 import LocationMap from '@/components/space/LocationMap';
 import DaySelector from '@/components/space/DaySelector';
 import HourRangeSelector from '@/components/space/HourRangeSelector';
 import TicketQuantitySelector from '@/components/space/TicketQuantitySelector';
 import SaveToListSheet from '@/components/space/SaveToListSheet';
 import { MIS_RESERVAS_QUERY_KEY } from '@/hooks/useMisReservas';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 // Si el cliente no completa los datos de facturación, se manda como
 // "consumidor final" (identificación genérica estándar en Ecuador para

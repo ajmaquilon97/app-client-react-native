@@ -3,17 +3,18 @@ import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, Platform, 
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeftIcon, LocationIcon, CalendarIcon } from '@/components/icons';
+import { ArrowLeftIcon, LocationIcon, CalendarIcon } from '@/shared/ui/icons';
 import { useReservaDetalle } from '@/hooks/useReservaDetalle';
 import { useFacturasReserva } from '@/hooks/useFacturasReserva';
 import { useEspacios } from '@/hooks/useEspacios';
 import { useAuth } from '@/context/AuthContext';
 import { facturasDescarga } from '@/services/reservas.service';
 import LocationMap from '@/components/space/LocationMap';
-import { formatRangoReserva } from '@/utils/fechas';
-import { getModalidadReserva } from '@/utils/espacioArchetype';
+import { ResenaSection } from '@/features/resenas';
+import { formatRangoReserva } from '@/shared/utils/fechas';
+import { getModalidadReserva } from '@/shared/utils/espacioArchetype';
 import { EstadoPago, EstadoReserva, FacturaStatus } from '@/types';
-import { ColorToken, makeStyles, spacing, useTheme } from '@/theme';
+import { ColorToken, makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const IMAGEN_FALLBACK =
   'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80';
@@ -351,6 +352,13 @@ export default function ReservaDetalleScreen() {
                 {facturas.map(factura => (
                   <FacturaCard key={factura.id} reservaId={reservaId} factura={factura} />
                 ))}
+              </View>
+            )}
+
+            {/* Reseña */}
+            {reserva.estado === 'finalizada' && (
+              <View style={styles.sectionTitleSpaced}>
+                <ResenaSection espacioId={reserva.espacioId} reservaId={reserva.id} />
               </View>
             )}
           </View>

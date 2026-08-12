@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, StatusBar, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeftIcon } from '@/components/icons';
+import { ArrowLeftIcon } from '@/shared/ui/icons';
 import { forgotPassword } from '@/services/auth.service';
 import AuthTextField from '@/components/auth/AuthTextField';
 import AuthButton from '@/components/auth/AuthButton';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

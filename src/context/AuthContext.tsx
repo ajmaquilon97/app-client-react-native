@@ -9,7 +9,8 @@ import React, {
 import * as SecureStore from 'expo-secure-store';
 import { Usuario } from '@/types';
 import * as authService from '@/services/auth.service';
-import { ApiError } from '@/services/apiError';
+import { ApiError } from '@/shared/api/errors';
+import { setTokenProvider } from '@/shared/api/client';
 
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -203,6 +204,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     },
     [getAccessToken, refreshSession, clearSession],
   );
+
+  // El cliente HTTP vive fuera del árbol de React, así que la sesión se le
+  // inyecta: es la misma lógica que usa `fetchAuthorized`, solo que alcanzable
+  // desde cualquier servicio sin pasar por un hook.
+  useEffect(() => {
+    setTokenProvider({
+      getAccessToken,
+      refresh: refreshSession,
+      onAuthFailure: clearSession,
+    });
+    return () => setTokenProvider(null);
+  }, [getAccessToken, refreshSession, clearSession]);
 
   return (
     <AuthContext.Provider

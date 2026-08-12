@@ -7,7 +7,7 @@ import React, {
   ReactNode,
 } from 'react';
 import * as Location from 'expo-location';
-import { LatLng } from '@/utils/geo';
+import { LatLng } from '@/shared/utils/geo';
 
 interface LocationContextValue {
   coords: LatLng | null;

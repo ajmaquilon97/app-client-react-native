@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StatusBar, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, TextInput, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeftIcon } from '@/components/icons';
+import { ArrowLeftIcon } from '@/shared/ui/icons';
 import AuthButton from '@/components/auth/AuthButton';
 import { useAuth } from '@/context/AuthContext';
 import { enviarSmsOtp, verificarSmsOtp } from '@/services/auth.service';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const RESEND_COOLDOWN_SECONDS = 30;
 const OTP_LENGTH = 6;

@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '@/config/api';
+import { API_BASE_URL } from '@/shared/config/api';
 import { Reserva } from '@/types';
-import { throwIfNotOk } from '@/services/apiError';
+import { throwIfNotOk } from '@/shared/api/errors';
 
 const RESERVAS_URL = `${API_BASE_URL}/reservas`;
 

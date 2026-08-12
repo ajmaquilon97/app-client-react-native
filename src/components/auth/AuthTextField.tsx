@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TextInputProps, TouchableOpacity } from 'react-native';
-import { makeStyles, useTheme } from '@/theme';
-import { EyeIcon, EyeOffIcon } from '@/components/icons';
+import { makeStyles, useTheme } from '@/shared/theme';
+import { EyeIcon, EyeOffIcon } from '@/shared/ui/icons';
 
 interface AuthTextFieldProps extends Omit<TextInputProps, 'style'> {
   label: string;

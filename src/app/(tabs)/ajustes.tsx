@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeMode, useThemeMode } from '@/context/ThemeModeContext';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const THEME_MODE_LABELS: Record<ThemeMode, string> = {
   system: 'Sistema',

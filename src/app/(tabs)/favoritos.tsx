@@ -18,8 +18,8 @@ import SpaceCard from '@/components/home/SpaceCard';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
 import SaveToListSheet from '@/components/space/SaveToListSheet';
 import CrearListaModal from '@/components/space/CrearListaModal';
-import { HeartIcon, PlusIcon } from '@/components/icons';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { HeartIcon, PlusIcon } from '@/shared/ui/icons';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 export default function FavoritesScreen() {
   const styles = useStyles();
@@ -176,8 +176,13 @@ export default function FavoritesScreen() {
           activeOpacity={0.8}
           style={[styles.chip, listaSeleccionada == null && styles.chipActive]}
           onPress={() => setListaSeleccionada(null)}>
-          <Text style={[styles.chipText, listaSeleccionada == null && styles.chipTextActive]}>
+          <Text
+            style={[styles.chipText, listaSeleccionada == null && styles.chipTextActive]}
+            numberOfLines={1}>
             Todos
+          </Text>
+          <Text style={[styles.chipCount, listaSeleccionada == null && styles.chipCountActive]}>
+            {favorites.length}
           </Text>
         </TouchableOpacity>
 
@@ -202,10 +207,12 @@ export default function FavoritesScreen() {
 
         <TouchableOpacity
           activeOpacity={0.8}
-          style={styles.chipNueva}
+          style={styles.chip}
           onPress={() => setCrearListaVisible(true)}>
-          <PlusIcon size={14} color={colors.accent} strokeWidth={2.5} />
-          <Text style={styles.chipNuevaText}>Nueva lista</Text>
+          <PlusIcon size={16} color={colors.accent} strokeWidth={2.5} />
+          <Text style={styles.chipText} numberOfLines={1}>
+            Nueva
+          </Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -282,17 +289,18 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.lg,
     paddingTop: t.spacing.md,
   },
+  // Cuadritos de tamaño fijo — mismo ancho/alto para "Todos", cada lista y
+  // "Nueva", sin que el contenido cambie la forma del botón.
   chip: {
-    flexDirection: 'row',
+    width: 76,
+    height: 64,
     alignItems: 'center',
-    gap: t.spacing.xxs,
-    paddingHorizontal: t.spacing.sm,
-    paddingVertical: t.spacing.xs,
-    borderRadius: t.radius.full,
+    justifyContent: 'center',
+    paddingHorizontal: t.spacing.xxs,
+    borderRadius: t.radius.md,
     borderWidth: 1,
     borderColor: t.colors.border,
     backgroundColor: t.colors.surface,
-    maxWidth: 160,
   },
   chipActive: {
     backgroundColor: t.colors.accent,
@@ -302,6 +310,7 @@ const useStyles = makeStyles((t) => ({
     fontSize: t.fontSize.xs,
     fontWeight: t.fontWeight.semiBold,
     color: t.colors.textSecondary,
+    textAlign: 'center',
   },
   chipTextActive: {
     color: t.colors.onAccent,
@@ -310,24 +319,10 @@ const useStyles = makeStyles((t) => ({
     fontSize: t.fontSize.xxs,
     fontWeight: t.fontWeight.bold,
     color: t.colors.textMuted,
+    marginTop: 2,
   },
   chipCountActive: {
     color: t.colors.onAccent,
-  },
-  chipNueva: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: t.spacing.xxs,
-    paddingHorizontal: t.spacing.sm,
-    paddingVertical: t.spacing.xs,
-    borderRadius: t.radius.full,
-    borderWidth: 1,
-    borderColor: t.colors.accent,
-  },
-  chipNuevaText: {
-    fontSize: t.fontSize.xs,
-    fontWeight: t.fontWeight.bold,
-    color: t.colors.accent,
   },
   listContent: {
     paddingHorizontal: t.spacing.lg,

@@ -6,8 +6,8 @@ import { useAuth } from '@/context/AuthContext';
 import { marcarFavorito } from '@/services/favoritos.service';
 import { useListasFavoritos, LISTAS_FAVORITOS_QUERY_KEY } from '@/hooks/useListasFavoritos';
 import { FAVORITOS_QUERY_KEY } from '@/hooks/useFavoritos';
-import { PlusIcon, CheckIcon } from '@/components/icons';
-import { makeStyles, useTheme } from '@/theme';
+import { PlusIcon, CheckIcon } from '@/shared/ui/icons';
+import { makeStyles, useTheme } from '@/shared/theme';
 import CrearListaModal from '@/components/space/CrearListaModal';
 
 interface SaveToListSheetProps {

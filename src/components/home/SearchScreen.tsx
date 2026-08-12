@@ -4,8 +4,8 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Espacio } from '@/types';
 import { useEspacios } from '@/hooks/useEspacios';
-import { ArrowLeftIcon, SearchIcon, CloseCircleIcon, StarIcon, LocationIcon } from '@/components/icons';
-import { makeStyles, useTheme } from '@/theme';
+import { ArrowLeftIcon, SearchIcon, CloseCircleIcon, StarIcon, LocationIcon } from '@/shared/ui/icons';
+import { makeStyles, useTheme } from '@/shared/theme';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKioskAuth } from '@/context/KioskAuthContext';
 import AuthTextField from '@/components/auth/AuthTextField';
 import AuthButton from '@/components/auth/AuthButton';
-import { makeStyles, spacing } from '@/theme';
+import { makeStyles, spacing } from '@/shared/theme';
 
 export default function RecepcionLoginScreen() {
   const styles = useStyles();

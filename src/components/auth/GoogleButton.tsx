@@ -7,11 +7,11 @@ import {
   isSuccessResponse,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import { makeStyles, useTheme } from '@/theme';
-import { GoogleIcon } from '@/components/icons';
+import { makeStyles, useTheme } from '@/shared/theme';
+import { GoogleIcon } from '@/shared/ui/icons';
 import { useAuth } from '@/context/AuthContext';
-import { GOOGLE_WEB_CLIENT_ID } from '@/config/googleAuthConfig';
-import { ApiError } from '@/services/apiError';
+import { GOOGLE_WEB_CLIENT_ID } from '@/shared/config/googleAuthConfig';
+import { ApiError } from '@/shared/api/errors';
 
 GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
 

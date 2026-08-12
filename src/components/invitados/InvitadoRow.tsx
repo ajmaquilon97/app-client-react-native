@@ -4,7 +4,7 @@ import { Invitado } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { reenviarInvitado, InvitadoApiError } from '@/services/invitados.service';
 import EditarInvitadoModal from '@/components/invitados/EditarInvitadoModal';
-import { makeStyles, useTheme } from '@/theme';
+import { makeStyles, useTheme } from '@/shared/theme';
 
 const DEFAULT_COOLDOWN_SECONDS = 300;
 

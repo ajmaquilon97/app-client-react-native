@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '@/config/api';
+import { API_BASE_URL } from '@/shared/config/api';
 import { Invitado, InvitacionAsignada, InvitadoInput } from '@/types';
-import { ApiError, throwIfNotOk } from '@/services/apiError';
+import { ApiError, throwIfNotOk } from '@/shared/api/errors';
 
 // Ver docs/frontend-spec-control-acceso.md — §4.1 usa el namespace no-mobile
 // (/api/reservas), el resto usa /api/mobile/reservas.

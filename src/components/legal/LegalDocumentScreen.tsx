@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StatusBar, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeftIcon } from '@/components/icons';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { ArrowLeftIcon } from '@/shared/ui/icons';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const HEADING_REGEX = /^\d+(\.\d+)*\.?\s+\S/;
 

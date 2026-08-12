@@ -1,7 +1,7 @@
 import { Espacio, Categoria, ModalidadReserva } from '@/types';
-import { API_BASE_URL } from '@/config/api';
-import { parseLatLngFromGoogleMapsUrl } from '@/utils/geo';
-import { throwIfNotOk } from '@/services/apiError';
+import { API_BASE_URL } from '@/shared/config/api';
+import { parseLatLngFromGoogleMapsUrl } from '@/shared/utils/geo';
+import { throwIfNotOk } from '@/shared/api/errors';
 
 const API_URL = `${API_BASE_URL}/mobile/espacios`;
 

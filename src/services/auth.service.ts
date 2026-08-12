@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '@/config/api';
+import { API_BASE_URL } from '@/shared/config/api';
 import { AuthTokens, Usuario } from '@/types';
-import { throwIfNotOk } from '@/services/apiError';
+import { throwIfNotOk } from '@/shared/api/errors';
 
 const AUTH_URL = `${API_BASE_URL}/auth`;
 const USUARIOS_URL = `${API_BASE_URL}/usuarios`;

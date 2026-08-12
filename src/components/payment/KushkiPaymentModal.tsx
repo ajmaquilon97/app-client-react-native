@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, Platform, Modal, ActivityIndicator, Alert
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Espacio } from '@/types';
-import { ArrowLeftIcon } from '@/components/icons';
+import { ArrowLeftIcon } from '@/shared/ui/icons';
 import PaymentResult from './PaymentResult';
-import { makeStyles, useTheme } from '@/theme';
+import { makeStyles, useTheme } from '@/shared/theme';
 
 /** Tarjeta de prueba que fuerza un rechazo (para probar el flujo de error). */
 const DECLINE_TEST_CARD = '4000000000000002';

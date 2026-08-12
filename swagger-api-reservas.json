@@ -1431,7 +1431,7 @@
         }
       }
     },
-    "/api/espacios/{espacioId}/reseñas": {
+    "/api/espacios/{espacioId}/resenas": {
       "get": {
         "tags": [
           "Espacios"
@@ -1451,13 +1451,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Lista de `ReseñaResponse`.",
+            "description": "Lista de `ResenaResponse`, ordenada de la más reciente a la más antigua.",
             "content": {
               "text/plain": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ReseñaResponse"
+                    "$ref": "#/components/schemas/ResenaResponse"
                   }
                 }
               },
@@ -1465,7 +1465,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ReseñaResponse"
+                    "$ref": "#/components/schemas/ResenaResponse"
                   }
                 }
               },
@@ -1473,14 +1473,11 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ReseñaResponse"
+                    "$ref": "#/components/schemas/ResenaResponse"
                   }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Error al consultar la base de datos."
           }
         }
       },
@@ -1488,7 +1485,7 @@
         "tags": [
           "Espacios"
         ],
-        "summary": "POST /api/espacios/{espacioId}/reseñas — Agrega una nueva reseña a un espacio.",
+        "summary": "POST /api/espacios/{espacioId}/reseñas — Agrega una nueva reseña a un espacio.\r\nEl autor se toma del claim `sub` del JWT; no se acepta por body.\r\nAl guardar se recalcula `Calificacion` y `TotalResenas` del espacio.",
         "parameters": [
           {
             "name": "espacioId",
@@ -1502,53 +1499,116 @@
           }
         ],
         "requestBody": {
-          "description": "<b>UsuarioId</b> (string GUID) — ID del usuario que escribe la reseña.\r\n<b>Titulo</b> (string) — título corto de la reseña.\r\n<b>Descripcion</b> (string) — texto detallado de la reseña.\r\n<b>Calificacion</b> (int) — puntuación otorgada al espacio.",
+          "description": "<b>ReservaId</b> (int, requerido) — reserva propia, ya terminada, que habilita la reseña.\r\n<b>Titulo</b> (string, requerido, máx. 200) — título corto de la reseña.\r\n<b>Descripcion</b> (string, requerido, máx. 1000) — texto detallado de la reseña.\r\n<b>Calificacion</b> (int, requerido, 1 a 5) — puntuación otorgada al espacio.",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReseñaRequest"
+                "$ref": "#/components/schemas/CrearResenaRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReseñaRequest"
+                "$ref": "#/components/schemas/CrearResenaRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/ReseñaRequest"
+                "$ref": "#/components/schemas/CrearResenaRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "`ReseñaResponse` con los datos de la reseña creada.",
+            "description": "`ResenaResponse` con los datos de la reseña creada.",
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReseñaResponse"
+                  "$ref": "#/components/schemas/ResenaResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReseñaResponse"
+                  "$ref": "#/components/schemas/ResenaResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReseñaResponse"
+                  "$ref": "#/components/schemas/ResenaResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Datos inválidos o error al guardar."
+            "description": "Datos inválidos (campos faltantes, texto muy largo o calificación fuera de 1..5)."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "404": {
+            "description": "No existe un espacio activo con ese ID, o la reserva no es del usuario para ese espacio."
+          },
+          "409": {
+            "description": "La reserva está cancelada, todavía no termina, o ya tiene una reseña."
           }
         }
       }
     },
-    "/api/espacios/{espacioId}/reseñas/{id}": {
+    "/api/espacios/{espacioId}/resenas/reservas-disponibles": {
+      "get": {
+        "tags": [
+          "Espacios"
+        ],
+        "summary": "GET /api/espacios/{espacioId}/reseñas/reservas-disponibles — Reservas del usuario\r\nautenticado en ese espacio que todavía habilitan una reseña: no canceladas, ya\r\nterminadas y sin reseña activa. Cada una vale por una reseña.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "<b>espacioId</b> (int, ruta, requerido) — ID del espacio.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arreglo de `ReservaResenableResponse` (`[]` si no puede reseñar).",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservaResenableResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservaResenableResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservaResenableResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/espacios/{espacioId}/resenas/{id}": {
       "put": {
         "tags": [
           "Espacios"
@@ -1581,41 +1641,50 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReseñaRequest"
+                "$ref": "#/components/schemas/ResenaRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReseñaRequest"
+                "$ref": "#/components/schemas/ResenaRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/ReseñaRequest"
+                "$ref": "#/components/schemas/ResenaRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "`ReseñaResponse` actualizada.",
+            "description": "`ResenaResponse` actualizada.",
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReseñaResponse"
+                  "$ref": "#/components/schemas/ResenaResponse"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReseñaResponse"
+                  "$ref": "#/components/schemas/ResenaResponse"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReseñaResponse"
+                  "$ref": "#/components/schemas/ResenaResponse"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Datos inválidos (campos faltantes, texto muy largo o calificación fuera de 1..5)."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el autor de la reseña."
           },
           "404": {
             "description": "No existe una reseña con ese ID."
@@ -1651,7 +1720,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Reseña anulada correctamente."
+            "description": "Resena anulada correctamente."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el autor de la reseña."
           },
           "404": {
             "description": "No existe una reseña con ese ID."
@@ -1773,6 +1848,46 @@
           },
           "409": {
             "description": "La factura no está en un estado reintentable (Procesando, Recibida o Autorizada)."
+          }
+        }
+      }
+    },
+    "/api/facturas/{id}/reenviar-email": {
+      "post": {
+        "tags": [
+          "Facturas"
+        ],
+        "summary": "POST /api/facturas/{id}/reenviar-email — Vuelve a enviarle al cliente el correo con el\r\ncomprobante (RIDE en PDF y XML autorizado adjuntos). Pensado para las facturas que\r\naparecen en el listado con `emailEnviado: false`, es decir las que el SRI autorizó\r\npero cuyo correo falló.\r\nEl RIDE se regenera desde el XML autorizado guardado, así que funciona aunque el PDF ya\r\nno esté en S3. Si el envío falla, la factura <b>no se modifica</b>: conserva su estado\r\n`Autorizada` y su `emailEnviado` anterior.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "<b>id</b> (Guid, ruta, requerido) — identificador de la factura.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Correo enviado; `emailEnviado` y `fechaEnvioEmail` quedaron actualizados."
+          },
+          "400": {
+            "description": "La factura no está autorizada todavía, o la reserva no tiene ningún correo al que enviar."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "403": {
+            "description": "El usuario autenticado no es el dueño del espacio de la reserva facturada."
+          },
+          "404": {
+            "description": "No existe una factura con ese ID."
+          },
+          "502": {
+            "description": "El servidor de correo rechazó el envío o no respondió. La factura quedó intacta; se puede reintentar."
           }
         }
       }
@@ -2336,6 +2451,138 @@
         }
       }
     },
+    "/api/mobile/favoritos": {
+      "get": {
+        "tags": [
+          "MobileFavoritos"
+        ],
+        "summary": "GET /api/mobile/favoritos — Arreglo plano con los IDs de los espacios que el usuario\r\ntiene guardados, sin repetir y sin envolver en ningún objeto (ej. `[12, 7, 30]`).\r\nContrato acordado con el equipo Frontend: el móvil cruza estos IDs contra su catálogo\r\ncacheado, así que la respuesta es deliberadamente un `List<int>` y no el\r\ndetalle de los favoritos. Devuelve `[]` si no tiene ninguno.",
+        "description": "Es un consolidado de TODAS las listas del usuario: si un espacio está guardado en dos\r\nlistas aparece una sola vez. Para saber a qué lista pertenece cada uno hay que usar\r\nGET /api/mobile/listas-favoritos.",
+        "responses": {
+          "200": {
+            "description": "Arreglo de enteros con los `EspacioId` favoritos.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/mobile/espacios/{espacioId}/favorito": {
+      "post": {
+        "tags": [
+          "MobileFavoritos"
+        ],
+        "summary": "POST /api/mobile/espacios/{espacioId}/favorito — Guarda el espacio en una lista del\r\nusuario. Idempotente: si ya estaba guardado no hace nada y si había sido quitado lo\r\nreactiva; los tres casos responden 204.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "<b>espacioId</b> (int, ruta, requerido) — espacio a guardar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Body OPCIONAL. <b>listaId</b> (int, opcional) — lista destino. Si se omite el body\r\nentero, o el body no trae `listaId`, el espacio cae en la lista por defecto del\r\nusuario (\"Mis Favoritos\"), que se crea automáticamente la primera vez.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarFavoritoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarFavoritoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarFavoritoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Guardado, reactivado o ya estaba guardado."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "404": {
+            "description": "No existe un espacio activo con ese ID, o el `listaId` enviado no es una lista activa del usuario."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MobileFavoritos"
+        ],
+        "summary": "DELETE /api/mobile/espacios/{espacioId}/favorito — Quita el espacio de los favoritos\r\nmediante eliminado lógico (`Anulado = true`); la fila nunca se borra. Idempotente:\r\nsi no estaba guardado o ya había sido quitado, responde 204 igual.",
+        "parameters": [
+          {
+            "name": "espacioId",
+            "in": "path",
+            "description": "<b>espacioId</b> (int, ruta, requerido) — espacio a quitar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "listaId",
+            "in": "query",
+            "description": "<b>listaId</b> (int, query, opcional) — quita el espacio solo de esa lista. Si se omite,\r\n            lo quita de TODAS las listas del usuario donde estuviera guardado.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Quitado, o no había nada que quitar."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
     "/api/mobile/reservas/{reservaId}/invitados": {
       "get": {
         "tags": [
@@ -2513,6 +2760,177 @@
         }
       }
     },
+    "/api/mobile/listas-favoritos": {
+      "get": {
+        "tags": [
+          "MobileListasFavoritos"
+        ],
+        "summary": "GET /api/mobile/listas-favoritos — Listas activas del usuario autenticado, cada una con\r\nsu `id`, su `nombre` y la cantidad de espacios guardados que siguen activos.\r\nOrdenadas de la más antigua a la más reciente. Devuelve `[]` si todavía no creó\r\nninguna lista.",
+        "responses": {
+          "200": {
+            "description": "Arreglo de `ListaFavoritosResponse`.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ListaFavoritosResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ListaFavoritosResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ListaFavoritosResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MobileListasFavoritos"
+        ],
+        "summary": "POST /api/mobile/listas-favoritos — Crea una lista de favoritos para el usuario\r\nautenticado y devuelve el objeto creado.",
+        "requestBody": {
+          "description": "<b>nombre</b> (string, requerido, máx. 100) — nombre visible de la lista.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearListaFavoritosRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearListaFavoritosRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearListaFavoritosRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "`ListaFavoritosResponse` de la lista recién creada, con `cantidadEspacios` en 0.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaFavoritosResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaFavoritosResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaFavoritosResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El nombre viene vacío, en blanco o supera los 100 caracteres."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
+    "/api/mobile/listas-favoritos/{listaId}": {
+      "get": {
+        "tags": [
+          "MobileListasFavoritos"
+        ],
+        "summary": "GET /api/mobile/listas-favoritos/{listaId} — Detalle de una lista del usuario\r\nautenticado con los IDs de los espacios que contiene, del guardado más reciente al más\r\nantiguo. Los espacios viajan como arreglo plano de enteros, igual que en\r\nGET /api/mobile/favoritos, para que el móvil los cruce contra su catálogo cacheado.",
+        "parameters": [
+          {
+            "name": "listaId",
+            "in": "path",
+            "description": "<b>listaId</b> (int, ruta, requerido) — identificador de la lista.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`ListaFavoritosDetalleResponse` con `espacioIds` (`[]` si la lista está vacía).",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaFavoritosDetalleResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaFavoritosDetalleResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaFavoritosDetalleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          },
+          "404": {
+            "description": "No existe una lista activa con ese ID para el usuario autenticado."
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MobileListasFavoritos"
+        ],
+        "summary": "DELETE /api/mobile/listas-favoritos/{listaId} — Elimina la lista mediante eliminado\r\nlógico (`Anulado = true`) junto con todos los favoritos que contiene; ninguna fila\r\nse borra físicamente. Idempotente: si la lista no existe, ya fue eliminada o es de otro\r\nusuario, responde 204 igual.",
+        "description": "Eliminar la lista por defecto (\"Mis Favoritos\") es válido: el siguiente\r\nPOST /api/mobile/espacios/{espacioId}/favorito sin `listaId` la vuelve a crear.",
+        "parameters": [
+          {
+            "name": "listaId",
+            "in": "path",
+            "description": "<b>listaId</b> (int, ruta, requerido) — identificador de la lista.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Eliminada, o no había nada que eliminar."
+          },
+          "401": {
+            "description": "No autenticado (falta o expiró el JWT)."
+          }
+        }
+      }
+    },
     "/api/mobile/recepcion/validar-qr": {
       "post": {
         "tags": [
@@ -2555,12 +2973,12 @@
         }
       }
     },
-    "/api/mobile/reservas/{reservaId}/factura": {
+    "/api/mobile/reservas/{reservaId}/facturas": {
       "get": {
         "tags": [
           "MobileReservas"
         ],
-        "summary": "GET /api/mobile/reservas/{reservaId}/factura — Enlaces de descarga de la(s) factura(s)\r\nelectrónica(s) de una reserva, para el botón \"Descargar factura\" del detalle de reserva.\r\nDevuelve una lista porque una reserva pagada genera dos comprobantes: la comisión de la\r\nplataforma (`fee_plataforma`) y el alquiler del espacio (`reserva_espacio`).\r\nLas URLs de PDF y XML son pre-firmadas de S3 y expiran en 1 hora\r\n(`urlsExpiranEnSegundos`): hay que volver a llamar al endpoint para renovarlas, no\r\ncachearlas en el dispositivo.",
+        "summary": "GET /api/mobile/reservas/{reservaId}/facturas — Arreglo con TODAS las facturas\r\nelectrónicas autorizadas de una reserva, cada una con su emisor, su monto y las URLs de\r\ndescarga del PDF (RIDE) y del XML. Una reserva pagada emite dos comprobantes\r\nindependientes: la comisión de la plataforma (`fee_plataforma`) y el alquiler del\r\nespacio (`reserva_espacio`).\r\nLas URLs son pre-firmadas de S3 y expiran en 1 hora (`urlsExpiranEnSegundos` en\r\ncada elemento): hay que volver a llamar al endpoint para renovarlas, no cachearlas en\r\nel dispositivo.",
         "parameters": [
           {
             "name": "reservaId",
@@ -2575,27 +2993,36 @@
         ],
         "responses": {
           "200": {
-            "description": "`FacturaDescargaResponse` con las facturas autorizadas y sus URLs de descarga.",
+            "description": "Arreglo de `FacturaDescargaItem`, una entrada por factura autorizada.",
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/FacturaDescargaResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacturaDescargaItem"
+                  }
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FacturaDescargaResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacturaDescargaItem"
+                  }
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FacturaDescargaResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacturaDescargaItem"
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "La factura todavía se está procesando en el SRI, o fue rechazada y no hay comprobante que descargar."
+            "description": "Las facturas todavía se están procesando en el SRI, o fueron rechazadas y no hay comprobante que descargar."
           },
           "401": {
             "description": "No autenticado (falta o expiró el JWT)."
@@ -4327,7 +4754,7 @@
           }
         ],
         "requestBody": {
-          "description": "<b>TipoUsuarioId</b> (int?, opcional) — 2 (Propietario) o 3 (Cliente); confirma/corrige el tipo\r\n              asignado en el registro o el default de Google. Se omite si no se quiere cambiar.\r\n<b>Nombre</b> (string, máx. 150) — nombre del usuario.\r\n<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.\r\n<b>FotoPerfilUrl</b> (string?, máx. 500) — ruta o URL de la foto de perfil.",
+          "description": "<b>TipoUsuarioId</b> (int?, opcional) — 2 (Propietario) o 3 (Cliente); confirma/corrige el tipo\r\n              asignado en el registro o el default de Google. Se omite si no se quiere cambiar.\r\n<b>Nombre</b> (string, máx. 150) — nombre del usuario.\r\n<b>Apellido</b> (string?, máx. 150) — apellido del usuario.\r\n<b>NumeroCedula</b> (string?, máx. 20) — número de documento de identidad.\r\n<b>NumeroRuc</b> (string?, máx. 20) — RUC del anfitrión. No se guarda en el usuario sino\r\n              en su perfil de negocio (`Negocio.NumeroIdentificacion`, con\r\n              `TipoIdentificacion = \"04\"`), que es la fuente única de datos fiscales. Si el\r\n              usuario aún no tiene negocio, se le crea uno con este RUC y el resto de campos vacíos.\r\n              Si se omite o llega vacío, no se modifica nada. No viene en `UsuarioResponse`:\r\n              para leerlo, usar `GET /api/negocios`.\r\n<b>FechaNacimiento</b> (DateOnly?) — fecha de nacimiento en formato `YYYY-MM-DD`.\r\n<b>RutaFotoCedula</b> (string?, máx. 500) — ruta o URL de la foto del documento.\r\n<b>FotoPerfilUrl</b> (string?, máx. 500) — ruta o URL de la foto de perfil.",
           "content": {
             "application/json": {
               "schema": {
@@ -4679,6 +5106,11 @@
             "type": "string",
             "nullable": true
           },
+          "numeroRuc": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
           "fechaNacimiento": {
             "type": "string",
             "format": "date",
@@ -4693,6 +5125,52 @@
             "maxLength": 500,
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CrearListaFavoritosRequest": {
+        "required": [
+          "nombre"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CrearResenaRequest": {
+        "required": [
+          "descripcion",
+          "titulo"
+        ],
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "descripcion": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "calificacion": {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "reservaId": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -5190,11 +5668,27 @@
             "type": "string",
             "format": "uuid"
           },
+          "reservaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigoReserva": {
+            "type": "string",
+            "nullable": true
+          },
           "tipoFactura": {
             "type": "string",
             "nullable": true
           },
           "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "emisorRazonSocial": {
+            "type": "string",
+            "nullable": true
+          },
+          "emisorNombreComercial": {
             "type": "string",
             "nullable": true
           },
@@ -5235,37 +5729,16 @@
             "type": "string",
             "nullable": true
           },
+          "urlsExpiranEnSegundos": {
+            "type": "integer",
+            "format": "int32"
+          },
           "nombreArchivoPdf": {
             "type": "string",
             "nullable": true
           },
           "nombreArchivoXml": {
             "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "FacturaDescargaResponse": {
-        "type": "object",
-        "properties": {
-          "reservaId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "codigoReserva": {
-            "type": "string",
-            "nullable": true
-          },
-          "urlsExpiranEnSegundos": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "facturas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FacturaDescargaItem"
-            },
             "nullable": true
           }
         },
@@ -5392,6 +5865,17 @@
         },
         "additionalProperties": false
       },
+      "GuardarFavoritoRequest": {
+        "type": "object",
+        "properties": {
+          "listaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "HoraEstadoDto": {
         "type": "object",
         "properties": {
@@ -5481,6 +5965,54 @@
           },
           "estado": {
             "$ref": "#/components/schemas/EstadoInvitado"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ListaFavoritosDetalleResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "espacioIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ListaFavoritosResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "cantidadEspacios": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -5736,6 +6268,74 @@
         },
         "additionalProperties": false
       },
+      "ResenaRequest": {
+        "required": [
+          "descripcion",
+          "titulo"
+        ],
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "descripcion": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "calificacion": {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResenaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "usuarioId": {
+            "type": "string",
+            "nullable": true
+          },
+          "usuarioNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "espacioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reservaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "titulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "calificacion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "ReservaAsistenciaRequest": {
         "type": "object",
         "properties": {
@@ -5886,6 +6486,28 @@
         },
         "additionalProperties": false
       },
+      "ReservaResenableResponse": {
+        "type": "object",
+        "properties": {
+          "reservaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigo": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaFin": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "ReservaResponse": {
         "type": "object",
         "properties": {
@@ -6012,66 +6634,6 @@
           "newPassword": {
             "minLength": 6,
             "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ReseñaRequest": {
-        "type": "object",
-        "properties": {
-          "usuarioId": {
-            "type": "string",
-            "nullable": true
-          },
-          "titulo": {
-            "type": "string",
-            "nullable": true
-          },
-          "descripcion": {
-            "type": "string",
-            "nullable": true
-          },
-          "calificacion": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ReseñaResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "usuarioId": {
-            "type": "string",
-            "nullable": true
-          },
-          "usuarioNombre": {
-            "type": "string",
-            "nullable": true
-          },
-          "espacioId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "titulo": {
-            "type": "string",
-            "nullable": true
-          },
-          "descripcion": {
-            "type": "string",
-            "nullable": true
-          },
-          "calificacion": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "fechaCreacion": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "additionalProperties": false

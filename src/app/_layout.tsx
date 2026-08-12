@@ -3,13 +3,67 @@ import { KioskAuthProvider, useKioskAuth } from '@/context/KioskAuthContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { LocationProvider } from '@/context/LocationContext';
 import { ThemeModeProvider } from '@/context/ThemeModeContext';
-import { makeStyles, useTheme } from '@/theme';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { queryClient } from '@/shared/api/queryClient';
+import { initQueryBridge } from '@/shared/api/rn-bridge';
+import { getTheme, makeStyles, useTheme } from '@/shared/theme';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 
-const queryClient = new QueryClient();
+initQueryBridge();
+
+/**
+ * Se renderiza cuando falla el propio layout raíz, es decir POR ENCIMA de
+ * `ThemeModeProvider`: aquí `useTheme()` lanzaría. Por eso lee los tokens con
+ * `getTheme`, que no es un hook y no depende del contexto.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const t = getTheme('light');
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        gap: t.spacing.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: t.spacing.xl,
+        backgroundColor: t.colors.background,
+      }}>
+      <Text
+        style={{
+          ...t.typography.subtitle,
+          fontWeight: t.fontWeight.bold,
+          color: t.colors.textPrimary,
+        }}>
+        Algo salió mal
+      </Text>
+      <Text style={{ ...t.typography.caption, color: t.colors.textSecondary, textAlign: 'center' }}>
+        {error.message}
+      </Text>
+      <TouchableOpacity
+        onPress={retry}
+        activeOpacity={0.8}
+        style={{
+          marginTop: t.spacing.sm,
+          backgroundColor: t.colors.primary,
+          paddingHorizontal: t.spacing.xl,
+          paddingVertical: t.spacing.sm,
+          borderRadius: t.radius.md,
+        }}>
+        <Text
+          style={{
+            ...t.typography.captionStrong,
+            fontWeight: t.fontWeight.bold,
+            color: t.colors.onPrimary,
+          }}>
+          Reintentar
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 const useStyles = makeStyles((t) => ({
   splash: {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, Platform } from 'react-native';
-import { makeStyles, useTheme } from '@/theme';
+import { makeStyles, useTheme } from '@/shared/theme';
 
 interface AuthButtonProps {
   label: string;

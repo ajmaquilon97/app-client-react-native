@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity, ActivityIndicator, FlatList, Platform } f
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftIcon } from '@/components/icons';
+import { ArrowLeftIcon } from '@/shared/ui/icons';
 import { useInvitados, invitadosQueryKey } from '@/hooks/useInvitados';
 import InvitadoRow from '@/components/invitados/InvitadoRow';
 import AsignarInvitadosForm from '@/components/invitados/AsignarInvitadosForm';
 import { Invitado } from '@/types';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 export default function InvitadosScreen() {
   const styles = useStyles();

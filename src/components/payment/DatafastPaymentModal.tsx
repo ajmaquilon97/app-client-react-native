@@ -4,9 +4,9 @@ import { WebView } from 'react-native-webview';
 import type { ShouldStartLoadRequest, WebViewNavigation } from 'react-native-webview/lib/WebViewTypes';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Espacio } from '@/types';
-import { ArrowLeftIcon } from '@/components/icons';
+import { ArrowLeftIcon } from '@/shared/ui/icons';
 import { useAuth } from '@/context/AuthContext';
-import { DATAFAST_CONFIG, DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/config/paymentConfig';
+import { DATAFAST_CONFIG, DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/shared/config/paymentConfig';
 import { crearCheckoutDatafast, verificarPagoDatafast } from '@/services/datafast.service';
 import {
   crearCheckoutDatafastDirecto,
@@ -15,7 +15,7 @@ import {
   UAT_DIRECT_WIDGET_BASE_URL,
 } from '@/services/datafastDirectUat';
 import PaymentResult from './PaymentResult';
-import { fontSize, fontWeight, makeStyles, radius, spacing, useTheme } from '@/theme';
+import { fontSize, fontWeight, makeStyles, radius, spacing, useTheme } from '@/shared/theme';
 
 type PaymentStatus = 'loading-checkout' | 'widget' | 'verifying' | 'success' | 'error';
 

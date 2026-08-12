@@ -3,7 +3,7 @@ import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Keyb
 import { Invitado } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { editarInvitado } from '@/services/invitados.service';
-import { makeStyles, useTheme } from '@/theme';
+import { makeStyles, useTheme } from '@/shared/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

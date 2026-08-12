@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '@/config/api';
+import { API_BASE_URL } from '@/shared/config/api';
 import { Disponibilidad, FacturaDescarga, FacturaStatus, Reserva } from '@/types';
-import { throwIfNotOk } from '@/services/apiError';
+import { throwIfNotOk } from '@/shared/api/errors';
 
 const MOBILE_ESPACIOS_URL = `${API_BASE_URL}/mobile/espacios`;
 const MOBILE_RESERVAS_URL = `${API_BASE_URL}/mobile/reservas`;

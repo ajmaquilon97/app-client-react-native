@@ -5,8 +5,8 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKioskAuth } from '@/context/KioskAuthContext';
 import { validarQr } from '@/services/recepcion.service';
-import { ApiError } from '@/services/apiError';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { ApiError } from '@/shared/api/errors';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 type Resultado =
   | { tipo: 'success'; nombre: string }

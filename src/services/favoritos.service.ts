@@ -1,6 +1,6 @@
-import { API_BASE_URL } from '@/config/api';
+import { API_BASE_URL } from '@/shared/config/api';
 import { ListaFavoritos, ListaFavoritosDetalle } from '@/types';
-import { throwIfNotOk } from '@/services/apiError';
+import { throwIfNotOk } from '@/shared/api/errors';
 
 // Ver docs/backend_response/favoritos-listas-response.md — el usuario sale del
 // claim `sub` del JWT, nunca se manda `usuarioId` en el body/query.

@@ -5,7 +5,7 @@ import { ListaFavoritos } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { crearListaFavoritos } from '@/services/favoritos.service';
 import { LISTAS_FAVORITOS_QUERY_KEY } from '@/hooks/useListasFavoritos';
-import { makeStyles, useTheme } from '@/theme';
+import { makeStyles, useTheme } from '@/shared/theme';
 
 // Backend: 400 si el nombre viene vacío, en blanco o supera 100 caracteres
 // (docs/backend_response/favoritos-listas-response.md §3) — se limita acá para

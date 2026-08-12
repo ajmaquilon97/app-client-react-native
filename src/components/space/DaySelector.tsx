@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ScrollView, TouchableOpacity, Text } from 'react-native';
-import { makeStyles } from '@/theme';
+import { makeStyles } from '@/shared/theme';
 
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DIAS_A_MOSTRAR = 14;

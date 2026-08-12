@@ -1,4 +1,4 @@
-import SearchBar from '@/components/common/SearchBar';
+import SearchBar from '@/shared/ui/SearchBar';
 import CategoryCard from '@/components/home/CategoryCard';
 import EmptyState from '@/components/home/EmptyState';
 import SpaceCard from '@/components/home/SpaceCard';
@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, ListRenderItemInfo, Modal, Platform, Pressable, RefreshControl, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { makeStyles, spacing, useTheme } from '@/theme';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const CATEGORIAS: Categoria[] = ['canchas', 'piscinas', 'salones'];
 

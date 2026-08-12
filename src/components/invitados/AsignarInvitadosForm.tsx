@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } fro
 import { InvitacionAsignada, InvitadoInput } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { asignarInvitados, InvitadoApiError } from '@/services/invitados.service';
-import { makeStyles, useTheme } from '@/theme';
+import { makeStyles, useTheme } from '@/shared/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
