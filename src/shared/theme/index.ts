@@ -35,7 +35,7 @@ import './global.css';
 import { useMemo } from 'react';
 import { Platform, StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 
-import { useThemeMode } from '@/context/ThemeModeContext';
+import { useThemeMode } from '@/shared/theme/ThemeModeContext';
 
 /* -------------------------------------------------------------------------- */
 /*  1. ESCALAS BASE (no dependen del tema)                                     */

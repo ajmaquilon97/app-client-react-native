@@ -7,20 +7,13 @@ import React, {
   ReactNode,
 } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { Usuario } from '@/types';
-import * as authService from '@/services/auth.service';
-import { ApiError } from '@/shared/api/errors';
 import { setTokenProvider } from '@/shared/api/client';
+
+import * as authService from '../services/auth.service';
+import { RegistroInput, Usuario } from '../types';
 
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
-
-interface RegistroInput {
-  nombre: string;
-  apellido: string;
-  email: string;
-  password: string;
-}
 
 interface AuthContextValue {
   user: Usuario | null;
@@ -30,8 +23,6 @@ interface AuthContextValue {
   loginWithGoogle: (idToken: string) => Promise<void>;
   registro: (input: RegistroInput) => Promise<void>;
   logout: () => Promise<void>;
-  getAccessToken: () => Promise<string>;
-  fetchAuthorized: <T>(request: (accessToken: string) => Promise<T>) => Promise<T>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -124,15 +115,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loginWithGoogle = useCallback(
     async (idToken: string) => {
-      console.log('[AuthContext] loginWithGoogle: invocando authService.loginWithGoogle...');
+      if (__DEV__) console.log('[AuthContext] loginWithGoogle: invocando authService.loginWithGoogle...');
       const { accessToken, refreshToken: newRefreshToken } =
         await authService.loginWithGoogle(idToken);
-      console.log('[AuthContext] loginWithGoogle: tokens recibidos del backend.');
+      if (__DEV__) console.log('[AuthContext] loginWithGoogle: tokens recibidos del backend.');
       const userId = authService.decodeJwtSubject(accessToken);
-      console.log('[AuthContext] loginWithGoogle: userId extraído del accessToken:', userId);
+      if (__DEV__) console.log('[AuthContext] loginWithGoogle: userId extraído del accessToken:', userId);
       if (!userId) throw new Error('No se pudo interpretar la sesión recibida.');
       const usuario = await authService.fetchUsuario(userId, accessToken);
-      console.log('[AuthContext] loginWithGoogle: usuario obtenido:', usuario);
+      if (__DEV__) console.log('[AuthContext] loginWithGoogle: usuario obtenido:', usuario);
       await persistSession(accessToken, newRefreshToken, usuario);
     },
     [persistSession],
@@ -180,34 +171,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [accessToken, refreshSession, clearSession]);
 
-  // Ejecuta `request` con un access token válido. Si el backend responde 401 pese a que el
-  // token parecía vigente localmente (reloj desincronizado, token revocado, etc.), fuerza un
-  // refresh y reintenta una sola vez. Si el refresh también falla, cierra la sesión en vez de
-  // dejar la UI en un estado autenticado "roto" que nunca puede recuperar datos.
-  const fetchAuthorized = useCallback(
-    async <T,>(request: (accessToken: string) => Promise<T>): Promise<T> => {
-      const token = await getAccessToken();
-      try {
-        return await request(token);
-      } catch (err) {
-        if (!(err instanceof ApiError) || err.status !== 401) {
-          throw err;
-        }
-        try {
-          const freshToken = await refreshSession();
-          return await request(freshToken);
-        } catch {
-          await clearSession();
-          throw err;
-        }
-      }
-    },
-    [getAccessToken, refreshSession, clearSession],
-  );
-
   // El cliente HTTP vive fuera del árbol de React, así que la sesión se le
-  // inyecta: es la misma lógica que usa `fetchAuthorized`, solo que alcanzable
-  // desde cualquier servicio sin pasar por un hook.
+  // inyecta aquí. Con esto, el 401 → refresh → reintento deja de ser algo que
+  // cada llamada tenga que envolver: lo aplica el cliente a todas.
   useEffect(() => {
     setTokenProvider({
       getAccessToken,
@@ -227,8 +193,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         loginWithGoogle,
         registro,
         logout,
-        getAccessToken,
-        fetchAuthorized,
       }}>
       {children}
     </AuthContext.Provider>

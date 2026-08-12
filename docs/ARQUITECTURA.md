@@ -1,406 +1,308 @@
 # Arquitectura de la aplicación móvil (Agora — cliente)
 
-> Estado: **diagnóstico + arquitectura objetivo**. Documenta lo que hay hoy en `src/`, identifica
-> los patrones que conviven y define hacia cuál se unifica.
-> Fecha del análisis: 2026-08-11 · rama `develop`.
+> Describe la arquitectura **vigente**. Si vas a añadir una pantalla, un endpoint
+> o una feature, esto es lo que hay que seguir.
+> Última actualización: 2026-08-12.
 
 ---
 
-## 1. Resumen ejecutivo
+## 1. En una frase
 
-El proyecto **no tiene una sola arquitectura**: tiene **una arquitectura dominante bien definida**
-(por capas, con Expo Router + React Query + capa de servicios) y **al menos tres patrones
-alternativos conviviendo con ella**, además de una capa de restos de la plantilla de Expo que
-nunca se limpió.
+App Expo Router organizada **por features**: cada dominio de negocio es una
+carpeta autocontenida con su UI, sus hooks, su servicio y sus tipos; debajo, una
+capa `shared/` con el cliente HTTP, el tema y los utilitarios.
 
-| | Patrón | Alcance aproximado |
-|---|---|---|
-| **A — canónico** | Capas: `app/` → `hooks/` (React Query) → `services/` (fetch + mapeo) → `types/` | ~70 % del código nuevo |
-| **B — imperativo** | `useState` + `useEffect` + `fetch` del service dentro del componente | Disponibilidad, aforo, pagos, escaneo QR |
-| **C — mutación manual** | Service llamado directo desde el componente + sincronización de caché a mano | **100 % de las escrituras** (0 `useMutation` en todo el repo) |
-| **D — estado global** | `Context` que envuelve React Query y expone su propia API | `FavoritesContext` |
-| **E — plantilla Expo** | `ThemedText` / `ThemedView` / `NativeTabs` / `explore` | Código muerto o semi-muerto |
-
-La unificación consiste en llevar B, C y D al patrón A, y eliminar E.
+**Estado de servidor** → React Query, siempre. **Estado de cliente** → Context,
+solo para lo que no viene del backend.
 
 ---
 
-## 2. Stack técnico
+## 2. Stack
 
 | Área | Tecnología | Versión |
 |---|---|---|
 | Runtime | Expo (managed + dev-client) | `~56.0.5` |
 | React Native | `react-native` | `0.85.3` |
-| React | `react` | `19.2.3` |
+| React | `react` (con **React Compiler** activo) | `19.2.3` |
 | Navegación | `expo-router` (file-based) | `~56.2.7` |
 | Estado de servidor | `@tanstack/react-query` | `^5.101.0` |
 | Estado de cliente | React Context API | nativo |
-| Estilos | Sistema propio de design tokens (`src/theme`) | — |
-| Persistencia segura | `expo-secure-store` | `~56.0.4` |
-| Tipado | TypeScript `strict: true`, alias `@/* → src/*` | `~6.0.3` |
+| Estilos | Design tokens propios (`shared/theme`) | — |
+| Sesión | `expo-secure-store` | `~56.0.4` |
+| Red | `fetch` nativo tras un cliente propio | — |
+| Tests | `jest-expo` | `~56.0.5` |
 
-No hay librería de estado global (Redux/Zustand/Jotai), ni de formularios, ni de validación de
-esquemas, ni de tests. El HTTP se hace con `fetch` nativo (sin Axios ni cliente generado).
+`experiments.reactCompiler: true` en `app.json`. El chequeo de compatibilidad
+compila **107 de 107 componentes**.
 
 ---
 
-## 3. Arquitectura canónica (patrón A) — la que se debe seguir
-
-### 3.1 Capas
+## 3. Estructura
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  src/app/            RUTAS (Expo Router)                     │
-│                      Un archivo = una ruta. Guardas de       │
-│                      sesión con <Stack.Protected>.           │
-└───────────────┬──────────────────────────────────────────────┘
-                │ compone
-┌───────────────▼──────────────────────────────────────────────┐
-│  src/components/     UI por dominio (auth, home, space,      │
-│                      resenas, invitados, payment, legal)     │
-│                      + comunes (common, icons, navigation)   │
-└───────────────┬──────────────────────────────────────────────┘
-                │ consume
-┌───────────────▼──────────────────────────────────────────────┐
-│  src/hooks/          ESTADO DE SERVIDOR (React Query)        │
-│                      useQuery + queryKey exportada           │
-│  src/context/        ESTADO DE CLIENTE (sesión, tema,        │
-│                      ubicación) vía Context API              │
-└───────────────┬──────────────────────────────────────────────┘
-                │ llama
-┌───────────────▼──────────────────────────────────────────────┐
-│  src/services/       ACCESO A LA API                         │
-│                      fetch + headers + errores + mapeo       │
-│                      DTO de backend → modelo de dominio      │
-└───────────────┬──────────────────────────────────────────────┘
-                │ tipa con
-┌───────────────▼──────────────────────────────────────────────┐
-│  src/types/          MODELO DE DOMINIO (barrel único)        │
-│  src/theme/  src/utils/  src/config/  src/constants/         │
-└──────────────────────────────────────────────────────────────┘
+src/
+  app/                     RUTAS (Expo Router). Solo componen features.
+    _layout.tsx            providers + Stack + ErrorBoundary
+    +not-found.tsx
+    (tabs)/  reserva/[id]/  recepcion/
+
+  features/                UN DOMINIO POR CARPETA
+    auth/         sesión, login, registro, recuperación de contraseña
+    espacios/     catálogo, búsqueda, tarjetas, mapa
+    reservas/     disponibilidad, aforo, reserva, calendario, facturas
+    pagos/        Datafast, Kushki, resultado de pago
+    favoritos/    corazón global y listas
+    resenas/      reseñas de un espacio
+    invitados/    control de acceso (invitaciones)
+    recepcion/    modo kiosco (PIN + escaneo de QR)
+    legal/        términos y política de privacidad
+
+  shared/                  BASE COMÚN — no depende de ninguna feature
+    api/          client.ts · errors.ts · queryClient.ts · rn-bridge.ts
+    ui/           icons/ · navigation/ · feedback/ · SearchBar · StarRating…
+    theme/        design tokens + ThemeModeContext
+    location/     LocationContext
+    utils/        fechas · geo
+    config/       api · googleAuthConfig
 ```
 
-**Regla de dependencia:** cada capa solo conoce la de abajo. Un componente nunca debe hacer
-`fetch`; un service nunca debe importar React.
+Anatomía de una feature (no todas tienen todas las piezas):
 
-### 3.2 Capa de rutas — `src/app/`
+```
+features/<dominio>/
+  components/    UI del dominio
+  hooks/         useQuery (lecturas) · useMutation (escrituras)
+  services/      HTTP + mapeo DTO→dominio
+  context/       solo si el dominio tiene estado de cliente (auth, recepcion)
+  errors.ts      subclase de ApiError, si el dominio la necesita
+  types.ts       modelo de dominio
+  index.ts       barrel: la única puerta de entrada desde fuera
+  __tests__/
+```
 
-- File-based routing de Expo Router. `src/app/_layout.tsx` monta el árbol de providers y el `Stack`.
-- El control de acceso es **declarativo**, con `<Stack.Protected guard={...}>` — no hay redirects
-  imperativos. Hay cuatro zonas: autenticado, no autenticado, kiosko autenticado, kiosko no
-  autenticado ([_layout.tsx:51-73](../src/app/_layout.tsx#L51-L73)).
-- Orden de providers (de fuera hacia dentro): `ThemeMode → QueryClient → Auth → KioskAuth →
-  Favorites → Location`. El orden importa: `FavoritesProvider` depende de `Auth` y de `QueryClient`.
-- Grupo `(tabs)` con `Tabs` de Expo Router y una barra propia (`CustomTabBar`).
+### Reglas de dependencia
 
-### 3.3 Capa de servicios — `src/services/`
+| Desde | Puede importar |
+|---|---|
+| `src/app/**` | barrels de features + `@/shared/**` |
+| `src/features/x/**` | `@/shared/**`, sus propios archivos por ruta **relativa**, y el **barrel** de otras features |
+| `src/shared/**` | solo `@/shared/**` |
 
-Un archivo por dominio de backend. Cada función:
+Más: **ningún componente llama a un servicio** ni conoce el token.
 
-1. es `async` y **stateless** (no conoce React),
-2. recibe el `accessToken` como último parámetro explícito,
-3. arma la URL a partir de `API_BASE_URL`,
-4. valida la respuesta con `throwIfNotOk(res, mensajeFallback)`,
-5. **mapea el DTO del backend al modelo de dominio** antes de devolverlo.
+Las tres están en `eslint.config.js` como **error**. Las excepciones legítimas se
+marcan en el sitio con un `eslint-disable` y su motivo (hoy hay una: el modal de
+Datafast, que orquesta un SDK externo de forma imperativa).
 
-El punto 5 es lo que aísla a la app de los cambios del backend. Ejemplo de referencia:
-[espacios.service.ts:46-89](../src/services/espacios.service.ts#L46-L89) — `EspacioAPI` (interno,
-no exportado) → `Espacio` (dominio).
+Dirección de las dependencias cruzadas, sin ciclos:
 
-Errores: `ApiError { message, status }` construido por `throwIfNotOk`; el parseo contempla que
-ASP.NET devuelve a veces un string JSON crudo en vez de `{ message }`
-([apiError.ts](../src/services/apiError.ts)).
+```
+pagos ──▶ reservas ──▶ espacios
+invitados ──▶ reservas
+favoritos ──▶ espacios
+resenas   ──▶ espacios
+```
 
-### 3.4 Capa de datos — `src/hooks/`
+`espacios` no importa a nadie: el corazón de favorito llega a `SpaceCard` como
+prop. Conservar esa inversión es lo que mantiene el grafo acíclico.
 
-Un hook por recurso, siempre con la misma forma:
+---
+
+## 4. Cómo fluyen los datos
+
+### Lectura
+
+```
+Pantalla → useX() [useQuery] → servicio → api.get() → mapeo DTO→dominio
+        ← { data, isLoading, isError, refetch } ←──────────────────────
+```
 
 ```ts
-export const ESPACIOS_QUERY_KEY = ['espacios'] as const;   // 1. key exportada
+// features/espacios/hooks/useEspacios.ts
+export const ESPACIOS_QUERY_KEY = ['espacios'] as const;
 
 export function useEspacios() {
-  const { fetchAuthorized, isAuthenticated } = useAuth();  // 2. token desde el context
+  const { isAuthenticated } = useAuth();
   return useQuery<Espacio[]>({
     queryKey: ESPACIOS_QUERY_KEY,
-    queryFn: () => fetchAuthorized(fetchEspacios),         // 3. service envuelto
-    enabled: isAuthenticated,                              // 4. gate de sesión
-    staleTime: 5 * 60 * 1000,                              // 5. staleTime explícito
+    queryFn: fetchEspacios,
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,   // solo si te apartas del default
   });
 }
 ```
 
-`fetchAuthorized` ([AuthContext.tsx:186-205](../src/context/AuthContext.tsx#L186-L205)) es la pieza
-central: obtiene un token válido, ejecuta la petición y, si el backend responde 401 pese a que el
-JWT parecía vigente, refresca y reintenta **una sola vez**; si el refresh también falla, cierra la
-sesión. Ninguna capa superior debe manejar tokens a mano.
+### Escritura
 
-Hooks de **derivación** (sin red) viven en el mismo directorio y componen los de red:
-`useFilteredSpaces`, `useFavoriteSpaces`, `useEspaciosPorIds` — filtran/ordenan sobre `useEspacios`
-con `useMemo`, sin duplicar peticiones.
-
-Convención de `queryKey` en uso:
-
-| Recurso | Key |
-|---|---|
-| Catálogo | `['espacios']` |
-| Reseñas de un espacio | `['espacios', id, 'resenas']` |
-| Reservas reseñables | `['espacios', id, 'resenas', 'reservas-disponibles']` |
-| Mis reservas | `['reservas', 'mias']` |
-| Favoritos | `['favoritos']` |
-| Listas de favoritos | `['listas-favoritos']` / `['listas-favoritos', id]` |
-
-### 3.5 Capa de estado de cliente — `src/context/`
-
-Reservada para lo que **no** es estado de servidor:
-
-| Context | Responsabilidad |
-|---|---|
-| `AuthContext` | Sesión, tokens en `SecureStore`, refresh, `fetchAuthorized` |
-| `KioskAuthContext` | Sesión paralela del modo recepción (PIN) |
-| `ThemeModeContext` | Preferencia claro/oscuro |
-| `LocationContext` | Permisos y coordenadas del dispositivo |
-| `FavoritesContext` | ⚠️ *excepción* — envuelve estado de servidor (ver §4.4) |
-
-Todos exponen un hook `useX()` que lanza si se usa fuera del provider.
-
-### 3.6 Capa de presentación — `src/components/`
-
-Agrupación **por dominio funcional**, no por tipo de componente:
-`auth/`, `home/`, `space/`, `resenas/`, `invitados/`, `payment/`, `legal/`, `navigation/`
-+ transversales `common/`, `icons/`, `ui/`.
-
-### 3.7 Sistema de estilos — `src/theme/`
-
-Design tokens centralizados ([theme/index.ts](../src/theme/index.ts), 547 líneas): `fontSize`,
-`fontWeight`, `lineHeight`, `spacing`, `radius`, `typography`, `palette`, `lightColors`/`darkColors`,
-`shadows`, `layout`.
-
-Dos formas de consumo, ambas canónicas:
+Toda escritura es un `useMutation`, **con su invalidación de caché al lado**.
+Nunca un `invalidateQueries` suelto en una pantalla.
 
 ```ts
-const useStyles = makeStyles((t) => ({ card: { backgroundColor: t.colors.surface } }));
-const { colors } = useTheme();   // para props del JSX: <HeartIcon color={colors.favorite} />
+export function useCrearResena(espacioId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CrearResenaInput) => crearResena(espacioId, input),
+    onSuccess: (nueva, input) => {
+      queryClient.setQueryData<Resena[]>(resenasEspacioQueryKey(espacioId), p =>
+        p ? [nueva, ...p] : [nueva]);
+      queryClient.invalidateQueries({ queryKey: ESPACIOS_QUERY_KEY });
+    },
+  });
+}
 ```
 
-Regla dura ya documentada en el propio archivo: **nunca un hexadecimal ni un `fontSize` numérico
-fuera de `theme/`**. Es la capa más consistente del proyecto: **48 de 50 archivos con estilos usan
-`makeStyles`**.
+El componente solo consume `{ mutate, isPending, error }`.
 
-### 3.8 Multiplataforma
+### Escritura optimista
 
-Especialización por sufijo de archivo (mecanismo nativo del bundler de RN), aplicado de forma
-consistente: `animated-icon.web.tsx`, `app-tabs.web.tsx`, `LocationMap.web.tsx`,
-`use-color-scheme.web.ts`.
-
-### 3.9 Flujo canónico de lectura
-
-```
-Pantalla → useRecurso() → fetchAuthorized(service) → fetch → throwIfNotOk → map DTO→dominio
-        ← { data, isLoading, isError, refetch } ←──────────────────────────────────────────
-```
-
----
-
-## 4. Divergencias detectadas — las otras arquitecturas
-
-### 4.1 Patrón B — lectura imperativa dentro del componente
-
-Coexiste con los hooks de React Query. En vez de un hook, el componente declara tres estados por
-recurso y los sincroniza a mano en un `useEffect` con bandera `cancelled`:
+Cuando la acción debe sentirse instantánea (el corazón de favoritos), el
+optimismo va en `onMutate` con rollback en `onError`:
 
 ```ts
-const [disponibilidad, setDisponibilidad] = useState<Disponibilidad | null>(null);
-const [disponibilidadLoading, setDisponibilidadLoading] = useState(false);
-const [disponibilidadError, setDisponibilidadError] = useState<string | null>(null);
-// … y otros tres para `aforo`
+onMutate: async ({ espacioId, esFavorito }) => {
+  await queryClient.cancelQueries({ queryKey: FAVORITOS_QUERY_KEY });  // no lo pise un refetch en vuelo
+  const anterior = queryClient.getQueryData<number[]>(FAVORITOS_QUERY_KEY);
+  queryClient.setQueryData<number[]>(FAVORITOS_QUERY_KEY, (prev = []) => …);
+  return { anterior };
+},
+onError: (_e, _v, ctx) => queryClient.setQueryData(FAVORITOS_QUERY_KEY, ctx.anterior),
+onSettled: () => invalidarFavoritos(queryClient),
 ```
 
-**Dónde:**
-- [SpaceDetailSheet.tsx](../src/components/space/SpaceDetailSheet.tsx) — disponibilidad y aforo
-  (1190 líneas; además concentra reserva, facturación, pago y favoritos).
-- [recepcion/scan.tsx](../src/app/recepcion/scan.tsx) — validación de QR.
-- [payment/DatafastPaymentModal.tsx](../src/components/payment/DatafastPaymentModal.tsx) — polling de estado de pago.
+---
 
-**Coste:** sin caché, sin deduplicación, sin reintentos, sin invalidación; el estado se pierde al
-cerrar el modal y se vuelve a pedir todo. Cada recurso reimplementa el manejo de race conditions.
+## 5. El cliente HTTP
 
-### 4.2 Patrón C — escrituras sin `useMutation` (la divergencia más extendida)
-
-**No existe una sola llamada a `useMutation` en todo el repositorio.** Todas las escrituras
-(crear reserva, pagar, cancelar, reseñar, editar, borrar, asignar invitados, crear lista, marcar
-favorito) siguen este molde dentro del componente:
+[`shared/api/client.ts`](../src/shared/api/client.ts) centraliza URL base,
+cabeceras, serialización, parseo de errores y la política de sesión.
 
 ```ts
-const [enviando, setEnviando] = useState(false);
-const [error, setError] = useState('');
-// setEnviando(true) → try { await fetchAuthorized(service) } catch → setError → finally setEnviando(false)
-// y después, a mano: queryClient.setQueryData(...) / queryClient.invalidateQueries(...)
+export const misReservas = () =>
+  api.get<Reserva[]>('/reservas/mias', { fallback: 'No se pudieron obtener tus reservas.' });
 ```
 
-La sincronización de caché queda **repartida entre componentes**: el hijo hace la escritura y avisa
-por callback (`onCreated` / `onUpdated` / `onDeleted`), y el padre decide qué invalidar
-([ResenaSection.tsx:44-70](../src/components/resenas/ResenaSection.tsx#L44-L70)). Eso es exactamente
-lo que `useMutation({ onSuccess })` resuelve en un solo lugar, junto al `queryKey` que afecta.
+`fallback` es obligatorio: es el mensaje que ve el usuario si el backend no manda
+uno propio.
 
-**Consecuencias observadas:**
-- La lista de `invalidateQueries` a disparar tras cada escritura está duplicada y desalineada entre
-  [favoritos.tsx:70-72](<../src/app/(tabs)/favoritos.tsx#L70-L72>), `SaveToListSheet`, `CrearListaModal`
-  y `FavoritesContext` — cuatro sitios que invalidan las mismas tres keys con criterios distintos.
-- Cualquier escritura nueva obliga a recordar qué invalidar; olvidarlo produce UI desactualizada
-  silenciosamente.
-- No hay estado de mutación compartido (`isPending`) reutilizable entre pantallas.
-
-### 4.3 Manejo de errores — tres estrategias en la capa de servicios
-
-| Estrategia | Servicios |
+| Opción | Para qué |
 |---|---|
-| `throwIfNotOk` + `ApiError` (canónica) | `aforo`, `auth`, `datafast`, `espacios`, `favoritos`, `recepcion`, `reservas` |
-| Subclase de `ApiError` **con parser duplicado** | `resenas` (`ResenaApiError` + `throwIfResenaError`, reimplementa `parseErrorMessage` completo), `invitados` (`InvitadoApiError`) |
-| Sin capa de errores compartida | `datafastDirectUat` |
+| `auth: false` | endpoint público (login, reseñas de un espacio) |
+| `token: string` | sesión ajena a la del cliente — hoy solo el kiosco |
+| `makeError` | construir una subclase de `ApiError` con campos extra |
+| `query` | parámetros de URL; los `null`/`undefined` se omiten |
 
-La necesidad detrás de las subclases es legítima (exponer `fieldErrors` de un 400, o el
-`retryAfter` de un 429), pero la implementación **copia** el parseo en vez de extenderlo.
+**Sesión.** `AuthContext` registra un `TokenProvider` al montar. Con eso, el
+`401 → refresh → reintento (una vez) → si falla, cerrar sesión` lo aplica el
+cliente a **todas** las peticiones, sin que ninguna tenga que envolverse.
 
-En la UI la divergencia se repite: `Alert.alert` imperativo (10 archivos, 24 llamadas) conviviendo
-con estado `error` renderizado inline — y en varios componentes, **ambos a la vez**.
+Dos excepciones deliberadas, ambas con test que las fija:
 
-### 4.4 Patrón D — estado de servidor detrás de un Context
+- `fetchUsuario` recibe el token explícito: se llama durante el arranque, cuando
+  el token está en `SecureStore` pero aún no en el estado de `AuthContext`.
+- El kiosco (`token: …`) no tiene refresh: su 401 se propaga para que la UI
+  vuelva a pedir el PIN, sin tocar la sesión del cliente.
 
-[FavoritesContext](../src/context/FavoritesContext.tsx) envuelve `useFavoritos()` (React Query) y
-expone su propia API (`favorites`, `isFavorite`, `toggleFavorite`, `favoritesCount`), incluyendo una
-mutación optimista con rollback manual.
+**Errores.** Un solo `ApiError { message, status }`. Un dominio que necesite más
+extiende la clase y pasa una `ErrorFactory` que recibe el cuerpo y las cabeceras
+ya parseados — nunca reimplementa el parseo:
 
-El problema no es el optimismo, es que **el mismo dato tiene dos puertas de entrada**: pantallas que
-lo leen por `useFavoritesContext()` y otras que importan `FAVORITOS_QUERY_KEY` y hablan con el
-`queryClient` directamente. React Query ya es global; el Context solo añade una capa de indirección
-y un punto extra donde el caché puede desincronizarse.
+```ts
+// features/invitados/errors.ts
+export const makeInvitadoError: ErrorFactory = ({ message, status, body, headers }) => …
+```
 
-### 4.5 Dos convenciones para "pantalla"
+Vive en `errors.ts` de la feature, no en el servicio, para que la UI pueda
+importarlo sin saltarse la frontera.
 
-- **Ruta = pantalla completa:** `(tabs)/index.tsx` (407 líneas), `reserva/[id]/detalle.tsx` (717).
-- **Ruta = adaptador fino que delega en `components/`:** `terminos-condiciones.tsx` y
-  `politica-privacidad.tsx` (17 líneas) → `components/legal/LegalDocumentScreen`; y la búsqueda vive
-  en `components/home/SearchScreen.tsx` (658 líneas), que es una pantalla completa fuera de `app/`.
-
-### 4.6 Dos convenciones para declarar componentes
-
-| Estilo | Archivos |
-|---|---|
-| `export default function X(props: Props)` | mayoría del código reciente (resenas, invitados, space, auth) |
-| `const X: React.FC<Props> = …; export default X` | `common/SearchBar`, `common/StarRating`, `home/CategoryCard`, `home/EmptyState`, `home/SpaceCard`, los 4 de `payment/`, los ~22 de `icons/` |
-
-`React.FC` está desaconsejado desde React 18 (no aporta tipado útil y arrastra el `children`
-implícito histórico).
-
-### 4.7 Patrón E — restos de la plantilla de Expo y código muerto
-
-| Archivo | Situación |
-|---|---|
-| `gemini.tsx` (raíz, **105 KB**) | Prototipo monolítico completo con datos quemados. 0 referencias. |
-| `src/data/espacios.ts` (210 líneas) | Mock del catálogo. **0 imports** en todo `src/`. |
-| `src/components/app-tabs.tsx` + `.web.tsx` | Segundo sistema de tabs (`NativeTabs`, tabs `index`/`explore`). 0 referencias — el real es `(tabs)/_layout.tsx` + `CustomTabBar`. |
-| `src/components/animated-icon.tsx` + `.web.tsx` | 0 referencias. Únicos archivos que aún usan `StyleSheet.create`. |
-| `src/components/hint-row.tsx` | 0 referencias. |
-| `src/app/explore.tsx` | Pantalla del template. No está en el `Stack`, pero Expo Router **igual la enruta**: `/explore` es alcanzable. |
-| `themed-text.tsx` / `themed-view.tsx` / `ui/collapsible.tsx` / `web-badge.tsx` / `external-link.tsx` | Sistema temático alternativo (`ThemedText`/`ThemedView`) paralelo a `makeStyles`. Solo los usa `explore.tsx`. |
-| `src/global.css` | Variables CSS de fuentes, importado por `theme/index.ts`. Sin efecto en nativo (no hay NativeWind ni Tailwind en `package.json`). |
-| `docs/theme_default/index.ts`, `docs/theme_pink/index.ts` | Dos copias completas del tema fuera de `src/`. Riesgo de editar la equivocada. |
-| `Tabs.Screen name="nueva"` en `(tabs)/_layout.tsx` | Ruta declarada **sin archivo** `nueva.tsx`. La etiqueta ya está comentada en `CustomTabBar`. |
-
-### 4.8 Configuración y secretos
-
-- `API_BASE_URL` está **hardcodeado** en [config/api.ts](../src/config/api.ts) apuntando a un
-  hosting temporal. No hay `.env` ni `expo-constants.extra`, así que no existe separación
-  dev/staging/prod.
-- [datafastDirectUat.ts](../src/services/datafastDirectUat.ts) llama **directo al host externo de
-  Datafast** (`eu-test.oppwa.com`) desde el cliente, con `UAT_ENTITY_ID` y `UAT_TOKEN` embebidos.
-  El propio archivo se declara temporal y pide borrarse cuando backend corrija el bug, pero ya está
-  cableado en `calendario.tsx` y en `DatafastPaymentModal`. Es una **cuarta ruta de acceso a datos**
-  que no pasa por la arquitectura.
-- 31 `console.log` sin guarda `__DEV__`, algunos con datos de sesión
-  ([AuthContext.tsx:126-134](../src/context/AuthContext.tsx#L126-L134) loguea el usuario y el flujo
-  de tokens de Google).
+**Configuración de React Query** ([`queryClient.ts`](../src/shared/api/queryClient.ts)):
+`staleTime` 1 min, `gcTime` 5 min, y `retry` que **no reintenta 4xx** (son de
+contrato, no de red). [`rn-bridge.ts`](../src/shared/api/rn-bridge.ts) conecta
+`focusManager` a `AppState` y `onlineManager` a `expo-network`: sin eso, en
+nativo la app no refresca al volver de segundo plano ni al recuperar conexión.
 
 ---
 
-## 5. Arquitectura objetivo
+## 6. Estilos
 
-Una sola arquitectura por capas, con estas reglas verificables:
+Todo pasa por [`shared/theme`](../src/shared/theme/index.ts): `fontSize`,
+`spacing`, `radius`, `typography`, `palette`, `lightColors`/`darkColors`,
+`shadows`.
 
-1. **Ningún componente hace `fetch` ni conoce `accessToken`.** Todo pasa por `hooks/`.
-2. **Toda lectura de servidor es un `useQuery`** en `src/hooks/useX.ts`, con `queryKey` exportada,
-   `enabled` y `staleTime` explícitos.
-3. **Toda escritura de servidor es un `useMutation`** en `src/hooks/useXMutations.ts`, con la
-   invalidación de caché declarada en su `onSuccess`. Ningún `invalidateQueries` suelto en pantallas.
-4. **`src/context/` solo guarda estado de cliente.** El estado de servidor vive en React Query.
-5. **Un solo `ApiError`**, extendido (no copiado) cuando un dominio necesita campos extra.
-6. **Un solo sistema de estilos:** `makeStyles` + `useTheme`. Sin `StyleSheet.create`, sin hexadecimales.
-7. **`src/app/` solo enruta y compone.** La pantalla puede vivir en `components/<dominio>/`, pero la
-   regla se aplica igual en ambos lados.
-8. **`export default function` + `interface Props`.** Sin `React.FC`.
-9. **La configuración de entorno se lee de una sola fuente** (`expo-constants.extra` / `.env`).
+```ts
+const useStyles = makeStyles(t => ({ card: { backgroundColor: t.colors.surface } }));
+const { colors } = useTheme();   // para props del JSX
+```
 
----
+**Nunca un hexadecimal ni un `fontSize` numérico fuera de `theme/`.**
 
-## 6. Plan de unificación
+`getTheme(scheme)` es la versión sin hook, para donde no hay contexto (el
+`ErrorBoundary` raíz se renderiza por encima de `ThemeModeProvider`).
 
-Ordenado por relación beneficio/riesgo. Cada fase es independiente y se puede mergear sola.
-
-### Fase 0 — Limpieza (riesgo nulo, alto impacto en claridad)
-- Borrar `gemini.tsx`, `src/data/espacios.ts`, `app-tabs.tsx(.web)`, `animated-icon.tsx(.web)`,
-  `hint-row.tsx`.
-- Decidir sobre `explore.tsx` y su cadena (`themed-text`, `themed-view`, `ui/collapsible`,
-  `web-badge`, `external-link`): borrar, o dejarla como pantalla de debug fuera de `app/`.
-- Quitar el `Tabs.Screen name="nueva"` fantasma.
-- Mover `docs/theme_default|theme_pink` a un único lugar versionado, o eliminarlos.
-- Evaluar `global.css` (borrar si no hay plan de web con CSS).
-
-### Fase 1 — Unificar escrituras con `useMutation`
-La fase de mayor impacto. Por dominio, en este orden (de menor a mayor riesgo):
-
-1. `resenas` — es el flujo más reciente y aislado; sirve de plantilla de referencia.
-2. `favoritos` + `listas-favoritos` — aquí está la duplicación de invalidaciones; al centralizarlas
-   se puede además decidir el futuro de `FavoritesContext` (fase 3).
-3. `invitados`.
-4. `reservas` / `pagos` — último, porque toca `SpaceDetailSheet`.
-
-Entregable por dominio: `src/hooks/useXMutations.ts` con las invalidaciones dentro de `onSuccess`,
-y componentes que solo consumen `{ mutate, isPending, error }`.
-
-### Fase 2 — Migrar lecturas imperativas a React Query
-`useDisponibilidad(espacioId, fecha)` y `useAforoDia(espacioId, fecha)` reemplazan los seis estados
-manuales de `SpaceDetailSheet`. Aprovechar para partir ese componente (1190 líneas) en
-`SpaceDetailSheet` (presentación) + `useReservaFlow` (orquestación).
-
-### Fase 3 — Un solo canal para favoritos
-Eliminar `FavoritesContext` y exponer `useFavoritos()` + `useToggleFavorito()` (con el optimismo ya
-implementado, movido al `onMutate` de la mutación). Menos providers, una sola fuente de verdad.
-
-### Fase 4 — Unificar errores
-`ResenaApiError` e `InvitadoApiError` extienden `ApiError` y **reutilizan** `parseErrorMessage`;
-un único helper `throwIfNotOk(res, fallback, ErrorClass?)`. Definir además la regla de UX:
-error inline para validación de formulario, `Alert` solo para acciones destructivas y confirmaciones.
-
-### Fase 5 — Convenciones y configuración
-- Migrar los ~30 componentes `React.FC` a `export default function`.
-- Mover `API_BASE_URL` y las claves de pago a configuración por entorno; borrar `datafastDirectUat`
-  cuando backend confirme el fix.
-- Guardar los `console.log` restantes tras `__DEV__` (o un `logger` propio).
-- Fijar las reglas 1-9 de §5 como lint rules donde sea posible (`no-restricted-imports` para impedir
-  `@/services` desde `src/components` y `src/app`).
+`shared/theme/global.css` **sí se usa**: define las variables de fuente que
+consume la rama `web` de `fonts`.
 
 ---
 
-## 7. Mapa de referencia rápido
+## 7. Estados de UI
 
-| Directorio | Qué contiene | Qué **no** debe contener |
-|---|---|---|
-| `src/app/` | Rutas, layouts, guardas | Lógica de negocio, `fetch` |
-| `src/components/<dominio>/` | UI del dominio | `fetch`, tokens, `invalidateQueries` |
-| `src/hooks/` | `useQuery` / `useMutation` + derivaciones | Llamadas `fetch` directas |
-| `src/context/` | Estado **de cliente** | Estado de servidor |
-| `src/services/` | HTTP + mapeo DTO→dominio + errores | React, hooks, estado |
-| `src/types/` | Modelo de dominio | DTOs crudos del backend |
-| `src/theme/` | Design tokens, `makeStyles` | Componentes |
-| `src/utils/` | Funciones puras (`fechas`, `geo`, `espacioArchetype`) | I/O |
-| `src/config/` | Constantes de entorno | Secretos |
+`shared/ui/feedback` evita que cada pantalla repinte lo mismo:
+
+- `ScreenState` — cargando / error con reintento / vacío.
+- `QueryBoundary` — envuelve una query completa. Útil cuando la pantalla *es*
+  una sola cosa; si hay cabecera que debe seguir visible durante la carga, usa
+  `ScreenState` como `ListEmptyComponent`.
+
+Regla de UX para errores: **inline** para validación de formulario, `Alert` para
+acciones destructivas, confirmaciones y fallos que interrumpen un flujo.
+
+---
+
+## 8. Tests
+
+`npm test` (jest-expo). Cubren la capa barata y de mayor retorno: cliente HTTP,
+servicios de cada feature, utils y el mapeo DTO→dominio. **115 tests.**
+
+`jest/setup.js` mockea los módulos nativos de terceros; `jest/styleMock.js`
+absorbe los `import './global.css'`.
+
+⚠️ `renderHook` de `@testing-library/react-native` 14 devuelve un objeto vacío
+con React 19.2 / RN 0.85 — **no funciona**. La lógica de las mutaciones se prueba
+con el `MutationObserver` de React Query, que ejercita `onMutate`/`onError`/
+`onSettled` sin montar React (ver
+[`useToggleFavorito.test.ts`](../src/features/favoritos/__tests__/useToggleFavorito.test.ts)).
+Para probar componentes habrá que resolver antes lo de RTL.
+
+---
+
+## 9. Añadir algo nuevo
+
+**Un endpoint a una feature existente**
+1. Función en `services/`, con `api.*` y su `fallback`.
+2. Hook en `hooks/`: `useQuery` si lee, `useMutation` (con su invalidación en
+   `onSuccess`) si escribe.
+3. Expórtalo en `index.ts`.
+4. Test del servicio.
+
+**Una feature nueva**
+1. `src/features/<dominio>/` con la anatomía de §3.
+2. Los DTOs del backend se declaran **dentro** del servicio y no salen de ahí; lo
+   que sale es modelo de dominio.
+3. Si necesita estado de cliente, un `context/` propio; si es estado de servidor,
+   no lo metas en un Context.
+4. La ruta en `src/app/` solo compone.
+
+---
+
+## 10. Deuda conocida
+
+Decisiones tomadas a conciencia, no olvidos:
+
+| Qué | Por qué sigue ahí |
+|---|---|
+| `API_BASE_URL` hardcodeado en `shared/config/api.ts` | Fuera del alcance acordado. El camino es `.env` + `EXPO_PUBLIC_API_URL` (se inlinea en el bundle: vale para URLs, nunca para secretos). |
+| `pagos/services/datafastDirectUat.ts` | Diagnóstico temporal con credenciales UAT embebidas, mientras backend arregla la validación de `resourcePath`. Aislado tras el barrel de `pagos`. **Borrar junto con el flag `DATAFAST_DIAGNOSTICO_DIRECTO_UAT` cuando backend confirme.** |
+| `paymentConfig.ts:105` — único error de `tsc` | Comparación contra un toggle manual de pasarela fijado a `'datafast'`. Preexistente; tocarlo es cambiar configuración de pagos. |
+| 4 `react-hooks/set-state-in-effect` | Dos en los modales de pago, uno en `useReservaFlow`, uno en `LocationContext`. Son idiomáticos, no bugs: el reset funciona. Arreglarlos bien exige reestructurar el flujo de pago, que no conviene tocar sin poder ejecutarlo. |
+| ~104 `useMemo`/`useCallback` manuales | Redundantes con React Compiler, pero **no dañinos**: `preserve-manual-memoization` reporta 0. Se quitan al tocar cada archivo, no en un barrido masivo. Ojo con `SpaceDetailSheet` → `hoy`, marcado `NO BORRAR`: su dependencia es intencional. |
+| ~30 componentes con `React.FC` | Se migran a `export default function` al tocar cada archivo. |
+| `docs/theme_default/`, `docs/theme_pink/` | Plantillas de paleta fuera de `src/`; `docs/` está excluido de `tsconfig`. Decidir si se integran o se borran. |

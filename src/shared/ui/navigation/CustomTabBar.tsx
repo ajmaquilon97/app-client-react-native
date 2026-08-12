@@ -42,7 +42,7 @@ const LABELS: Record<string, string> = {
 interface CustomTabBarProps {
   state: {
     index: number;
-    routes: Array<{ name: string; key: string }>;
+    routes: { name: string; key: string }[];
   };
   descriptors: Record<string, { options: Record<string, unknown> }>;
   navigation: { emit: Function; navigate: Function };

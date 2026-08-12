@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, StatusBar, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuth } from '@/context/AuthContext';
-import { ThemeMode, useThemeMode } from '@/context/ThemeModeContext';
+import { useAuth } from '@/features/auth';
+import { ThemeMode, useThemeMode } from '@/shared/theme/ThemeModeContext';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const THEME_MODE_LABELS: Record<ThemeMode, string> = {

@@ -3,8 +3,7 @@ import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-na
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKioskAuth } from '@/features/recepcion';
-import AuthTextField from '@/components/auth/AuthTextField';
-import AuthButton from '@/components/auth/AuthButton';
+import { AuthTextField , AuthButton } from '@/features/auth';
 import { makeStyles, spacing } from '@/shared/theme';
 
 export default function RecepcionLoginScreen() {

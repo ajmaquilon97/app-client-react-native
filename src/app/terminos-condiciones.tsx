@@ -1,10 +1,9 @@
 import React from 'react';
-import LegalDocumentScreen from '@/components/legal/LegalDocumentScreen';
-import {
+import { LegalDocumentScreen ,
   TERMINOS_CONDICIONES_TEXT,
   TERMINOS_CONDICIONES_VERSION,
   TERMINOS_CONDICIONES_FECHA,
-} from '@/constants/legalContent';
+} from '@/features/legal';
 
 export default function TerminosCondicionesScreen() {
   return (

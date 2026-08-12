@@ -1,10 +1,9 @@
 import React from 'react';
-import LegalDocumentScreen from '@/components/legal/LegalDocumentScreen';
-import {
+import { LegalDocumentScreen ,
   POLITICA_PRIVACIDAD_TEXT,
   POLITICA_PRIVACIDAD_VERSION,
   POLITICA_PRIVACIDAD_FECHA,
-} from '@/constants/legalContent';
+} from '@/features/legal';
 
 export default function PoliticaPrivacidadScreen() {
   return (

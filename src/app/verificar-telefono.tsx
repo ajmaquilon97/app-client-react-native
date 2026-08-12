@@ -3,9 +3,7 @@ import { View, Text, StatusBar, ScrollView, TouchableOpacity, KeyboardAvoidingVi
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeftIcon } from '@/shared/ui/icons';
-import AuthButton from '@/components/auth/AuthButton';
-import { useAuth } from '@/context/AuthContext';
-import { enviarSmsOtp, verificarSmsOtp } from '@/services/auth.service';
+import { AuthButton , enviarSmsOtp, verificarSmsOtp } from '@/features/auth';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const RESEND_COOLDOWN_SECONDS = 30;
@@ -19,7 +17,6 @@ export default function VerificarTelefonoScreen() {
   const { colors, statusBarStyle } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { fetchAuthorized } = useAuth();
 
   const [paso, setPaso] = useState<Paso>('telefono');
   const [telefono, setTelefono] = useState('');
@@ -30,7 +27,7 @@ export default function VerificarTelefonoScreen() {
   const [otpError, setOtpError] = useState('');
   const [verificando, setVerificando] = useState(false);
   const [resendSeconds, setResendSeconds] = useState(RESEND_COOLDOWN_SECONDS);
-  const inputRefs = useRef<Array<TextInput | null>>([]);
+  const inputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
     if (paso !== 'otp' || resendSeconds <= 0) return;
@@ -46,7 +43,7 @@ export default function VerificarTelefonoScreen() {
     setTelefonoError('');
     setEnviando(true);
     try {
-      await fetchAuthorized(accessToken => enviarSmsOtp(`+593${telefono}`, accessToken));
+      await enviarSmsOtp(`+593${telefono}`);
       setDigitos(Array(OTP_LENGTH).fill(''));
       setOtpError('');
       setResendSeconds(RESEND_COOLDOWN_SECONDS);
@@ -64,7 +61,7 @@ export default function VerificarTelefonoScreen() {
     if (resendSeconds > 0 || enviando) return;
     setEnviando(true);
     try {
-      await fetchAuthorized(accessToken => enviarSmsOtp(`+593${telefono}`, accessToken));
+      await enviarSmsOtp(`+593${telefono}`);
       setDigitos(Array(OTP_LENGTH).fill(''));
       setOtpError('');
       setResendSeconds(RESEND_COOLDOWN_SECONDS);
@@ -80,7 +77,7 @@ export default function VerificarTelefonoScreen() {
   const verificarCodigo = async (codigo: string) => {
     setVerificando(true);
     try {
-      await fetchAuthorized(accessToken => verificarSmsOtp(codigo, accessToken));
+      await verificarSmsOtp(codigo);
       router.replace('/');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Código incorrecto. Intenta de nuevo.';

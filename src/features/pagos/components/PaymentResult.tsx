@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { CheckIcon, CloseCircleIcon } from '@/shared/ui/icons';
 import { makeStyles, useTheme } from '@/shared/theme';
@@ -33,7 +33,10 @@ const PaymentResult: React.FC<PaymentResultProps> = ({
 }) => {
   const styles = useStyles();
   const { colors } = useTheme();
-  const opacity = useRef(new Animated.Value(0)).current;
+  // `useState` con inicializador perezoso en vez de `useRef(...).current`: crea
+  // el valor una sola vez sin leer una ref durante el render, que es lo que
+  // prohíben las Rules of React.
+  const [opacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     Animated.timing(opacity, {

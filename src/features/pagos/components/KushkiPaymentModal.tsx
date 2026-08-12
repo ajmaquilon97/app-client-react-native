@@ -75,7 +75,7 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
           }, 2000);
         }
       } catch (error) {
-        console.error('Error procesando mensaje del WebView:', error);
+        if (__DEV__) console.error('Error procesando mensaje del WebView:', error);
       }
     },
     []

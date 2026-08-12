@@ -3,9 +3,7 @@ import { View, Text, StatusBar, ScrollView, TouchableOpacity, KeyboardAvoidingVi
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeftIcon } from '@/shared/ui/icons';
-import { forgotPassword } from '@/services/auth.service';
-import AuthTextField from '@/components/auth/AuthTextField';
-import AuthButton from '@/components/auth/AuthButton';
+import { forgotPassword , AuthTextField , AuthButton } from '@/features/auth';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

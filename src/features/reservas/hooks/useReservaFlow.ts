@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/features/auth';
 import { Espacio, getModalidadReserva } from '@/features/espacios';
 import { SERVICE_FEE_RATE } from '@/features/pagos';
 import { toLocalDateTimeString } from '@/shared/utils/fechas';

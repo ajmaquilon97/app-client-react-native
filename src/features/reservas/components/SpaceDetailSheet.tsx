@@ -14,7 +14,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useLocationContext } from '@/context/LocationContext';
+import { useLocationContext } from '@/shared/location/LocationContext';
 import { Espacio, LocationMap } from '@/features/espacios';
 import { SaveToListSheet } from '@/features/favoritos';
 import { PaymentModal, SERVICE_FEE_RATE } from '@/features/pagos';
@@ -102,8 +102,13 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     cancelarPago,
   } = flow;
 
-  // Se congela al abrir la hoja: si el usuario la deja abierta pasada la
-  // medianoche, el listado de días no debe saltarle bajo los dedos.
+  // NO BORRAR este useMemo: no es una optimización. La dependencia `visible` es
+  // intencional y es lo único que hace el trabajo — recalcula "hoy" cada vez que
+  // se abre la hoja (para que el listado de días arranque correcto aunque la app
+  // lleve horas abierta) y lo congela mientras está abierta (para que no salte
+  // bajo los dedos del usuario si cruza la medianoche). Sin el memo, `new Date()`
+  // cambiaría en cada render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const hoy = useMemo(() => new Date(), [visible]);
   const esHoy = !!selectedDate && esMismoDia(selectedDate, hoy);
 
@@ -369,7 +374,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                     <View style={styles.facturacionDivider} />
                     <Text style={styles.facturacionTitle}>Datos de facturación (opcional)</Text>
                     <Text style={styles.facturacionHelper}>
-                      Si no los completas, la factura se emite a "Consumidor Final".
+                      Si no los completas, la factura se emite a &ldquo;Consumidor Final&rdquo;.
                     </Text>
 
                     <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Cédula o RUC</Text>
@@ -433,7 +438,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                       <Text style={styles.reviewStars}>
                         {'★'.repeat(com.rating)}{'☆'.repeat(5 - com.rating)}
                       </Text>
-                      <Text style={styles.reviewText}>"{com.texto}"</Text>
+                      <Text style={styles.reviewText}>&ldquo;{com.texto}&rdquo;</Text>
                     </View>
                   ))}
                 </>

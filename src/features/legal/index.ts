@@ -1,0 +1,10 @@
+export { default as LegalDocumentScreen } from './components/LegalDocumentScreen';
+
+export {
+  TERMINOS_CONDICIONES_TEXT,
+  TERMINOS_CONDICIONES_VERSION,
+  TERMINOS_CONDICIONES_FECHA,
+  POLITICA_PRIVACIDAD_TEXT,
+  POLITICA_PRIVACIDAD_VERSION,
+  POLITICA_PRIVACIDAD_FECHA,
+} from './content';

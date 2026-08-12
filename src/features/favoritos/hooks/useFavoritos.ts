@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/features/auth';
 
 import { fetchFavoritos } from '../services/favoritos.service';
 

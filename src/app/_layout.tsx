@@ -1,7 +1,7 @@
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/features/auth';
 import { KioskAuthProvider, useKioskAuth } from '@/features/recepcion';
-import { LocationProvider } from '@/context/LocationContext';
-import { ThemeModeProvider } from '@/context/ThemeModeContext';
+import { LocationProvider } from '@/shared/location/LocationContext';
+import { ThemeModeProvider } from '@/shared/theme/ThemeModeContext';
 import { queryClient } from '@/shared/api/queryClient';
 import { initQueryBridge } from '@/shared/api/rn-bridge';
 import { getTheme, makeStyles, useTheme } from '@/shared/theme';

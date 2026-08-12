@@ -4,9 +4,9 @@ const expoConfig = require('eslint-config-expo/flat');
 
 // Fronteras de la arquitectura (ver docs/ARQUITECTURA.md).
 //
-// Están en `warn` mientras dura la migración a feature-first: el código todavía
-// sin migrar las incumple a propósito. Pasan a `error` en la fase de cierre.
-const BOUNDARY = 'warn';
+// En `error`: la migración a feature-first terminó y ya no hay violaciones. Las
+// excepciones legítimas se marcan en el sitio con un eslint-disable y su motivo.
+const BOUNDARY = 'error';
 
 module.exports = defineConfig([
   expoConfig,

@@ -12,10 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeftIcon, CheckIcon } from '@/shared/ui/icons';
-import { useAuth } from '@/context/AuthContext';
-import AuthTextField from '@/components/auth/AuthTextField';
-import AuthButton from '@/components/auth/AuthButton';
-import GoogleButton from '@/components/auth/GoogleButton';
+import { useAuth , AuthTextField , AuthButton , GoogleButton } from '@/features/auth';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -3,7 +3,7 @@ import { ScreenState } from '@/shared/ui/feedback';
 import { CategoryCard, EmptyState, SpaceCard, useFilteredSpaces, QuickFilters, SearchScreen, Categoria, Espacio, FiltroRapido } from '@/features/espacios';
 import { SpaceDetailSheet } from '@/features/reservas';
 import { SaveToListSheet, useEsFavorito, useToggleFavorito } from '@/features/favoritos';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/features/auth';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, ListRenderItemInfo, Modal, Platform, Pressable, RefreshControl, StatusBar, Text, TouchableOpacity, View } from 'react-native';

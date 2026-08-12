@@ -6,7 +6,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Espacio } from '@/features/espacios';
 import { ArrowLeftIcon } from '@/shared/ui/icons';
 import { DATAFAST_CONFIG, DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '../config';
+// Excepción deliberada a "un componente no llama a un servicio": esto no es una
+// lectura ni una escritura de datos de la app, sino la orquestación imperativa
+// del widget de Datafast dentro de un WebView (crear checkout → cargar widget →
+// verificar el resultado que devuelve el SDK). No hay caché que invalidar ni
+// estado de servidor que compartir, así que envolverlo en un `useMutation` solo
+// añadiría indirección.
+// eslint-disable-next-line no-restricted-imports
 import { crearCheckoutDatafast, verificarPagoDatafast } from '../services/datafast.service';
+// eslint-disable-next-line no-restricted-imports
 import {
   crearCheckoutDatafastDirecto,
   verificarPagoDatafastDirecto,
