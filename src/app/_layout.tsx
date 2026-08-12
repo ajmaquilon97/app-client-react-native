@@ -1,6 +1,5 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { KioskAuthProvider, useKioskAuth } from '@/context/KioskAuthContext';
-import { FavoritesProvider } from '@/context/FavoritesContext';
 import { LocationProvider } from '@/context/LocationContext';
 import { ThemeModeProvider } from '@/context/ThemeModeContext';
 import { queryClient } from '@/shared/api/queryClient';
@@ -135,11 +134,9 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <KioskAuthProvider>
-            <FavoritesProvider>
-              <LocationProvider>
-                <RootNavigator />
-              </LocationProvider>
-            </FavoritesProvider>
+            <LocationProvider>
+              <RootNavigator />
+            </LocationProvider>
           </KioskAuthProvider>
         </AuthProvider>
       </QueryClientProvider>

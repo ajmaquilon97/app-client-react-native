@@ -3,9 +3,8 @@ import CategoryCard from '@/components/home/CategoryCard';
 import EmptyState from '@/components/home/EmptyState';
 import SpaceCard from '@/components/home/SpaceCard';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
-import SaveToListSheet from '@/components/space/SaveToListSheet';
+import { SaveToListSheet, useEsFavorito, useToggleFavorito } from '@/features/favoritos';
 import { useAuth } from '@/context/AuthContext';
-import { useFavoritesContext } from '@/context/FavoritesContext';
 import { useFilteredSpaces } from '@/hooks/useFilteredSpaces';
 import QuickFilters from '@/components/home/QuickFilters';
 import SearchScreen from '@/components/home/SearchScreen';
@@ -35,7 +34,13 @@ export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [guardarEnListaId, setGuardarEnListaId] = useState<number | null>(null);
 
-  const { isFavorite, toggleFavorite } = useFavoritesContext();
+  const isFavorite = useEsFavorito();
+  const toggle = useToggleFavorito();
+  const toggleFavorite = useCallback(
+    (espacioId: number) => toggle.mutate({ espacioId, esFavorito: isFavorite(espacioId) }),
+    [toggle, isFavorite],
+  );
+
   const { espacios, total, isRefetching, refetch } = useFilteredSpaces({
     categoria: categoriaSeleccionada,
     query: busqueda,

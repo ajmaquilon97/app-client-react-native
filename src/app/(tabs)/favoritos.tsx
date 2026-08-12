@@ -1,23 +1,22 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, FlatList, StatusBar, Platform, ListRenderItemInfo, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQueryClient } from '@tanstack/react-query';
-import { Espacio, ListaFavoritos } from '@/types';
-import { useAuth } from '@/context/AuthContext';
-import { useFavoritesContext } from '@/context/FavoritesContext';
+import { Espacio } from '@/types';
 import { useFavoriteSpaces, useEspaciosPorIds } from '@/hooks/useFilteredSpaces';
 import {
-  useListasFavoritos,
+  CrearListaModal,
+  SaveToListSheet,
+  useEliminarLista,
+  useEsFavorito,
+  useFavoritos,
   useListaFavoritosDetalle,
-  LISTAS_FAVORITOS_QUERY_KEY,
-  listaFavoritosDetalleQueryKey,
-} from '@/hooks/useListasFavoritos';
-import { FAVORITOS_QUERY_KEY } from '@/hooks/useFavoritos';
-import { quitarFavorito, eliminarListaFavoritos } from '@/services/favoritos.service';
+  useListasFavoritos,
+  useQuitarDeLista,
+  useToggleFavorito,
+  type ListaFavoritos,
+} from '@/features/favoritos';
 import SpaceCard from '@/components/home/SpaceCard';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
-import SaveToListSheet from '@/components/space/SaveToListSheet';
-import CrearListaModal from '@/components/space/CrearListaModal';
 import { HeartIcon, PlusIcon } from '@/shared/ui/icons';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
@@ -25,10 +24,12 @@ export default function FavoritesScreen() {
   const styles = useStyles();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { fetchAuthorized } = useAuth();
-  const queryClient = useQueryClient();
 
-  const { isFavorite, toggleFavorite, favorites } = useFavoritesContext();
+  const { data: favorites = [] } = useFavoritos();
+  const isFavorite = useEsFavorito();
+  const toggle = useToggleFavorito();
+  const quitarDeLista = useQuitarDeLista();
+  const eliminarLista = useEliminarLista();
   const favoriteSpaces = useFavoriteSpaces(favorites);
 
   const { data: listas = [] } = useListasFavoritos();
@@ -58,22 +59,20 @@ export default function FavoritesScreen() {
   // corazón siempre "quita" — de todas las listas si se ve "Todos", o solo de
   // la lista actual si hay una seleccionada (ver docs/backend_response/
   // favoritos-listas-response.md §2, nota sobre el botón "quitar" con listaId).
+  const toggleFavorite = useCallback(
+    (espacioId: number) => toggle.mutate({ espacioId, esFavorito: isFavorite(espacioId) }),
+    [toggle, isFavorite],
+  );
+
   const handleQuitarFavorito = useCallback(
-    (id: number) => {
+    (espacioId: number) => {
       if (listaSeleccionada == null) {
-        toggleFavorite(id);
+        toggleFavorite(espacioId);
         return;
       }
-      const listaId = listaSeleccionada;
-      fetchAuthorized(accessToken => quitarFavorito(id, listaId, accessToken))
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: FAVORITOS_QUERY_KEY });
-          queryClient.invalidateQueries({ queryKey: listaFavoritosDetalleQueryKey(listaId) });
-          queryClient.invalidateQueries({ queryKey: LISTAS_FAVORITOS_QUERY_KEY });
-        })
-        .catch(() => {});
+      quitarDeLista.mutate({ espacioId, listaId: listaSeleccionada });
     },
-    [listaSeleccionada, toggleFavorite, fetchAuthorized, queryClient],
+    [listaSeleccionada, toggleFavorite, quitarDeLista],
   );
 
   const handleListaCreada = useCallback((lista: ListaFavoritos) => {
@@ -91,25 +90,22 @@ export default function FavoritesScreen() {
           {
             text: 'Eliminar',
             style: 'destructive',
-            onPress: () => {
-              fetchAuthorized(accessToken => eliminarListaFavoritos(lista.id, accessToken))
-                .then(() => {
+            onPress: () =>
+              eliminarLista.mutate(lista.id, {
+                onSuccess: () => {
                   if (listaSeleccionada === lista.id) setListaSeleccionada(null);
-                  queryClient.invalidateQueries({ queryKey: LISTAS_FAVORITOS_QUERY_KEY });
-                  queryClient.invalidateQueries({ queryKey: FAVORITOS_QUERY_KEY });
-                })
-                .catch(err => {
+                },
+                onError: err =>
                   Alert.alert(
                     'No se pudo eliminar la lista',
-                    err instanceof Error ? err.message : 'Intenta de nuevo.',
-                  );
-                });
-            },
+                    err.message || 'Intenta de nuevo.',
+                  ),
+              }),
           },
         ],
       );
     },
-    [fetchAuthorized, listaSeleccionada, queryClient],
+    [eliminarLista, listaSeleccionada],
   );
 
   const renderItem = useCallback(

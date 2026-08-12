@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
-import { useQueryClient } from '@tanstack/react-query';
-import { ListaFavoritos } from '@/types';
-import { useAuth } from '@/context/AuthContext';
-import { crearListaFavoritos } from '@/services/favoritos.service';
-import { LISTAS_FAVORITOS_QUERY_KEY } from '@/hooks/useListasFavoritos';
+
 import { makeStyles, useTheme } from '@/shared/theme';
+
+import { useCrearLista } from '../hooks/useFavoritoMutations';
+import { ListaFavoritos } from '../types';
 
 // Backend: 400 si el nombre viene vacío, en blanco o supera 100 caracteres
 // (docs/backend_response/favoritos-listas-response.md §3) — se limita acá para
@@ -21,11 +20,11 @@ interface CrearListaModalProps {
 export default function CrearListaModal({ visible, onClose, onCreated }: CrearListaModalProps) {
   const styles = useStyles();
   const { colors } = useTheme();
-  const { fetchAuthorized } = useAuth();
-  const queryClient = useQueryClient();
   const [nombre, setNombre] = useState('');
   const [error, setError] = useState('');
-  const [creando, setCreando] = useState(false);
+
+  const crear = useCrearLista();
+  const creando = crear.isPending;
 
   const handleClose = () => {
     setNombre('');
@@ -33,7 +32,7 @@ export default function CrearListaModal({ visible, onClose, onCreated }: CrearLi
     onClose();
   };
 
-  const handleCrear = async () => {
+  const handleCrear = () => {
     const nombreTrim = nombre.trim();
     if (!nombreTrim) {
       setError('Ponle un nombre a la lista.');
@@ -41,17 +40,13 @@ export default function CrearListaModal({ visible, onClose, onCreated }: CrearLi
     }
 
     setError('');
-    setCreando(true);
-    try {
-      const lista = await fetchAuthorized(accessToken => crearListaFavoritos(nombreTrim, accessToken));
-      queryClient.invalidateQueries({ queryKey: LISTAS_FAVORITOS_QUERY_KEY });
-      setNombre('');
-      onCreated(lista);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo crear la lista.');
-    } finally {
-      setCreando(false);
-    }
+    crear.mutate(nombreTrim, {
+      onSuccess: lista => {
+        setNombre('');
+        onCreated(lista);
+      },
+      onError: err => setError(err.message || 'No se pudo crear la lista.'),
+    });
   };
 
   return (

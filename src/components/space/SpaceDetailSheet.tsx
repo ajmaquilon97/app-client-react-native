@@ -31,7 +31,7 @@ import LocationMap from '@/components/space/LocationMap';
 import DaySelector from '@/components/space/DaySelector';
 import HourRangeSelector from '@/components/space/HourRangeSelector';
 import TicketQuantitySelector from '@/components/space/TicketQuantitySelector';
-import SaveToListSheet from '@/components/space/SaveToListSheet';
+import { SaveToListSheet } from '@/features/favoritos';
 import { MIS_RESERVAS_QUERY_KEY } from '@/hooks/useMisReservas';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 

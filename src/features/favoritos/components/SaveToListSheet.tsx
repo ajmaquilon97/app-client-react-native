@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
-import { useQueryClient } from '@tanstack/react-query';
-import { ListaFavoritos } from '@/types';
-import { useAuth } from '@/context/AuthContext';
-import { marcarFavorito } from '@/services/favoritos.service';
-import { useListasFavoritos, LISTAS_FAVORITOS_QUERY_KEY } from '@/hooks/useListasFavoritos';
-import { FAVORITOS_QUERY_KEY } from '@/hooks/useFavoritos';
+
 import { PlusIcon, CheckIcon } from '@/shared/ui/icons';
 import { makeStyles, useTheme } from '@/shared/theme';
-import CrearListaModal from '@/components/space/CrearListaModal';
+
+import CrearListaModal from './CrearListaModal';
+import { useGuardarEnLista } from '../hooks/useFavoritoMutations';
+import { useListasFavoritos } from '../hooks/useListasFavoritos';
+import { ListaFavoritos } from '../types';
 
 interface SaveToListSheetProps {
   visible: boolean;
@@ -19,35 +18,26 @@ interface SaveToListSheetProps {
 export default function SaveToListSheet({ visible, espacioId, onClose }: SaveToListSheetProps) {
   const styles = useStyles();
   const { colors } = useTheme();
-  const { fetchAuthorized } = useAuth();
-  const queryClient = useQueryClient();
   const { data: listas = [], isLoading } = useListasFavoritos();
-  const [guardandoListaId, setGuardandoListaId] = useState<number | null>(null);
   const [guardadaListaId, setGuardadaListaId] = useState<number | null>(null);
   const [crearListaVisible, setCrearListaVisible] = useState(false);
 
-  const invalidar = () => {
-    queryClient.invalidateQueries({ queryKey: FAVORITOS_QUERY_KEY });
-    queryClient.invalidateQueries({ queryKey: LISTAS_FAVORITOS_QUERY_KEY });
+  const guardar = useGuardarEnLista();
+  // `variables` conserva la lista en vuelo mientras la mutación está pendiente.
+  const guardandoListaId = guardar.isPending ? guardar.variables.listaId : null;
+
+  const handleGuardarEn = (lista: ListaFavoritos) => {
+    if (espacioId == null || guardar.isPending) return;
+    guardar.mutate(
+      { espacioId, listaId: lista.id },
+      // Best effort: si falla, el usuario puede reintentar tocando la lista.
+      { onSuccess: () => setGuardadaListaId(lista.id) },
+    );
   };
 
-  const handleGuardarEn = async (lista: ListaFavoritos) => {
-    if (espacioId == null || guardandoListaId != null) return;
-    setGuardandoListaId(lista.id);
-    try {
-      await fetchAuthorized(accessToken => marcarFavorito(espacioId, lista.id, accessToken));
-      invalidar();
-      setGuardadaListaId(lista.id);
-    } catch {
-      // best effort: el usuario puede reintentar tocando la lista de nuevo
-    } finally {
-      setGuardandoListaId(null);
-    }
-  };
-
-  const handleListaCreada = async (lista: ListaFavoritos) => {
+  const handleListaCreada = (lista: ListaFavoritos) => {
     setCrearListaVisible(false);
-    await handleGuardarEn(lista);
+    handleGuardarEn(lista);
   };
 
   const handleClose = () => {
