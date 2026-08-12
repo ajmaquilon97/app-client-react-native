@@ -4,7 +4,8 @@ import { View, Text, TextInput, TouchableOpacity, Platform, KeyboardAvoidingView
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AforoDia, Disponibilidad, Espacio, Reserva } from '@/types';
+import { Espacio, getModalidadReserva, LocationMap } from '@/features/espacios';
+import { AforoDia, Disponibilidad, Reserva } from '@/types';
 import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/shared/ui/icons';
 import PaymentModal from '@/components/payment/PaymentModal';
 import { useAuth } from '@/context/AuthContext';
@@ -25,9 +26,7 @@ import {
   FacturacionInput,
 } from '@/services/reservas.service';
 import { fetchAforoDia } from '@/services/aforo.service';
-import { getModalidadReserva } from '@/shared/utils/espacioArchetype';
 import { SERVICE_FEE_RATE } from '@/shared/config/paymentConfig';
-import LocationMap from '@/components/space/LocationMap';
 import DaySelector from '@/components/space/DaySelector';
 import HourRangeSelector from '@/components/space/HourRangeSelector';
 import TicketQuantitySelector from '@/components/space/TicketQuantitySelector';

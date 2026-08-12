@@ -2,8 +2,8 @@ import React, { useRef, useCallback, useState, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Platform, StatusBar } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Espacio } from '@/types';
-import { useEspacios } from '@/hooks/useEspacios';
+import { Espacio } from '../types';
+import { useEspacios } from '@/features/espacios';
 import { ArrowLeftIcon, SearchIcon, CloseCircleIcon, StarIcon, LocationIcon } from '@/shared/ui/icons';
 import { makeStyles, useTheme } from '@/shared/theme';
 
@@ -200,14 +200,14 @@ export default function SearchScreen({
                 activeOpacity={0.85}
                 onPress={() => setPantallaSugeridos(true)}>
                 <Text style={styles.buscarBannerText}>
-                  Buscar: <Text style={styles.buscarBannerQuery}>"{busqueda}"</Text>
+                  Buscar: <Text style={styles.buscarBannerQuery}>&ldquo;{busqueda}&rdquo;</Text>
                 </Text>
                 <Text style={styles.buscarBannerArrow}>➔</Text>
               </TouchableOpacity>
 
               {/* Contador */}
               <View style={styles.resultsHeader}>
-                <Text style={styles.resultsLabel}>Resultados para "{busqueda}"</Text>
+                <Text style={styles.resultsLabel}>Resultados para &ldquo;{busqueda}&rdquo;</Text>
                 <Text style={styles.resultsCount}>{resultados.length} encontrados</Text>
               </View>
 
@@ -258,7 +258,7 @@ export default function SearchScreen({
             </TouchableOpacity>
             <View>
               <Text style={styles.sugeridosTitle}>Lugares Sugeridos</Text>
-              <Text style={styles.sugeridosSubtitle}>Búsqueda: "{busqueda}"</Text>
+              <Text style={styles.sugeridosSubtitle}>Búsqueda: &ldquo;{busqueda}&rdquo;</Text>
             </View>
           </View>
           <View style={styles.fuzzyBadge}>
@@ -277,7 +277,7 @@ export default function SearchScreen({
             <Text style={styles.algorithmTitle}>🔍 Algoritmo de Coincidencias</Text>
             <Text style={styles.algorithmDesc}>
               Mostrando todos los espacios que comparten palabras o características con{' '}
-              <Text style={styles.algorithmQuery}>"{busqueda}"</Text>, ordenados de mayor a menor relevancia.
+              <Text style={styles.algorithmQuery}>&ldquo;{busqueda}&rdquo;</Text>, ordenados de mayor a menor relevancia.
             </Text>
           </View>
 

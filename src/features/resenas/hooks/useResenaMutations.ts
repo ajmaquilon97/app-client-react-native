@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-// TODO(fase 5): pasar a `@/features/espacios` cuando esa feature exista.
-import { ESPACIOS_QUERY_KEY } from '@/hooks/useEspacios';
+import { ESPACIOS_QUERY_KEY } from '@/features/espacios';
 
 import {
   actualizarResena,

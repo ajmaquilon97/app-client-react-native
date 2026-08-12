@@ -1,14 +1,9 @@
 import SearchBar from '@/shared/ui/SearchBar';
-import CategoryCard from '@/components/home/CategoryCard';
-import EmptyState from '@/components/home/EmptyState';
-import SpaceCard from '@/components/home/SpaceCard';
+import { ScreenState } from '@/shared/ui/feedback';
+import { CategoryCard, EmptyState, SpaceCard, useFilteredSpaces, QuickFilters, SearchScreen, Categoria, Espacio, FiltroRapido } from '@/features/espacios';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
 import { SaveToListSheet, useEsFavorito, useToggleFavorito } from '@/features/favoritos';
 import { useAuth } from '@/context/AuthContext';
-import { useFilteredSpaces } from '@/hooks/useFilteredSpaces';
-import QuickFilters from '@/components/home/QuickFilters';
-import SearchScreen from '@/components/home/SearchScreen';
-import { Categoria, Espacio, FiltroRapido } from '@/types';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, ListRenderItemInfo, Modal, Platform, Pressable, RefreshControl, StatusBar, Text, TouchableOpacity, View } from 'react-native';
@@ -41,7 +36,7 @@ export default function HomeScreen() {
     [toggle, isFavorite],
   );
 
-  const { espacios, total, isRefetching, refetch } = useFilteredSpaces({
+  const { espacios, total, isLoading, isError, isRefetching, refetch } = useFilteredSpaces({
     categoria: categoriaSeleccionada,
     query: busqueda,
     filtroRapido,
@@ -130,7 +125,21 @@ export default function HomeScreen() {
     </View>
   );
 
-  const ListEmptyComponent = <EmptyState onReset={handleReset} />;
+  // La lista vacía puede significar tres cosas muy distintas. Antes las tres
+  // pintaban "Sin resultados", así que durante la carga inicial y ante un error
+  // de red el catálogo parecía vacío.
+  const ListEmptyComponent = isLoading ? (
+    <ScreenState variant="loading" />
+  ) : isError ? (
+    <ScreenState
+      variant="error"
+      title="No se pudieron cargar los espacios"
+      message="Revisa tu conexión e inténtalo de nuevo."
+      onAction={refetch}
+    />
+  ) : (
+    <EmptyState onReset={handleReset} />
+  );
 
   return (
     <View style={styles.container}>

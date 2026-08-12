@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Platform, Modal, ActivityIndicator, Alert } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Espacio } from '@/types';
+import { Espacio } from '@/features/espacios';
 import { ArrowLeftIcon } from '@/shared/ui/icons';
 import PaymentResult from './PaymentResult';
 import { makeStyles, useTheme } from '@/shared/theme';

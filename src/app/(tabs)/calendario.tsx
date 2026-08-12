@@ -5,14 +5,13 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CalendarIcon } from '@/shared/ui/icons';
 import { useMisReservas } from '@/hooks/useMisReservas';
-import { useEspacios } from '@/hooks/useEspacios';
+import { useEspacios, getModalidadReserva, Espacio } from '@/features/espacios';
+import { EstadoReserva, Reserva } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { cancelarReserva } from '@/services/reservas.service';
 import { reversarPagoDatafastDirecto, obtenerTransaccionDirecta } from '@/services/datafastDirectUat';
 import { DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/shared/config/paymentConfig';
 import { formatRangoReserva } from '@/shared/utils/fechas';
-import { getModalidadReserva } from '@/shared/utils/espacioArchetype';
-import { EstadoReserva, Espacio, Reserva } from '@/types';
 import { ColorToken, makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const ESTADOS_CANCELABLES: EstadoReserva[] = ['pendiente', 'confirmada', 'reagendada'];

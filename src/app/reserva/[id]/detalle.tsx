@@ -6,14 +6,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeftIcon, LocationIcon, CalendarIcon } from '@/shared/ui/icons';
 import { useReservaDetalle } from '@/hooks/useReservaDetalle';
 import { useFacturasReserva } from '@/hooks/useFacturasReserva';
-import { useEspacios } from '@/hooks/useEspacios';
+import { useEspacios, LocationMap, getModalidadReserva } from '@/features/espacios';
+import { EstadoPago, EstadoReserva, FacturaStatus } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { facturasDescarga } from '@/services/reservas.service';
-import LocationMap from '@/components/space/LocationMap';
 import { ResenaSection } from '@/features/resenas';
 import { formatRangoReserva } from '@/shared/utils/fechas';
-import { getModalidadReserva } from '@/shared/utils/espacioArchetype';
-import { EstadoPago, EstadoReserva, FacturaStatus } from '@/types';
 import { ColorToken, makeStyles, spacing, useTheme } from '@/shared/theme';
 
 const IMAGEN_FALLBACK =

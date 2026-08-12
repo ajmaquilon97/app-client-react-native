@@ -1,9 +1,7 @@
-import { Espacio, Categoria, ModalidadReserva } from '@/types';
-import { API_BASE_URL } from '@/shared/config/api';
+import { api } from '@/shared/api/client';
 import { parseLatLngFromGoogleMapsUrl } from '@/shared/utils/geo';
-import { throwIfNotOk } from '@/shared/api/errors';
 
-const API_URL = `${API_BASE_URL}/mobile/espacios`;
+import { Categoria, Espacio, ModalidadReserva } from '../types';
 
 interface TarifaHoyAPI {
   modalidad: string | null;
@@ -12,6 +10,7 @@ interface TarifaHoyAPI {
   esPromocion: boolean;
 }
 
+/** Forma cruda del backend: no sale de este archivo. */
 interface EspacioAPI {
   id: number;
   titulo: string;
@@ -35,6 +34,9 @@ interface EspacioAPI {
 const IMAGEN_FALLBACK =
   'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80';
 
+const AVATAR_FALLBACK =
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80';
+
 function mapTipoToCategoria(tipoNombre: string): Categoria {
   const lower = tipoNombre.toLowerCase();
   if (lower.includes('cancha')) return 'canchas';
@@ -43,7 +45,8 @@ function mapTipoToCategoria(tipoNombre: string): Categoria {
   return 'canchas';
 }
 
-function mapApiToEspacio(e: EspacioAPI): Espacio {
+/** Exportado solo para poder probar el mapeo sin pasar por la red. */
+export function mapApiToEspacio(e: EspacioAPI): Espacio {
   const coords = parseLatLngFromGoogleMapsUrl(e.linkUbicacion);
 
   if (__DEV__) {
@@ -79,7 +82,7 @@ function mapApiToEspacio(e: EspacioAPI): Espacio {
     servicios: [],
     anfitrion: {
       nombre: e.propietarioNombre,
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
+      avatar: AVATAR_FALLBACK,
       registro: `Miembro desde ${new Date(e.fechaCreacion).getFullYear()}`,
       verificado: false,
     },
@@ -88,11 +91,9 @@ function mapApiToEspacio(e: EspacioAPI): Espacio {
   };
 }
 
-export async function fetchEspacios(accessToken: string): Promise<Espacio[]> {
-  const res = await fetch(API_URL, {
-    headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
+export async function fetchEspacios(): Promise<Espacio[]> {
+  const data = await api.get<EspacioAPI[]>('/mobile/espacios', {
+    fallback: 'No se pudieron obtener los espacios.',
   });
-  await throwIfNotOk(res, 'No se pudieron obtener los espacios.');
-  const data: EspacioAPI[] = await res.json();
   return data.map(mapApiToEspacio);
 }

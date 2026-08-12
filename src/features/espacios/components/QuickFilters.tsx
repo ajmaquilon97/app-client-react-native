@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text } from 'react-native';
 import { makeStyles } from '@/shared/theme';
-import { FiltroRapido } from '@/types';
+import { FiltroRapido } from '../types';
 
 interface QuickFilterOption {
   key: FiltroRapido;

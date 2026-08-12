@@ -1,4 +1,4 @@
-import { Espacio, ModalidadReserva } from '@/types';
+import { Espacio, ModalidadReserva } from './types';
 
 // Backend ya expone `modalidadReserva` en el catálogo de tipos de espacio (ver
 // docs/instrucciones-equipo-mobile-modalidades-reserva.md §2.1). El fallback por

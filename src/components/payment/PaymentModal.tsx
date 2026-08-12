@@ -1,5 +1,5 @@
 import React from 'react';
-import { Espacio } from '@/types';
+import { Espacio } from '@/features/espacios';
 import { PAYMENT_PROVIDER } from '@/shared/config/paymentConfig';
 import KushkiPaymentModal from './KushkiPaymentModal';
 import DatafastPaymentModal from './DatafastPaymentModal';

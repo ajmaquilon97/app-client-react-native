@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Platform, Modal, ActivityIndicator } from
 import { WebView } from 'react-native-webview';
 import type { ShouldStartLoadRequest, WebViewNavigation } from 'react-native-webview/lib/WebViewTypes';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Espacio } from '@/types';
+import { Espacio } from '@/features/espacios';
 import { ArrowLeftIcon } from '@/shared/ui/icons';
 import { useAuth } from '@/context/AuthContext';
 import { DATAFAST_CONFIG, DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/shared/config/paymentConfig';

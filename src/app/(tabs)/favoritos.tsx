@@ -1,8 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, FlatList, StatusBar, Platform, ListRenderItemInfo, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Espacio } from '@/types';
-import { useFavoriteSpaces, useEspaciosPorIds } from '@/hooks/useFilteredSpaces';
+import { Espacio, useFavoriteSpaces, useEspaciosPorIds, SpaceCard } from '@/features/espacios';
 import {
   CrearListaModal,
   SaveToListSheet,
@@ -15,7 +14,6 @@ import {
   useToggleFavorito,
   type ListaFavoritos,
 } from '@/features/favoritos';
-import SpaceCard from '@/components/home/SpaceCard';
 import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
 import { HeartIcon, PlusIcon } from '@/shared/ui/icons';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';

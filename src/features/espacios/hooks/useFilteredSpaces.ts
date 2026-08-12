@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Espacio, Categoria, FiltroRapido } from '@/types';
-import { useEspacios } from '@/hooks/useEspacios';
+import { useEspacios } from './useEspacios';
+import { Categoria, Espacio, FiltroRapido } from '../types';
 
 interface UseFilteredSpacesParams {
   categoria: Categoria | null;
