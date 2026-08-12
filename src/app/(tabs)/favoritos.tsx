@@ -14,7 +14,7 @@ import {
   useToggleFavorito,
   type ListaFavoritos,
 } from '@/features/favoritos';
-import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
+import { SpaceDetailSheet } from '@/features/reservas';
 import { HeartIcon, PlusIcon } from '@/shared/ui/icons';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { AforoDia } from '@/types';
+import { AforoDia } from '../types';
 import { makeStyles, useTheme } from '@/shared/theme';
 
 interface TicketQuantitySelectorProps {

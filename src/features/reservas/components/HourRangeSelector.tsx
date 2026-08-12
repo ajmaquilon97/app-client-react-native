@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
-import { HoraEstado } from '@/types';
+import { HoraEstado } from '../types';
 import { formatHora } from '@/shared/utils/fechas';
 import { makeStyles } from '@/shared/theme';
 

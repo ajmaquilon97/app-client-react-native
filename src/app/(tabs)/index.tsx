@@ -1,7 +1,7 @@
 import SearchBar from '@/shared/ui/SearchBar';
 import { ScreenState } from '@/shared/ui/feedback';
 import { CategoryCard, EmptyState, SpaceCard, useFilteredSpaces, QuickFilters, SearchScreen, Categoria, Espacio, FiltroRapido } from '@/features/espacios';
-import SpaceDetailSheet from '@/components/space/SpaceDetailSheet';
+import { SpaceDetailSheet } from '@/features/reservas';
 import { SaveToListSheet, useEsFavorito, useToggleFavorito } from '@/features/favoritos';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'expo-router';

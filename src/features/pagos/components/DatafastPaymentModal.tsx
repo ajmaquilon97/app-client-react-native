@@ -5,15 +5,14 @@ import type { ShouldStartLoadRequest, WebViewNavigation } from 'react-native-web
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Espacio } from '@/features/espacios';
 import { ArrowLeftIcon } from '@/shared/ui/icons';
-import { useAuth } from '@/context/AuthContext';
-import { DATAFAST_CONFIG, DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/shared/config/paymentConfig';
-import { crearCheckoutDatafast, verificarPagoDatafast } from '@/services/datafast.service';
+import { DATAFAST_CONFIG, DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '../config';
+import { crearCheckoutDatafast, verificarPagoDatafast } from '../services/datafast.service';
 import {
   crearCheckoutDatafastDirecto,
   verificarPagoDatafastDirecto,
   registrarTransaccionDirecta,
   UAT_DIRECT_WIDGET_BASE_URL,
-} from '@/services/datafastDirectUat';
+} from '../services/datafastDirectUat';
 import PaymentResult from './PaymentResult';
 import { fontSize, fontWeight, makeStyles, radius, spacing, useTheme } from '@/shared/theme';
 
@@ -52,7 +51,6 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
   const styles = useStyles();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { fetchAuthorized } = useAuth();
   const requestIdRef = useRef(0);
   const resultHandledRef = useRef(false);
 
@@ -81,7 +79,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
       }
       const { checkoutId: nuevoCheckoutId } = DATAFAST_DIAGNOSTICO_DIRECTO_UAT
         ? await crearCheckoutDatafastDirecto(total)
-        : await fetchAuthorized(accessToken => crearCheckoutDatafast(reservaId, accessToken));
+        : await crearCheckoutDatafast(reservaId);
       if (requestIdRef.current !== requestId) return;
       resultHandledRef.current = false;
       setCheckoutId(nuevoCheckoutId);
@@ -92,7 +90,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
       setErrorMessage(err instanceof Error ? err.message : 'No se pudo iniciar el pago con Datafast.');
       setStatus('error');
     }
-  }, [espacio, reservaId, total, fetchAuthorized]);
+  }, [espacio, reservaId, total]);
 
   // Al abrir el modal, crea un checkout nuevo. Al cerrarlo, invalida cualquier
   // request en vuelo para que no pise el estado si se reabre con otra reserva.
@@ -123,9 +121,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         }
         const resultado = DATAFAST_DIAGNOSTICO_DIRECTO_UAT
           ? await verificarPagoDatafastDirecto(resourcePath)
-          : await fetchAuthorized(accessToken =>
-              verificarPagoDatafast(reservaId, resourcePath, accessToken),
-            );
+          : await verificarPagoDatafast(reservaId, resourcePath);
         if (resultado.aprobado) {
           setTransactionId(resultado.transactionId);
           if (DATAFAST_DIAGNOSTICO_DIRECTO_UAT) {
@@ -141,7 +137,7 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
         setStatus('error');
       }
     },
-    [reservaId, total, fetchAuthorized],
+    [reservaId, total],
   );
 
   // El widget de Datafast intenta "navegar" a shopperResultUrl al terminar.

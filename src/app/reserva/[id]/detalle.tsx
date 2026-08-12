@@ -4,12 +4,15 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeftIcon, LocationIcon, CalendarIcon } from '@/shared/ui/icons';
-import { useReservaDetalle } from '@/hooks/useReservaDetalle';
-import { useFacturasReserva } from '@/hooks/useFacturasReserva';
+import {
+  facturasDescarga,
+  useFacturasReserva,
+  useReservaDetalle,
+  type EstadoPago,
+  type EstadoReserva,
+  type FacturaStatus,
+} from '@/features/reservas';
 import { useEspacios, LocationMap, getModalidadReserva } from '@/features/espacios';
-import { EstadoPago, EstadoReserva, FacturaStatus } from '@/types';
-import { useAuth } from '@/context/AuthContext';
-import { facturasDescarga } from '@/services/reservas.service';
 import { ResenaSection } from '@/features/resenas';
 import { formatRangoReserva } from '@/shared/utils/fechas';
 import { ColorToken, makeStyles, spacing, useTheme } from '@/shared/theme';
@@ -85,7 +88,6 @@ function formatFechaHora(iso: string | null): string | null {
 function FacturaCard({ reservaId, factura }: { reservaId: number; factura: FacturaStatus }) {
   const styles = useStyles();
   const { colors } = useTheme();
-  const { fetchAuthorized } = useAuth();
   const [descargando, setDescargando] = useState(false);
   const autorizada = factura.estado === 'Autorizada';
 
@@ -96,7 +98,7 @@ function FacturaCard({ reservaId, factura }: { reservaId: number; factura: Factu
       // (urlsExpiranEnSegundos, por ítem), así que no se pueden cachear del lado del
       // cliente. Nunca se manda el header Authorization al abrir pdfUrl — la firma va
       // en la propia URL.
-      const facturas = await fetchAuthorized(accessToken => facturasDescarga(reservaId, accessToken));
+      const facturas = await facturasDescarga(reservaId);
       const item = facturas.find(f => f.tipoFactura === factura.tipoFactura) ?? facturas[0];
       if (!item?.pdfUrl) {
         Alert.alert(

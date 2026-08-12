@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Platform, Modal, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Modal, ActivityIndicator } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Espacio } from '@/features/espacios';
@@ -51,6 +51,48 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
     }
   }, [visible]);
 
+  // ─── Maneja mensajes del WebView ───
+  const handleWebViewMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      try {
+        const data = JSON.parse(event.nativeEvent.data);
+
+        if (data.type === 'PROCESS_PAYMENT') {
+          setStatus('processing');
+
+          // SIMULACIÓN: aquí tu backend procesaría el pago real con Kushki.
+          // Por ahora decidimos éxito/fallo según la tarjeta de prueba usada.
+          const cardNumber: string = data.data?.cardNumber || '';
+          const isDeclined = cardNumber === DECLINE_TEST_CARD;
+
+          setTimeout(() => {
+            if (isDeclined) {
+              setStatus('error');
+            } else {
+              setTransactionId(`RES-${Math.floor(100000 + Math.random() * 900000)}`);
+              setStatus('success');
+            }
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error procesando mensaje del WebView:', error);
+      }
+    },
+    []
+  );
+
+  // Confirma el pago exitoso → el padre cierra el modal y navega a reservas
+  const handleContinue = useCallback(() => {
+    onSuccess({ transactionId, amount: total });
+  }, [onSuccess, transactionId, total]);
+
+  // Vuelve al formulario de pago para reintentar
+  const handleRetry = useCallback(() => {
+    setStatus('form');
+  }, []);
+
+  // El early return va DESPUES de todos los hooks: si sube, el componente
+  // llama 4 hooks con `espacio` nulo y 7 sin el, y el orden se rompe.
   if (!espacio) return null;
 
   // ─── Genera el HTML con el SDK de Kushki ───
@@ -327,45 +369,6 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
     `;
   };
 
-  // ─── Maneja mensajes del WebView ───
-  const handleWebViewMessage = useCallback(
-    (event: WebViewMessageEvent) => {
-      try {
-        const data = JSON.parse(event.nativeEvent.data);
-
-        if (data.type === 'PROCESS_PAYMENT') {
-          setStatus('processing');
-
-          // SIMULACIÓN: aquí tu backend procesaría el pago real con Kushki.
-          // Por ahora decidimos éxito/fallo según la tarjeta de prueba usada.
-          const cardNumber: string = data.data?.cardNumber || '';
-          const isDeclined = cardNumber === DECLINE_TEST_CARD;
-
-          setTimeout(() => {
-            if (isDeclined) {
-              setStatus('error');
-            } else {
-              setTransactionId(`RES-${Math.floor(100000 + Math.random() * 900000)}`);
-              setStatus('success');
-            }
-          }, 2000);
-        }
-      } catch (error) {
-        console.error('Error procesando mensaje del WebView:', error);
-      }
-    },
-    []
-  );
-
-  // Confirma el pago exitoso → el padre cierra el modal y navega a reservas
-  const handleContinue = useCallback(() => {
-    onSuccess({ transactionId, amount: total });
-  }, [onSuccess, transactionId, total]);
-
-  // Vuelve al formulario de pago para reintentar
-  const handleRetry = useCallback(() => {
-    setStatus('form');
-  }, []);
 
   // Solo se puede cerrar manualmente en el formulario o tras un error
   const canClose = status === 'form' || status === 'error';

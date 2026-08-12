@@ -4,13 +4,13 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CalendarIcon } from '@/shared/ui/icons';
-import { useMisReservas } from '@/hooks/useMisReservas';
 import { useEspacios, getModalidadReserva, Espacio } from '@/features/espacios';
-import { EstadoReserva, Reserva } from '@/types';
-import { useAuth } from '@/context/AuthContext';
-import { cancelarReserva } from '@/services/reservas.service';
-import { reversarPagoDatafastDirecto, obtenerTransaccionDirecta } from '@/services/datafastDirectUat';
-import { DATAFAST_DIAGNOSTICO_DIRECTO_UAT } from '@/shared/config/paymentConfig';
+import { useCancelarReserva, useMisReservas, EstadoReserva, Reserva } from '@/features/reservas';
+import {
+  DATAFAST_DIAGNOSTICO_DIRECTO_UAT,
+  obtenerTransaccionDirecta,
+  reversarPagoDatafastDirecto,
+} from '@/features/pagos';
 import { formatRangoReserva } from '@/shared/utils/fechas';
 import { ColorToken, makeStyles, spacing, useTheme } from '@/shared/theme';
 
@@ -43,8 +43,8 @@ export default function CalendarScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { fetchAuthorized } = useAuth();
   const { data: reservas = [], isLoading, isError, refetch } = useMisReservas();
+  const cancelar = useCancelarReserva();
   const { data: espacios = [] } = useEspacios();
 
   const espaciosPorId = useMemo(() => {
@@ -100,10 +100,7 @@ export default function CalendarScreen() {
                   throw new Error(resultado.mensaje || 'Datafast rechazó el reverso.');
                 }
               }
-              await fetchAuthorized(accessToken =>
-                cancelarReserva(reserva.id, motivo, accessToken),
-              );
-              refetch();
+              await cancelar.mutateAsync({ reservaId: reserva.id, motivo });
             } catch (err) {
               Alert.alert(
                 'No se pudo cancelar',

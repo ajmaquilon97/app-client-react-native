@@ -1,47 +1,32 @@
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { View, Text, TextInput, TouchableOpacity, Platform, KeyboardAvoidingView, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Espacio, getModalidadReserva, LocationMap } from '@/features/espacios';
-import { AforoDia, Disponibilidad, Reserva } from '@/types';
-import { ArrowLeftIcon, HeartIcon, CheckIcon, LocationIcon } from '@/shared/ui/icons';
-import PaymentModal from '@/components/payment/PaymentModal';
-import { useAuth } from '@/context/AuthContext';
-import { useLocationContext } from '@/context/LocationContext';
-import { haversineDistanceKm, formatDistanceKm } from '@/shared/utils/geo';
-import {
-  esMismoDia,
-  formatFecha,
-  formatHora,
-  toDateOnlyString,
-  toLocalDateTimeString,
-} from '@/shared/utils/fechas';
-import {
-  fetchDisponibilidad,
-  crearReserva,
-  registrarPago,
-  cancelarReserva,
-  FacturacionInput,
-} from '@/services/reservas.service';
-import { fetchAforoDia } from '@/services/aforo.service';
-import { SERVICE_FEE_RATE } from '@/shared/config/paymentConfig';
-import DaySelector from '@/components/space/DaySelector';
-import HourRangeSelector from '@/components/space/HourRangeSelector';
-import TicketQuantitySelector from '@/components/space/TicketQuantitySelector';
-import { SaveToListSheet } from '@/features/favoritos';
-import { MIS_RESERVAS_QUERY_KEY } from '@/hooks/useMisReservas';
-import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
-// Si el cliente no completa los datos de facturación, se manda como
-// "consumidor final" (identificación genérica estándar en Ecuador para
-// facturas sin RUC/cédula real del comprador).
-const FACTURACION_CONSUMIDOR_FINAL: FacturacionInput = {
-  identificacion: '9999999999999',
-  nombre: 'Consumidor Final',
-  correo: '',
-};
+import { useLocationContext } from '@/context/LocationContext';
+import { Espacio, LocationMap } from '@/features/espacios';
+import { SaveToListSheet } from '@/features/favoritos';
+import { PaymentModal, SERVICE_FEE_RATE } from '@/features/pagos';
+import { ArrowLeftIcon, CheckIcon, HeartIcon, LocationIcon } from '@/shared/ui/icons';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
+import { esMismoDia, formatFecha, formatHora } from '@/shared/utils/fechas';
+import { formatDistanceKm, haversineDistanceKm } from '@/shared/utils/geo';
+
+import DaySelector from './DaySelector';
+import HourRangeSelector from './HourRangeSelector';
+import TicketQuantitySelector from './TicketQuantitySelector';
+import { useReservaFlow } from '../hooks/useReservaFlow';
 
 interface SpaceDetailSheetProps {
   visible: boolean;
@@ -51,6 +36,15 @@ interface SpaceDetailSheetProps {
   onClose: () => void;
 }
 
+/**
+ * Detalle del espacio y flujo de reserva.
+ *
+ * Solo presentación: la máquina de estados (selección → creación → pago), las
+ * consultas de disponibilidad y aforo y las mutaciones viven en
+ * `useReservaFlow`. Vive en la feature de reservas, no en la de espacios,
+ * porque su lógica es la de reservar y porque `reservas → espacios` es la
+ * dirección permitida entre features.
+ */
 const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   visible,
   espacio,
@@ -62,135 +56,58 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { fetchAuthorized, user } = useAuth();
+
+  const [guardarEnListaVisible, setGuardarEnListaVisible] = useState(false);
+
+  const handleReservaPagada = useCallback(() => {
+    setGuardarEnListaVisible(false);
+    onClose();
+    router.navigate('/calendario');
+  }, [onClose, router]);
+
+  const flow = useReservaFlow({ espacio, visible, onReservaPagada: handleReservaPagada });
+
+  const {
+    esCupoCompartido,
+    selectedDate,
+    setSelectedDate,
+    horaDesde,
+    horaHasta,
+    handleChangeHoraDesde,
+    setHoraHasta,
+    cantidadEntradas,
+    setCantidadEntradas,
+    identificacionFacturacion,
+    setIdentificacionFacturacion,
+    razonSocialFacturacion,
+    setRazonSocialFacturacion,
+    correoFacturacion,
+    setCorreoFacturacion,
+    disponibilidad,
+    disponibilidadLoading,
+    disponibilidadError,
+    aforo,
+    aforoLoading,
+    aforoError,
+    cantidadUnidades,
+    precioDelDia,
+    subtotal: subtotalReserva,
+    comision: comisionServicio,
+    total: totalReserva,
+    reservar,
+    creandoReserva,
+    reservaCreada,
+    showPayment,
+    confirmarPago,
+    cancelarPago,
+  } = flow;
+
+  // Se congela al abrir la hoja: si el usuario la deja abierta pasada la
+  // medianoche, el listado de días no debe saltarle bajo los dedos.
   const hoy = useMemo(() => new Date(), [visible]);
-  // Ver docs/backend-espacios-archetypes-spec.md — mientras backend no confirme
-  // `modalidadReserva`, se infiere localmente (ver espacioArchetype.ts).
-  const modalidad = useMemo(
-    () => (espacio ? getModalidadReserva(espacio) : 'franja_exclusiva'),
-    [espacio],
-  );
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [horaDesde, setHoraDesde] = useState<number | null>(null);
-  const [horaHasta, setHoraHasta] = useState<number | null>(null);
-  const [cantidadEntradas, setCantidadEntradas] = useState(1);
-  const [showPayment, setShowPayment] = useState(false);
-  const [creandoReserva, setCreandoReserva] = useState(false);
-  const [reservaCreada, setReservaCreada] = useState<Reserva | null>(null);
-
-  const [identificacionFacturacion, setIdentificacionFacturacion] = useState('');
-  const [razonSocialFacturacion, setRazonSocialFacturacion] = useState('');
-  const [correoFacturacion, setCorreoFacturacion] = useState('');
-
-  const [disponibilidad, setDisponibilidad] = useState<Disponibilidad | null>(null);
-  const [disponibilidadLoading, setDisponibilidadLoading] = useState(false);
-  const [disponibilidadError, setDisponibilidadError] = useState<string | null>(null);
-
-  // Aforo disponible del día — solo aplica a espacios `cupo_compartido` (piscinas).
-  const [aforo, setAforo] = useState<AforoDia | null>(null);
-  const [aforoLoading, setAforoLoading] = useState(false);
-  const [aforoError, setAforoError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!visible) {
-      setSelectedDate(null);
-      setHoraDesde(null);
-      setHoraHasta(null);
-      setCantidadEntradas(1);
-      setShowPayment(false);
-      setReservaCreada(null);
-      setIdentificacionFacturacion('');
-      setRazonSocialFacturacion('');
-      setCorreoFacturacion('');
-      setDisponibilidad(null);
-      setDisponibilidadError(null);
-      setAforo(null);
-      setAforoError(null);
-      setGuardarEnListaVisible(false);
-    }
-  }, [visible]);
-
-  useEffect(() => {
-    if (!visible || !espacio || !selectedDate) {
-      setDisponibilidad(null);
-      return;
-    }
-    let cancelled = false;
-    setDisponibilidadLoading(true);
-    setDisponibilidadError(null);
-
-    (async () => {
-      try {
-        const data = await fetchAuthorized(accessToken =>
-          fetchDisponibilidad(espacio.id, toDateOnlyString(selectedDate), accessToken),
-        );
-        if (!cancelled) setDisponibilidad(data);
-      } catch (err) {
-        if (!cancelled) {
-          setDisponibilidadError(
-            err instanceof Error ? err.message : 'No se pudo obtener la disponibilidad.',
-          );
-        }
-      } finally {
-        if (!cancelled) setDisponibilidadLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [visible, espacio, selectedDate, fetchAuthorized]);
-
-  useEffect(() => {
-    if (!visible || !espacio || !selectedDate || modalidad !== 'cupo_compartido') {
-      setAforo(null);
-      return;
-    }
-    let cancelled = false;
-    setAforoLoading(true);
-    setAforoError(null);
-
-    (async () => {
-      try {
-        const data = await fetchAuthorized(accessToken =>
-          fetchAforoDia(espacio.id, toDateOnlyString(selectedDate), espacio.maxCapacidad, accessToken),
-        );
-        if (!cancelled) {
-          setAforo(data);
-          setCantidadEntradas(prev => Math.min(Math.max(prev, 1), Math.max(data.disponible, 1)));
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setAforoError(err instanceof Error ? err.message : 'No se pudo obtener el aforo disponible.');
-        }
-      } finally {
-        if (!cancelled) setAforoLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [visible, espacio, selectedDate, modalidad, fetchAuthorized]);
-
-  const handleChangeHoraDesde = useCallback((hora: number) => {
-    setHoraDesde(hora);
-    setHoraHasta(prev => (prev != null && prev > hora ? prev : null));
-  }, []);
-
-  const cantidadHoras = horaDesde != null && horaHasta != null ? horaHasta - horaDesde : 0;
   const esHoy = !!selectedDate && esMismoDia(selectedDate, hoy);
 
-  const { coords: userCoords, loading: userLocationLoading, refresh: refreshLocation } = useLocationContext();
-
-  // La ubicación ya se captura al abrir la app; si aún no la tenemos (permiso
-  // recién concedido, primer intento fallido, etc.) la reintentamos al abrir el detalle.
-  useEffect(() => {
-    if (visible && espacio && !userCoords) {
-      refreshLocation();
-    }
-  }, [visible, espacio, userCoords, refreshLocation]);
+  const { coords: userCoords, loading: userLocationLoading } = useLocationContext();
 
   const espacioCoords = useMemo(() => {
     if (!espacio || espacio.latitud == null || espacio.longitud == null) return null;
@@ -202,8 +119,6 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     return haversineDistanceKm(userCoords, espacioCoords);
   }, [userCoords, espacioCoords]);
 
-  const [guardarEnListaVisible, setGuardarEnListaVisible] = useState(false);
-
   const handleFavoritePress = useCallback(() => {
     if (espacio) onToggleFavorite(espacio.id);
   }, [espacio, onToggleFavorite]);
@@ -212,175 +127,22 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
     if (espacio) setGuardarEnListaVisible(true);
   }, [espacio]);
 
-  const handleReservar = useCallback(async () => {
-    if (!espacio) return;
-
-    if (!selectedDate) {
-      Alert.alert('Faltan datos', 'Elige el día para tu reserva.', [{ text: 'Entendido' }]);
-      return;
-    }
-
-    if (modalidad === 'cupo_compartido') {
-      if (cantidadEntradas < 1) {
-        Alert.alert('Faltan datos', 'Elige la cantidad de entradas para tu reserva.', [{ text: 'Entendido' }]);
-        return;
-      }
-    } else if (horaDesde == null || horaHasta == null) {
-      Alert.alert(
-        'Faltan datos',
-        'Elige el rango de horas (desde–hasta) para tu reserva.',
-        [{ text: 'Entendido' }],
-      );
-      return;
-    }
-
-    if (!disponibilidad?.tarifa) {
-      Alert.alert(
-        'Tarifa no disponible',
-        'Este espacio no tiene una tarifa configurada para el día elegido. Prueba con otro día.',
-        [{ text: 'Entendido' }],
-      );
-      return;
-    }
-
-    const facturacionCompletada =
-      identificacionFacturacion.trim() || razonSocialFacturacion.trim() || correoFacturacion.trim();
-    const facturacion: FacturacionInput = facturacionCompletada
-      ? {
-          identificacion: identificacionFacturacion.trim(),
-          nombre: razonSocialFacturacion.trim(),
-          correo: correoFacturacion.trim(),
-        }
-      : FACTURACION_CONSUMIDOR_FINAL;
-
-    // Convención acordada con el equipo Web para `cupo_compartido` (piscinas):
-    // fechaInicio = fechaFin = el día elegido, sin franja horaria específica — ver
-    // docs/backend-espacios-archetypes-spec.md §3 y FEEDBACK_BACKEND_MODALIDADES_RESERVA.md.
-    // `totalHoras: 0` es un placeholder: backend todavía no confirmó qué espera este
-    // campo para una venta de entrada.
-    const inputReserva =
-      modalidad === 'cupo_compartido'
-        ? {
-            espacioId: espacio.id,
-            fechaInicio: toLocalDateTimeString(selectedDate, 0),
-            fechaFin: toLocalDateTimeString(selectedDate, 0),
-            totalHoras: 0,
-            pax: cantidadEntradas,
-            facturacion,
-          }
-        : {
-            espacioId: espacio.id,
-            // horaDesde/horaHasta ya se validaron como no-nulos arriba para este archetype.
-            fechaInicio: toLocalDateTimeString(selectedDate, horaDesde as number),
-            fechaFin: toLocalDateTimeString(selectedDate, horaHasta as number),
-            totalHoras: cantidadHoras,
-            facturacion,
-          };
-
-    setCreandoReserva(true);
-    try {
-      const nueva = await fetchAuthorized(accessToken =>
-        crearReserva(inputReserva, user?.id ?? '', accessToken),
-      );
-      setReservaCreada(nueva);
-      setShowPayment(true);
-      // La reserva (aunque sea 'pendiente') ya existe en backend — si el
-      // usuario mira Calendario ahora, que la vea sin esperar el staleTime.
-      queryClient.invalidateQueries({ queryKey: MIS_RESERVAS_QUERY_KEY });
-    } catch (err) {
-      Alert.alert(
-        'No se pudo crear la reserva',
-        err instanceof Error ? err.message : 'Intenta de nuevo.',
-        [{ text: 'Entendido' }],
-      );
-    } finally {
-      setCreandoReserva(false);
-    }
-  }, [
-    espacio,
-    selectedDate,
-    modalidad,
-    horaDesde,
-    horaHasta,
-    cantidadEntradas,
-    disponibilidad,
-    cantidadHoras,
-    user,
-    fetchAuthorized,
-    queryClient,
-    identificacionFacturacion,
-    razonSocialFacturacion,
-    correoFacturacion,
-  ]);
-
-  const fechaHoraTexto =
-    modalidad === 'cupo_compartido'
-      ? selectedDate
-        ? `${formatFecha(selectedDate)} · ${cantidadEntradas} entrada${cantidadEntradas !== 1 ? 's' : ''}`
-        : ''
-      : selectedDate && horaDesde != null && horaHasta != null
-        ? `${formatFecha(selectedDate)} · ${formatHora(horaDesde)}–${formatHora(horaHasta)}`
-        : '';
-
-  const handlePaymentSuccess = useCallback(async (result?: { pagoYaRegistrado?: boolean }) => {
-    // Datafast ya registra el pago en el backend al verificar la transacción
-    // (ver datafast.service.ts); solo hace falta este registro manual para
-    // pasarelas que todavía no confirman el pago del lado del servidor (Kushki).
-    if (reservaCreada && !result?.pagoYaRegistrado) {
-      try {
-        await fetchAuthorized(accessToken =>
-          registrarPago(reservaCreada.id, reservaCreada.pago.total ?? 0, accessToken),
-        );
-      } catch (err) {
-        Alert.alert(
-          'Pago procesado, pero no se pudo registrar',
-          err instanceof Error ? err.message : 'Contacta soporte con tu comprobante.',
-          [{ text: 'Entendido' }],
-        );
-      }
-    }
-    setShowPayment(false);
-    setSelectedDate(null);
-    setHoraDesde(null);
-    setHoraHasta(null);
-    setReservaCreada(null);
-    // El pago cambió el estado de la reserva en backend — que Calendario
-    // muestre el estado fresco ("pagado") en vez de la caché de hace un rato.
-    queryClient.invalidateQueries({ queryKey: MIS_RESERVAS_QUERY_KEY });
-    onClose();
-    router.navigate('/calendario');
-  }, [reservaCreada, fetchAuthorized, onClose, router, queryClient]);
-
-  const handleClosePayment = useCallback(async () => {
-    setShowPayment(false);
-    if (reservaCreada) {
-      try {
-        await fetchAuthorized(accessToken =>
-          cancelarReserva(reservaCreada.id, 'Cliente canceló el pago', accessToken),
-        );
-        queryClient.invalidateQueries({ queryKey: MIS_RESERVAS_QUERY_KEY });
-      } catch {
-        // best effort: no bloqueamos la UI si la cancelación silenciosa falla
-      }
-      setReservaCreada(null);
-    }
-  }, [reservaCreada, fetchAuthorized]);
-
   if (!espacio) return null;
 
-  const esCupoCompartido = modalidad === 'cupo_compartido';
-  // Backend hoy reutiliza la modalidad de tarifa "hora" como precio de entrada para
-  // piscinas (ver docs/backend-espacios-archetypes-spec.md §4, sin decidir todavía), así
-  // que `espacio.unidad` vendría mal etiquetado — lo forzamos acá para la UI.
+  // Backend hoy reutiliza la modalidad de tarifa "hora" como precio de entrada
+  // para piscinas (ver docs/backend-espacios-archetypes-spec.md §4, sin decidir
+  // todavía), así que `espacio.unidad` vendría mal etiquetado: se fuerza acá.
   const unidadLabel = esCupoCompartido ? 'entrada' : espacio.unidad;
-  const cantidadUnidades = esCupoCompartido ? cantidadEntradas : cantidadHoras;
-  const precioDelDia = disponibilidad?.tarifa?.precio ?? espacio.precio;
-  const subtotalReserva = cantidadUnidades > 0 ? precioDelDia * cantidadUnidades : 0;
-  const comisionServicio = subtotalReserva * SERVICE_FEE_RATE;
-  const totalReserva = subtotalReserva + comisionServicio;
-  // Para que el resumen genérico de pago (`${cantidad} ${espacio.unidad}(s)`) diga
-  // "entrada(s)" en vez de "hora(s)" cuando corresponde.
+  // Para que el resumen genérico de pago diga "entrada(s)" y no "hora(s)".
   const espacioParaPago = esCupoCompartido ? { ...espacio, unidad: unidadLabel } : espacio;
+
+  const fechaHoraTexto = !selectedDate
+    ? ''
+    : esCupoCompartido
+      ? `${formatFecha(selectedDate)} · ${cantidadEntradas} entrada${cantidadEntradas !== 1 ? 's' : ''}`
+      : horaDesde != null && horaHasta != null
+        ? `${formatFecha(selectedDate)} · ${formatHora(horaDesde)}–${formatHora(horaHasta)}`
+        : '';
 
   return (
     <Modal
@@ -645,7 +407,7 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={handleReservar}
+                  onPress={reservar}
                   disabled={creandoReserva}
                   style={[styles.reserveButton, creandoReserva && styles.reserveButtonDisabled]}>
                   {creandoReserva ? (
@@ -690,8 +452,8 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
           cantidad={cantidadUnidades}
           total={(reservaCreada?.pago.total ?? totalReserva).toFixed(2)}
           reservaId={reservaCreada?.id ?? null}
-          onClose={handleClosePayment}
-          onSuccess={handlePaymentSuccess}
+          onClose={cancelarPago}
+          onSuccess={confirmarPago}
         />
       )}
 
