@@ -40,6 +40,12 @@ export interface RequestOptions {
   fallback: string;
   /** `false` para endpoints públicos (p. ej. el listado de reseñas). */
   auth?: boolean;
+  /**
+   * Token explícito, al margen del `TokenProvider`. Lo usa la sesión de kiosco,
+   * que es independiente de la del cliente y no tiene refresh: un 401 se
+   * propaga tal cual para que la UI vuelva a pedir el PIN.
+   */
+  token?: string;
   /** Cuerpo a serializar como JSON. */
   body?: unknown;
   /** Parámetros de query; los `null`/`undefined` se omiten. */
@@ -80,7 +86,12 @@ async function send(
   accessToken: string | null,
 ): Promise<Response> {
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+  // También en los POST/PUT sin cuerpo: varios endpoints del backend responden
+  // 415 si falta el header (ver la nota del servicio de favoritos), y así se
+  // manda exactamente lo mismo que antes de centralizar el cliente.
+  if (options.body !== undefined || method === 'POST' || method === 'PUT' || method === 'PATCH') {
+    headers['Content-Type'] = 'application/json';
+  }
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
   return fetch(buildUrl(path, options.query), {
@@ -94,8 +105,9 @@ async function send(
 async function request<T>(method: Method, path: string, options: RequestOptions): Promise<T> {
   const needsAuth = options.auth !== false;
 
-  if (!needsAuth) {
-    const res = await send(method, path, options, null);
+  // Público, o con token propio (kiosco): en ningún caso hay refresh que aplicar.
+  if (!needsAuth || options.token) {
+    const res = await send(method, path, options, options.token ?? null);
     await throwIfNotOk(res, options.fallback, options.makeError);
     return parseBody<T>(res);
   }

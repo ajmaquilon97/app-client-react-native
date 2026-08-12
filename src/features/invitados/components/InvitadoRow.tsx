@@ -1,79 +1,85 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { Invitado } from '@/types';
-import { useAuth } from '@/context/AuthContext';
-import { reenviarInvitado, InvitadoApiError } from '@/services/invitados.service';
-import EditarInvitadoModal from '@/components/invitados/EditarInvitadoModal';
+
 import { makeStyles, useTheme } from '@/shared/theme';
+
+import EditarInvitadoModal from './EditarInvitadoModal';
+import { InvitadoApiError } from '../errors';
+import { useReenviarInvitado } from '../hooks/useInvitadoMutations';
+import { Invitado } from '../types';
 
 const DEFAULT_COOLDOWN_SECONDS = 300;
 
 interface InvitadoRowProps {
   reservaId: number;
   invitado: Invitado;
-  onUpdated: (invitado: Invitado) => void;
 }
 
-export default function InvitadoRow({ reservaId, invitado, onUpdated }: InvitadoRowProps) {
+export default function InvitadoRow({ reservaId, invitado }: InvitadoRowProps) {
   const styles = useStyles();
   const { colors } = useTheme();
-  const { fetchAuthorized } = useAuth();
-  const [reenviando, setReenviando] = useState(false);
   const [limiteAlcanzado, setLimiteAlcanzado] = useState(false);
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
-  const [segundosRestantes, setSegundosRestantes] = useState(0);
+  const [ahora, setAhora] = useState(() => Date.now());
   const [showEditar, setShowEditar] = useState(false);
 
+  // El efecto solo suscribe el reloj; el `setState` va dentro del callback del
+  // intervalo, no en el cuerpo del efecto. Los segundos restantes se derivan del
+  // render en vez de guardarse en su propio estado.
   useEffect(() => {
-    if (!cooldownUntil) {
-      setSegundosRestantes(0);
-      return;
-    }
-    const tick = () => {
-      const restante = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
-      setSegundosRestantes(restante);
-      if (restante <= 0) setCooldownUntil(null);
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
+    if (!cooldownUntil) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setAhora(now);
+      if (now >= cooldownUntil) setCooldownUntil(null);
+    }, 1000);
+
     return () => clearInterval(interval);
   }, [cooldownUntil]);
 
   const ingresado = invitado.estado === 'Ingresado';
+  const segundosRestantes = cooldownUntil
+    ? Math.max(0, Math.ceil((cooldownUntil - ahora) / 1000))
+    : 0;
   const enCooldown = segundosRestantes > 0;
 
-  const handleReenviar = async () => {
-    setReenviando(true);
-    try {
-      await fetchAuthorized(accessToken => reenviarInvitado(reservaId, invitado.id, accessToken));
-      Alert.alert('Reenviada', 'Se reenvió la credencial al correo del invitado.', [{ text: 'Entendido' }]);
-    } catch (err) {
-      if (err instanceof InvitadoApiError && err.status === 400) {
-        setLimiteAlcanzado(true);
-        Alert.alert(
-          'Límite alcanzado',
-          'Ya reenviaste esta invitación 3 veces. Contacta al anfitrión si tu invitado sigue sin recibirla.',
-          [{ text: 'Entendido' }],
-        );
-      } else if (err instanceof InvitadoApiError && err.status === 429) {
-        setCooldownUntil(Date.now() + (err.retryAfterSeconds ?? DEFAULT_COOLDOWN_SECONDS) * 1000);
-        Alert.alert('Espera unos minutos', 'Espera unos minutos antes de volver a enviar.', [
+  const reenviar = useReenviarInvitado(reservaId);
+  const reenviando = reenviar.isPending;
+
+  const handleReenviar = () => {
+    reenviar.mutate(invitado.id, {
+      onSuccess: () =>
+        Alert.alert('Reenviada', 'Se reenvió la credencial al correo del invitado.', [
           { text: 'Entendido' },
-        ]);
-      } else {
-        Alert.alert(
-          'No se pudo reenviar',
-          err instanceof Error ? err.message : 'Intenta de nuevo.',
-          [{ text: 'Entendido' }],
-        );
-      }
-    } finally {
-      setReenviando(false);
-    }
+        ]),
+      onError: err => {
+        if (err instanceof InvitadoApiError && err.status === 400) {
+          setLimiteAlcanzado(true);
+          Alert.alert(
+            'Límite alcanzado',
+            'Ya reenviaste esta invitación 3 veces. Contacta al anfitrión si tu invitado sigue sin recibirla.',
+            [{ text: 'Entendido' }],
+          );
+        } else if (err instanceof InvitadoApiError && err.status === 429) {
+          const desde = Date.now();
+          setAhora(desde);
+          setCooldownUntil(desde + (err.retryAfterSeconds ?? DEFAULT_COOLDOWN_SECONDS) * 1000);
+          Alert.alert('Espera unos minutos', 'Espera unos minutos antes de volver a enviar.', [
+            { text: 'Entendido' },
+          ]);
+        } else {
+          Alert.alert('No se pudo reenviar', err.message || 'Intenta de nuevo.', [
+            { text: 'Entendido' },
+          ]);
+        }
+      },
+    });
   };
 
-  const handleSaved = (actualizado: Invitado) => {
-    onUpdated(actualizado);
+  // Editar regenera credenciales y resetea el contador de reenvíos en backend:
+  // el cooldown y el tope local tienen que irse con él.
+  const handleSaved = () => {
     setLimiteAlcanzado(false);
     setCooldownUntil(null);
   };

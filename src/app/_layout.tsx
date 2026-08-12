@@ -1,5 +1,5 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { KioskAuthProvider, useKioskAuth } from '@/context/KioskAuthContext';
+import { KioskAuthProvider, useKioskAuth } from '@/features/recepcion';
 import { LocationProvider } from '@/context/LocationContext';
 import { ThemeModeProvider } from '@/context/ThemeModeContext';
 import { queryClient } from '@/shared/api/queryClient';

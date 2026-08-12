@@ -1,13 +1,9 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, FlatList, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftIcon } from '@/shared/ui/icons';
-import { useInvitados, invitadosQueryKey } from '@/hooks/useInvitados';
-import InvitadoRow from '@/components/invitados/InvitadoRow';
-import AsignarInvitadosForm from '@/components/invitados/AsignarInvitadosForm';
-import { Invitado } from '@/types';
+import { AsignarInvitadosForm, InvitadoRow, useInvitados } from '@/features/invitados';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 export default function InvitadosScreen() {
@@ -15,7 +11,6 @@ export default function InvitadosScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { id, titulo, maxCapacidad } = useLocalSearchParams<{
     id: string;
     titulo?: string;
@@ -31,16 +26,6 @@ export default function InvitadosScreen() {
     if (!Number.isFinite(total)) return null;
     return Math.max(0, total - invitados.length);
   }, [maxCapacidad, invitados.length]);
-
-  const handleUpdated = (actualizado: Invitado) => {
-    queryClient.setQueryData<Invitado[]>(invitadosQueryKey(reservaId), prev =>
-      prev ? prev.map(i => (i.id === actualizado.id ? actualizado : i)) : prev,
-    );
-  };
-
-  const handleAsignados = () => {
-    queryClient.invalidateQueries({ queryKey: invitadosQueryKey(reservaId) });
-  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -58,7 +43,7 @@ export default function InvitadosScreen() {
         data={invitados}
         keyExtractor={item => item.id}
         contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + spacing.xxxl }]}
-        renderItem={({ item }) => <InvitadoRow reservaId={reservaId} invitado={item} onUpdated={handleUpdated} />}
+        renderItem={({ item }) => <InvitadoRow reservaId={reservaId} invitado={item} />}
         ItemSeparatorComponent={() => <View style={{ height: spacing.xs }} />}
         ListHeaderComponent={
           isLoading ? (
@@ -91,7 +76,6 @@ export default function InvitadosScreen() {
               <AsignarInvitadosForm
                 reservaId={reservaId}
                 disponibleEstimado={disponibleEstimado}
-                onAsignados={handleAsignados}
               />
             </View>
           ) : null

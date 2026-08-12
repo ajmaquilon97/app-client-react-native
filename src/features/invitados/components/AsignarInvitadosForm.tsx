@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { InvitacionAsignada, InvitadoInput } from '@/types';
-import { useAuth } from '@/context/AuthContext';
-import { asignarInvitados, InvitadoApiError } from '@/services/invitados.service';
+
 import { makeStyles, useTheme } from '@/shared/theme';
+
+import { InvitadoApiError } from '../errors';
+import { useAsignarInvitados } from '../hooks/useInvitadoMutations';
+import { InvitadoInput } from '../types';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -20,20 +22,19 @@ function filaVacia(): FilaInvitado {
 interface AsignarInvitadosFormProps {
   reservaId: number;
   disponibleEstimado: number | null;
-  onAsignados: (invitaciones: InvitacionAsignada[]) => void;
 }
 
 export default function AsignarInvitadosForm({
   reservaId,
   disponibleEstimado,
-  onAsignados,
 }: AsignarInvitadosFormProps) {
   const styles = useStyles();
   const { colors } = useTheme();
-  const { fetchAuthorized } = useAuth();
   const [filas, setFilas] = useState<FilaInvitado[]>([filaVacia()]);
-  const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
+
+  const asignar = useAsignarInvitados(reservaId);
+  const enviando = asignar.isPending;
 
   const alTope = disponibleEstimado != null && filas.length >= Math.max(disponibleEstimado, 1);
 
@@ -50,7 +51,7 @@ export default function AsignarInvitadosForm({
     setFilas(prev => (prev.length > 1 ? prev.filter(f => f.key !== key) : prev));
   };
 
-  const handleAsignar = async () => {
+  const handleAsignar = () => {
     const invitados: InvitadoInput[] = filas.map(f => ({ nombre: f.nombre.trim(), correo: f.correo.trim() }));
 
     for (const inv of invitados) {
@@ -65,26 +66,22 @@ export default function AsignarInvitadosForm({
     }
 
     setError('');
-    setEnviando(true);
-    try {
-      const nuevos = await fetchAuthorized(accessToken => asignarInvitados(reservaId, invitados, accessToken));
-      onAsignados(nuevos);
-      setFilas([filaVacia()]);
-    } catch (err) {
-      if (err instanceof InvitadoApiError && err.status === 409) {
-        Alert.alert('No hay suficiente cupo', err.message, [{ text: 'Entendido' }]);
-      } else if (err instanceof InvitadoApiError && err.hasFieldErrors) {
-        setError('Revisa los datos ingresados: el nombre es obligatorio y el correo debe tener un formato válido.');
-      } else {
-        Alert.alert(
-          'No se pudieron asignar los invitados',
-          err instanceof Error ? err.message : 'Intenta de nuevo.',
-          [{ text: 'Entendido' }],
-        );
-      }
-    } finally {
-      setEnviando(false);
-    }
+    asignar.mutate(invitados, {
+      onSuccess: () => setFilas([filaVacia()]),
+      onError: err => {
+        if (err instanceof InvitadoApiError && err.status === 409) {
+          Alert.alert('No hay suficiente cupo', err.message, [{ text: 'Entendido' }]);
+        } else if (err instanceof InvitadoApiError && err.hasFieldErrors) {
+          setError(
+            'Revisa los datos ingresados: el nombre es obligatorio y el correo debe tener un formato válido.',
+          );
+        } else {
+          Alert.alert('No se pudieron asignar los invitados', err.message || 'Intenta de nuevo.', [
+            { text: 'Entendido' },
+          ]);
+        }
+      },
+    });
   };
 
   return (

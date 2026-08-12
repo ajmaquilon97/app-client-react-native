@@ -3,8 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, Back
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKioskAuth } from '@/context/KioskAuthContext';
-import { validarQr } from '@/services/recepcion.service';
+import { useKioskAuth, validarQr } from '@/features/recepcion';
 import { ApiError } from '@/shared/api/errors';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import * as recepcionService from '@/services/recepcion.service';
+import * as recepcionService from '../services/recepcion.service';
 
 // Sesión de kiosco: completamente separada de AuthContext (ver
 // docs/frontend-spec-control-acceso.md — el JWT de recepción no representa a un

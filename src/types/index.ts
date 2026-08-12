@@ -112,47 +112,8 @@ export interface ReservaPago {
   fechaUltimoPago: string | null;
 }
 
-// Control de acceso (invitados, PIN y kiosco) — ver docs/frontend-spec-control-acceso.md
-export type EstadoInvitado = 'Pendiente' | 'Enviado' | 'Ingresado';
-
-// Shape de GET .../invitados y PUT .../invitados/{id} (§4.2/§4.4). Nunca trae
-// tokenQr/codigoCorto — esas credenciales solo viajan por correo al invitado.
-export interface Invitado {
-  id: string;
-  nombre: string;
-  correo: string;
-  estado: EstadoInvitado;
-}
-
-// Shape de POST .../invitaciones/asignar (§4.1) — deliberadamente distinto de
-// Invitado, así lo devuelve el backend para ese endpoint puntual.
-export interface InvitacionAsignada {
-  id: string;
-  reservaId: number;
-  nombreInvitado: string | null;
-  correoInvitado: string | null;
-  enviada: boolean;
-  usada: boolean;
-  fechaUso: string | null;
-}
-
-export interface InvitadoInput {
-  nombre: string;
-  correo: string;
-}
-
-// POST /api/mobile/auth/recepcion (§4.6)
-export interface RecepcionLoginResult {
-  accessToken: string;
-  reservaId: number;
-  expiraEn: string;
-}
-
-// POST /api/mobile/recepcion/validar-qr (§4.7)
-export interface ValidarQrResult {
-  invitadoId: string;
-  nombre: string;
-}
+// Los tipos de invitados y de recepción/kiosco viven ahora en
+// src/features/invitados/types.ts y src/features/recepcion/types.ts.
 
 export interface Reserva {
   id: number;
