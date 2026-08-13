@@ -257,12 +257,13 @@ magnitud pero **no sustituye** al tiempo del runner:
 | -------------- | ----- |
 | Ejecución completa de Jest con cobertura (36 suites, 550 pruebas) | ~7 segundos |
 
-**Sobre "Tiempo de compilación Expo: 1 min":** el workflow implementado no
-compila la app. Compilar el binario nativo en cada PR llevaría entre 10 y 20
-minutos y no aporta señal de calidad sobre el código; esa compilación ya está
-resuelta en el workflow separado `android-release-bundle.yml`, que genera el
-`.aab` firmado en cada push a `develop`. Si conservas esa fila en la tabla,
-tienes que aclarar que corresponde a ese otro workflow, o retirarla.
+**Sobre "Tiempo de compilación Expo: 1 min":** el workflow de calidad
+(`pruebas.yml`) no compila la app. Compilar el binario nativo en cada PR
+llevaría entre 10 y 20 minutos y no aporta señal de calidad sobre el código;
+esa compilación vive aparte, en `android-release-bundle.yml`, que genera el
+`.aab` firmado al abrir o actualizar el PR hacia `main` — y que no bloquea el
+merge si falla. Si conservas esa fila en la tabla, tienes que aclarar que
+corresponde a ese otro workflow, o retirarla.
 
 **Sobre el párrafo de causas de fallo** (`[COMPLETAR: causas reales — p. ej.,
 errores de configuración de Expo detectados por expo-doctor, errores de tipos de

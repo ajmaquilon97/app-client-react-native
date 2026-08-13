@@ -24,12 +24,24 @@ export default function RecepcionScanScreen() {
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [procesando, setProcesando] = useState(false);
   const [codigoManual, setCodigoManual] = useState('');
+  const [camaraActiva, setCamaraActiva] = useState(false);
   const procesandoRef = useRef(false);
 
+  /**
+   * El botón físico de atrás nunca cierra el modo kiosco (eso solo lo hace
+   * "Salir", con confirmación). Pero si la cámara está encendida, sí sirve
+   * para apagarla y volver al menú, que es lo que la gente espera al
+   * presionarlo.
+   */
   useEffect(() => {
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (camaraActiva) {
+        setCamaraActiva(false);
+      }
+      return true;
+    });
     return () => sub.remove();
-  }, []);
+  }, [camaraActiva]);
 
   const handleCodigo = useCallback(
     async (codigo: string) => {
@@ -78,11 +90,12 @@ export default function RecepcionScanScreen() {
 
   const cerrarResultado = () => setResultado(null);
 
+  const volverAlMenu = useCallback(() => setCamaraActiva(false), []);
+
   /**
    * Única salida del modo kiosco. Sin esto la pantalla es un callejón sin
-   * salida: el botón físico de atrás está interceptado, el gesto de retroceso
-   * desactivado y la sesión sobrevive al cierre de la app, así que solo se salía
-   * esperando a que el PIN caducara.
+   * salida: el gesto de retroceso está desactivado y la sesión sobrevive al
+   * cierre de la app, así que solo se salía esperando a que el PIN caducara.
    *
    * Va con confirmación porque el dispositivo está en la puerta, al alcance de
    * los invitados, y volver a entrar exige pedirle el PIN al anfitrión.
@@ -120,20 +133,45 @@ export default function RecepcionScanScreen() {
     );
   }
 
-  const escaneoActivo = !resultado && !procesando;
+  const escaneoActivo = camaraActiva && !resultado && !procesando;
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-        onBarcodeScanned={escaneoActivo ? handleBarcodeScanned : undefined}
-      />
+      {camaraActiva ? (
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+          onBarcodeScanned={escaneoActivo ? handleBarcodeScanned : undefined}
+        />
+      ) : (
+        <View style={styles.menu}>
+          <Text style={styles.menuTitle}>Validar entrada</Text>
+          <Text style={styles.menuSubtitle}>
+            Escanea el código QR de la entrada o ingresa el código corto abajo.
+          </Text>
+          <TouchableOpacity activeOpacity={0.85} style={styles.qrBtn} onPress={() => setCamaraActiva(true)}>
+            <Text style={styles.qrBtnText}>Escanear código QR</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-      {/* Sobre la cámara, discreto: es una acción del anfitrión, no del flujo
+      {/* Sobre la cámara, discreto: son acciones del anfitrión, no del flujo
           de validación. Los overlays de resultado lo tapan a propósito. */}
       <View style={[styles.topBar, { paddingTop: insets.top + spacing.xs }]}>
+        {camaraActiva ? (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={volverAlMenu}
+            accessibilityRole="button"
+            accessibilityLabel="Volver y apagar la cámara"
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.backBtn}>
+            <Text style={styles.backBtnText}>‹ Volver</Text>
+          </TouchableOpacity>
+        ) : (
+          <View />
+        )}
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={confirmarSalida}
@@ -206,6 +244,38 @@ const useStyles = makeStyles((t) => ({
   camera: {
     flex: 1,
   },
+  menu: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: t.spacing.xl,
+    gap: t.spacing.md,
+  },
+  menuTitle: {
+    fontSize: t.fontSize.xl,
+    fontWeight: t.fontWeight.extraBold,
+    color: t.colors.textInverse,
+    textAlign: 'center',
+  },
+  menuSubtitle: {
+    fontSize: t.fontSize.sm,
+    color: t.colors.textOnMedia,
+    textAlign: 'center',
+  },
+  qrBtn: {
+    marginTop: t.spacing.md,
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: t.colors.accent,
+    borderRadius: t.radius.md,
+    paddingVertical: t.spacing.md,
+    paddingHorizontal: t.spacing.xl,
+  },
+  qrBtnText: {
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.base,
+    fontWeight: t.fontWeight.extraBold,
+  },
   center: {
     flex: 1,
     alignItems: 'center',
@@ -243,8 +313,19 @@ const useStyles = makeStyles((t) => ({
     left: 0,
     right: 0,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     paddingHorizontal: t.spacing.md,
+  },
+  backBtn: {
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.xs,
+    borderRadius: t.radius.full,
+    backgroundColor: t.colors.overlay,
+  },
+  backBtnText: {
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
   },
   exitBtn: {
     paddingHorizontal: t.spacing.md,

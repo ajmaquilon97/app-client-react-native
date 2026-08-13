@@ -1,18 +1,23 @@
 name: Android Release Bundle
 
-# Genera el .aab de release en cada commit a develop, firmado con
-# agora-release-key.jks. El keystore y sus contraseñas no viven en el repo
-# (ver .gitignore) — se reconstruyen en el runner a partir de GitHub Secrets,
-# igual que gradle.properties en local. Requiere estos secrets en
+# Genera el .aab de release al abrir/actualizar un Pull Request hacia main,
+# firmado con agora-release-key.jks. El keystore y sus contraseñas no viven en
+# el repo (ver .gitignore) — se reconstruyen en el runner a partir de GitHub
+# Secrets, igual que gradle.properties en local. Requiere estos secrets en
 # Settings > Secrets and variables > Actions:
 #   ANDROID_RELEASE_KEYSTORE_BASE64  (agora-release-key.jks en base64)
 #   ANDROID_RELEASE_KEY_ALIAS
 #   ANDROID_RELEASE_STORE_PASSWORD
 #   ANDROID_RELEASE_KEY_PASSWORD
+#
+# Se dispara solo en el PR hacia main (no en push ni en develop/feature): el
+# bundle firmado es un artefacto de release, no algo que tenga sentido generar
+# en cada commit de desarrollo. No es un status check obligatorio — que falle
+# no bloquea el merge (ver pruebas.yml para la validación que sí bloquea).
 
 on:
-  push:
-    branches: [develop]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:

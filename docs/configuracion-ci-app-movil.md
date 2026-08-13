@@ -44,11 +44,16 @@ protección de rama lo impide, y todo lo que llega ahí pasó ya por el PR.
 | ------- | -------- | ------------ |
 | `.github/workflows/pruebas.yml` | Lint, tipos, pruebas con cobertura, artefacto y correo | Ver arriba |
 | `.github/workflows/code-analysis.yml` | CodeQL + SonarCloud | Ver arriba |
-| `.github/workflows/android-release-bundle.yml` | Genera el `.aab` firmado | Push a `develop` (ya existía) |
+| `.github/workflows/android-release-bundle.yml` | Genera el `.aab` firmado | PR hacia `main` |
 
-> El workflow de release sigue disparándose en `develop` porque genera el
-> binario de pruebas, no una validación de calidad. Si quieres que el `.aab`
-> salga del código ya validado, cámbialo a `main`.
+> El workflow de release se dispara en el PR hacia `main`, no en cada push a
+> `develop`: el bundle firmado es un artefacto de release, no algo que tenga
+> sentido regenerar en cada commit de desarrollo. **No es un status check
+> obligatorio** — que falle no bloquea el merge, a diferencia de `pruebas.yml`.
+> Si quieres verlo como evidencia de que el binario compila antes de llegar a
+> producción, puedes añadirlo más adelante como check obligatorio del ruleset
+> (§6), una vez que hayas confirmado que corre en verde con los secrets de este
+> apartado configurados.
 
 ### Cambios respecto de lo que había
 
@@ -88,10 +93,65 @@ protección de rama lo impide, y todo lo que llega ahí pasó ya por el PR.
 | `MAIL_PASSWORD` | `pruebas.yml` | **Contraseña de aplicación** de Google (16 caracteres), no la contraseña de la cuenta | Igual que el anterior |
 | `SONAR_TOKEN` | `code-analysis.yml` | Token generado en SonarCloud | El job *SonarCloud Analysis* falla; solo bloquea si lo pones como check obligatorio |
 | `GITHUB_TOKEN` | `code-analysis.yml` | **No hay que crearlo**: GitHub lo inyecta solo en cada ejecución | — |
+| `ANDROID_RELEASE_KEYSTORE_BASE64` | `android-release-bundle.yml` | `agora-release-key.jks` codificado en base64, en una sola línea | El paso *Decode release keystore* produce un `.jks` vacío o corrupto; falla `bundleRelease` |
+| `ANDROID_RELEASE_KEY_ALIAS` | `android-release-bundle.yml` | Alias del keystore | Falla la firma: `Failed to read key from store` |
+| `ANDROID_RELEASE_STORE_PASSWORD` | `android-release-bundle.yml` | Contraseña del almacén (`.jks`) | Falla la firma: `keystore password was incorrect` |
+| `ANDROID_RELEASE_KEY_PASSWORD` | `android-release-bundle.yml` | Contraseña de la clave dentro del almacén | Falla la firma: `Cannot recover key` |
 
 Son los mismos nombres que en el portal web, así que si ya los tienes ahí, los
 valores de `MAIL_USERNAME` y `MAIL_PASSWORD` sirven tal cual; `SONAR_TOKEN`
 puede ser el mismo token de la organización.
+
+### Cómo obtener los cuatro secrets de Android
+
+Ya existe un keystore de release (`agora-release-key.jks`, referenciado en
+`docs/build-android-release.md`) en otra máquina, con sus contraseñas en
+`agora-release-key.credentials.txt`. **No generes uno nuevo**: la huella SHA1
+de ese keystore es la "upload key" que Play Console espera, y una vez que se
+sube el primer `.aab` firmado con una key, Play Console rechaza cualquier
+subida futura firmada con otra distinta.
+
+1. **Localiza los dos archivos** en la máquina donde se generaron (ambos están
+   en `.gitignore`, así que no viajan con el repo — tienen que copiarse a mano
+   o recuperarse de donde los respaldaste).
+
+2. **Codifica el `.jks` en base64, en una sola línea.** El decodificador del
+   workflow (`base64 --decode`) no tolera saltos de línea, así que el comando
+   importa:
+
+   PowerShell:
+   ```powershell
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("agora-release-key.jks")) | Set-Clipboard
+   ```
+   Queda copiado en el portapapeles, listo para pegar directamente en el campo
+   *Value* del secret.
+
+   Bash / Git Bash:
+   ```bash
+   base64 -w0 agora-release-key.jks > keystore.b64
+   ```
+   `-w0` desactiva el ajuste de línea de `base64` (por defecto corta cada 76
+   caracteres); abre `keystore.b64` y copia el contenido completo.
+
+3. **Abre `agora-release-key.credentials.txt`** y ubica los tres valores:
+   `ALIAS`, `STORE_PASSWORD`, `KEY_PASSWORD`.
+
+4. **Crea los cuatro secrets** en *Settings → Secrets and variables → Actions →
+   New repository secret*, con los nombres exactos de la tabla de arriba. Pega
+   el base64 completo en `ANDROID_RELEASE_KEYSTORE_BASE64` — sin comillas, sin
+   saltos de línea añadidos a mano.
+
+5. **Verifica sin gastar una ejecución completa**: dispara el workflow con
+   *Actions → Android Release Bundle → Run workflow* (usa `workflow_dispatch`,
+   no requiere un PR) y revisa que el paso *Build release bundle* termine en
+   verde. Si falla en *Decode release keystore* o en la firma, compara los
+   mensajes de error con la columna *Si falta* de la tabla — identifican cuál
+   de los cuatro secrets está mal.
+
+No hace falta tocar `gradle.properties` en el runner: el workflow lo genera en
+cada ejecución a partir de estos cuatro secrets (paso *Configure release
+signing*), igual que tú lo configuras a mano en local siguiendo
+`docs/build-android-release.md`.
 
 ### Qué necesitas según lo que quieras conseguir
 
@@ -269,10 +329,12 @@ técnicamente impuesta.
 
 ### El workflow del bundle no bloquea nada
 
-`android-release-bundle.yml` se dispara con `push` a `develop` y no participa en
-ningún Pull Request, así que no puede aparecer como status check ni frenar un
-merge. Que falle la generación del `.aab` no detiene el flujo de trabajo, que es
-el comportamiento esperado.
+`android-release-bundle.yml` sí se dispara en el PR hacia `main`, igual que
+`pruebas.yml`, pero **no lo añadas a la lista de status checks requeridos** del
+ruleset. Que falle la generación del `.aab` no debe frenar un merge cuyo código
+ya pasó lint, tipos y pruebas — solo bloquea lo que explícitamente marques como
+obligatorio en *Require status checks to pass*, así que basta con no
+seleccionarlo ahí.
 
 ---
 
