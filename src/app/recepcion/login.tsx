@@ -1,13 +1,15 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKioskAuth } from '@/features/recepcion';
 import { AuthTextField , AuthButton } from '@/features/auth';
-import { makeStyles, spacing } from '@/shared/theme';
+import { ArrowLeftIcon } from '@/shared/ui/icons';
+import { makeStyles, spacing, useTheme } from '@/shared/theme';
 
 export default function RecepcionLoginScreen() {
   const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { loginKiosk } = useKioskAuth();
@@ -53,6 +55,19 @@ export default function RecepcionLoginScreen() {
             { paddingTop: insets.top + spacing.xxl, paddingBottom: insets.bottom + spacing.xl },
           ]}
           keyboardShouldPersistTaps="handled">
+          {/* Sin este botón la pantalla no tiene salida visible: el layout la
+              monta sin cabecera, así que solo se podía volver con el gesto o el
+              botón físico del sistema. */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))}
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.backButton}>
+            <ArrowLeftIcon size={20} color={colors.primaryText} strokeWidth={2.5} />
+          </TouchableOpacity>
+
           <Text style={styles.title}>Ingreso Recepción</Text>
           <Text style={styles.subtitle}>
             Ingresa el PIN de 6 dígitos que te entregó el anfitrión para abrir la sesión de kiosco.
@@ -90,6 +105,17 @@ const useStyles = makeStyles((t) => ({
   scrollContent: {
     paddingHorizontal: t.spacing.lg,
     flexGrow: 1,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: t.radius.full,
+    backgroundColor: t.colors.surface,
+    borderWidth: 1,
+    borderColor: t.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: t.spacing.lg,
   },
   title: {
     fontSize: t.fontSize.xxxl,

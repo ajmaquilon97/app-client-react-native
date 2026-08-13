@@ -18,6 +18,7 @@ import { useLocationContext } from '@/shared/location/LocationContext';
 import { Espacio, LocationMap } from '@/features/espacios';
 import { SaveToListSheet } from '@/features/favoritos';
 import { PaymentModal, SERVICE_FEE_RATE } from '@/features/pagos';
+import { DeferredContent } from '@/shared/ui/feedback';
 import { ArrowLeftIcon, CheckIcon, HeartIcon, LocationIcon } from '@/shared/ui/icons';
 import { makeStyles, spacing, useTheme } from '@/shared/theme';
 import { esMismoDia, formatFecha, formatHora } from '@/shared/utils/fechas';
@@ -180,282 +181,288 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
           </TouchableOpacity>
         </View>
 
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
-          <ScrollView
-            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xxxl }]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled">
+        {/* La cabecera queda fuera del gate a propósito: aparece en el primer
+            frame, así que se puede volver sin esperar a que cargue el resto. */}
+        <DeferredContent active={visible} message="Preparando el espacio…">
+          {() => (
+            <KeyboardAvoidingView
+              style={styles.flex}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+              <ScrollView
+                contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + spacing.xxxl }]}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled">
 
-            {/* Cover image */}
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: espacio.imagen }} style={styles.image} contentFit="cover" />
-              <View style={styles.subcategoryBadge}>
-                <Text style={styles.subcategoryText}>{espacio.subcategoria}</Text>
-              </View>
-              {espacio.disponibleHoy && (
-                <View style={styles.disponibleBadge}>
-                  <Text style={styles.disponibleText}>⚡ Disponible Hoy</Text>
-                </View>
-              )}
-            </View>
-
-            <View style={styles.body}>
-
-              {/* Nombre y rating */}
-              <Text style={styles.nombre}>{espacio.nombre}</Text>
-              <View style={styles.metaRow}>
-                <Text style={styles.rating}>★ {espacio.rating}</Text>
-                <Text style={styles.metaDot}>•</Text>
-                {/* "reseñas verificadas" no lleva a ninguna pantalla todavía; se oculta hasta que exista esa acción. */}
-                {/* <Text style={styles.reviewsLink}>{espacio.reviews} reseñas verificadas</Text>
-                <Text style={styles.metaDot}>•</Text> */}
-                <Text style={styles.distancia}>
-                  📍{' '}
-                  {distanciaKm != null
-                    ? `a ${formatDistanceKm(distanciaKm)}`
-                    : userLocationLoading
-                      ? 'Calculando distancia…'
-                      : 'Ubicación no disponible'}
-                </Text>
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Anfitrión */}
-              <View style={styles.hostCard}>
-                <Image
-                  source={{ uri: espacio.anfitrion.avatar }}
-                  style={styles.hostAvatar}
-                  contentFit="cover"
-                />
-                <View style={styles.hostInfo}>
-                  <Text style={styles.hostLabel}>Anfitrión del espacio</Text>
-                  <Text style={styles.hostName}>
-                    {espacio.anfitrion.nombre}
-                    {espacio.anfitrion.verificado ? ' ✔' : ''}
-                  </Text>
-                  <Text style={styles.hostSince}>{espacio.anfitrion.registro}</Text>
-                </View>
-                {/* Botón "Contactar" sin acción implementada todavía; se oculta hasta que exista el flujo de contacto. */}
-                {/* <TouchableOpacity activeOpacity={0.8} style={styles.contactBtn}>
-                  <Text style={styles.contactBtnText}>Contactar</Text>
-                </TouchableOpacity> */}
-              </View>
-
-              <View style={styles.divider} />
-
-              {/* Descripción */}
-              <Text style={styles.sectionTitle}>Sobre el Espacio</Text>
-              <View style={styles.descCard}>
-                <Text style={styles.descripcion}>{espacio.descripcion}</Text>
-              </View>
-
-              {/* Servicios */}
-              <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Servicios Incluidos</Text>
-              <View style={styles.servicesGrid}>
-                {espacio.servicios.map((servicio, index) => (
-                  <View key={index} style={styles.serviceItem}>
-                    <CheckIcon size={14} color={colors.accent} />
-                    <Text style={styles.serviceText} numberOfLines={1}>{servicio}</Text>
+                {/* Cover image */}
+                <View style={styles.imageContainer}>
+                  <Image source={{ uri: espacio.imagen }} style={styles.image} contentFit="cover" />
+                  <View style={styles.subcategoryBadge}>
+                    <Text style={styles.subcategoryText}>{espacio.subcategoria}</Text>
                   </View>
-                ))}
-              </View>
-
-              {/* Mapa de ubicación */}
-              <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Ubicación aproximada</Text>
-              <View style={styles.mapContainer}>
-                {espacioCoords ? (
-                  <LocationMap
-                    latitude={espacioCoords.latitude}
-                    longitude={espacioCoords.longitude}
-                  />
-                ) : (
-                  <View style={styles.mapUnavailable}>
-                    <LocationIcon size={20} color={colors.textMuted} />
-                    <Text style={styles.mapUnavailableText}>Ubicación no disponible</Text>
-                  </View>
-                )}
-                <View style={styles.mapLabel}>
-                  <LocationIcon size={10} color={colors.headerText} />
-                  <Text style={styles.mapLabelText}>{espacio.ubicacion}</Text>
-                </View>
-              </View>
-
-              {/* Normas */}
-              <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Normas del Lugar</Text>
-              <View style={styles.normasCard}>
-                {espacio.normas.map((norma, idx) => (
-                  <View key={idx} style={styles.normaRow}>
-                    <Text style={styles.normaDot}>•</Text>
-                    <Text style={styles.normaText}>{norma}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* Calculadora de reserva */}
-              <View style={styles.bookingCard}>
-                <View style={styles.bookingHeader}>
-                  <Text style={styles.bookingHeaderLabel}>Planifica tu reserva</Text>
-                  <Text style={styles.bookingHeaderPrice}>
-                    ${espacio.precio} <Text style={styles.bookingPriceUnit}>/{unidadLabel}</Text>
-                  </Text>
-                </View>
-
-                <Text style={styles.inputLabel}>Día</Text>
-                <DaySelector hoy={hoy} selectedDate={selectedDate} onSelect={setSelectedDate} />
-
-                {selectedDate && (
-                  <>
-                    {disponibilidadLoading && (
-                      <View style={styles.infoBanner}>
-                        <ActivityIndicator size="small" color={colors.textSecondary} />
-                        <Text style={styles.infoBannerText}>Consultando tarifa y disponibilidad…</Text>
-                      </View>
-                    )}
-                    {!disponibilidadLoading && disponibilidadError && (
-                      <View style={styles.warningBanner}>
-                        <Text style={styles.warningBannerText}>⚠️ {disponibilidadError}</Text>
-                      </View>
-                    )}
-                    {!disponibilidadLoading && !disponibilidadError && disponibilidad && !disponibilidad.tarifa && (
-                      <View style={styles.warningBanner}>
-                        <Text style={styles.warningBannerText}>
-                          ⚠️ Este espacio no tiene una tarifa configurada para el {esHoy ? 'día de hoy' : 'día elegido'}.
-                        </Text>
-                      </View>
-                    )}
-                  </>
-                )}
-
-                {esCupoCompartido ? (
-                  <>
-                    <Text style={[styles.inputLabel, styles.inputLabelSpaced]}>Cantidad de entradas</Text>
-                    <TicketQuantitySelector
-                      cantidad={cantidadEntradas}
-                      onChange={setCantidadEntradas}
-                      aforo={aforo}
-                      loading={aforoLoading}
-                      error={aforoError}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <Text style={[styles.inputLabel, styles.inputLabelSpaced]}>Horario</Text>
-                    <HourRangeSelector
-                      horaDesde={horaDesde}
-                      horaHasta={horaHasta}
-                      onChangeDesde={handleChangeHoraDesde}
-                      onChangeHasta={setHoraHasta}
-                      horasEstado={disponibilidad?.horas}
-                    />
-                  </>
-                )}
-
-                {/* Desglose de costos */}
-                {cantidadUnidades > 0 && disponibilidad?.tarifa && (
-                  <View style={[styles.costBreakdown, styles.costBreakdownSpaced]}>
-                    <View style={styles.costRow}>
-                      <Text style={styles.costLabel}>
-                        Costo por {cantidadUnidades} {unidadLabel}
-                        {cantidadUnidades !== 1 ? 's' : ''}:
-                      </Text>
-                      <Text style={styles.costValue}>${precioDelDia} c/u</Text>
+                  {espacio.disponibleHoy && (
+                    <View style={styles.disponibleBadge}>
+                      <Text style={styles.disponibleText}>⚡ Disponible Hoy</Text>
                     </View>
-                    <View style={styles.costRow}>
-                      <Text style={styles.costLabel}>Subtotal:</Text>
-                      <Text style={styles.costValue}>${subtotalReserva.toFixed(2)}</Text>
-                    </View>
-                    <View style={styles.costRow}>
-                      <Text style={styles.costLabel}>
-                        Comisión de servicio ({(SERVICE_FEE_RATE * 100).toFixed(0)}%):
-                      </Text>
-                      <Text style={styles.costValue}>${comisionServicio.toFixed(2)}</Text>
-                    </View>
-                    <View style={styles.costDivider} />
-                    <View style={styles.costRow}>
-                      <Text style={styles.costTotal}>Total a pagar:</Text>
-                      <Text style={styles.costTotalValue}>${totalReserva.toFixed(2)}</Text>
-                    </View>
-
-                    <View style={styles.facturacionDivider} />
-                    <Text style={styles.facturacionTitle}>Datos de facturación (opcional)</Text>
-                    <Text style={styles.facturacionHelper}>
-                      Si no los completas, la factura se emite a &ldquo;Consumidor Final&rdquo;.
-                    </Text>
-
-                    <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Cédula o RUC</Text>
-                    <TextInput
-                      value={identificacionFacturacion}
-                      onChangeText={setIdentificacionFacturacion}
-                      placeholder="Ej. 0102030405"
-                      placeholderTextColor={colors.textMuted}
-                      keyboardType="number-pad"
-                      maxLength={13}
-                      style={styles.facturacionInput}
-                    />
-
-                    <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Razón social / Nombre</Text>
-                    <TextInput
-                      value={razonSocialFacturacion}
-                      onChangeText={setRazonSocialFacturacion}
-                      placeholder="Nombre o empresa a facturar"
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.facturacionInput}
-                    />
-
-                    <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Correo electrónico</Text>
-                    <TextInput
-                      value={correoFacturacion}
-                      onChangeText={setCorreoFacturacion}
-                      placeholder="correo@ejemplo.com"
-                      placeholderTextColor={colors.textMuted}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      style={styles.facturacionInput}
-                    />
-                  </View>
-                )}
-
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={reservar}
-                  disabled={creandoReserva}
-                  style={[styles.reserveButton, creandoReserva && styles.reserveButtonDisabled]}>
-                  {creandoReserva ? (
-                    <ActivityIndicator size="small" color={colors.accent} />
-                  ) : (
-                    <Text style={styles.reserveButtonText}>CONTINUAR AL PAGO →</Text>
                   )}
-                </TouchableOpacity>
-              </View>
+                </View>
 
-              {/* Reseñas */}
-              {espacio.comentarios.length > 0 && (
-                <>
-                  <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
-                    Reseñas de Usuarios ({espacio.comentarios.length})
-                  </Text>
-                  {espacio.comentarios.map((com, idx) => (
-                    <View key={idx} style={styles.reviewCard}>
-                      <View style={styles.reviewHeader}>
-                        <Text style={styles.reviewUser}>{com.usuario}</Text>
-                        <Text style={styles.reviewDate}>{com.fecha}</Text>
-                      </View>
-                      <Text style={styles.reviewStars}>
-                        {'★'.repeat(com.rating)}{'☆'.repeat(5 - com.rating)}
+                <View style={styles.body}>
+
+                  {/* Nombre y rating */}
+                  <Text style={styles.nombre}>{espacio.nombre}</Text>
+                  <View style={styles.metaRow}>
+                    <Text style={styles.rating}>★ {espacio.rating}</Text>
+                    <Text style={styles.metaDot}>•</Text>
+                    {/* "reseñas verificadas" no lleva a ninguna pantalla todavía; se oculta hasta que exista esa acción. */}
+                    {/* <Text style={styles.reviewsLink}>{espacio.reviews} reseñas verificadas</Text>
+                    <Text style={styles.metaDot}>•</Text> */}
+                    <Text style={styles.distancia}>
+                      📍{' '}
+                      {distanciaKm != null
+                        ? `a ${formatDistanceKm(distanciaKm)}`
+                        : userLocationLoading
+                          ? 'Calculando distancia…'
+                          : 'Ubicación no disponible'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.divider} />
+
+                  {/* Anfitrión */}
+                  <View style={styles.hostCard}>
+                    <Image
+                      source={{ uri: espacio.anfitrion.avatar }}
+                      style={styles.hostAvatar}
+                      contentFit="cover"
+                    />
+                    <View style={styles.hostInfo}>
+                      <Text style={styles.hostLabel}>Anfitrión del espacio</Text>
+                      <Text style={styles.hostName}>
+                        {espacio.anfitrion.nombre}
+                        {espacio.anfitrion.verificado ? ' ✔' : ''}
                       </Text>
-                      <Text style={styles.reviewText}>&ldquo;{com.texto}&rdquo;</Text>
+                      <Text style={styles.hostSince}>{espacio.anfitrion.registro}</Text>
                     </View>
-                  ))}
-                </>
-              )}
+                    {/* Botón "Contactar" sin acción implementada todavía; se oculta hasta que exista el flujo de contacto. */}
+                    {/* <TouchableOpacity activeOpacity={0.8} style={styles.contactBtn}>
+                      <Text style={styles.contactBtnText}>Contactar</Text>
+                    </TouchableOpacity> */}
+                  </View>
 
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+                  <View style={styles.divider} />
+
+                  {/* Descripción */}
+                  <Text style={styles.sectionTitle}>Sobre el Espacio</Text>
+                  <View style={styles.descCard}>
+                    <Text style={styles.descripcion}>{espacio.descripcion}</Text>
+                  </View>
+
+                  {/* Servicios */}
+                  <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Servicios Incluidos</Text>
+                  <View style={styles.servicesGrid}>
+                    {espacio.servicios.map((servicio, index) => (
+                      <View key={index} style={styles.serviceItem}>
+                        <CheckIcon size={14} color={colors.accent} />
+                        <Text style={styles.serviceText} numberOfLines={1}>{servicio}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Mapa de ubicación */}
+                  <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Ubicación aproximada</Text>
+                  <View style={styles.mapContainer}>
+                    {espacioCoords ? (
+                      <LocationMap
+                        latitude={espacioCoords.latitude}
+                        longitude={espacioCoords.longitude}
+                      />
+                    ) : (
+                      <View style={styles.mapUnavailable}>
+                        <LocationIcon size={20} color={colors.textMuted} />
+                        <Text style={styles.mapUnavailableText}>Ubicación no disponible</Text>
+                      </View>
+                    )}
+                    <View style={styles.mapLabel}>
+                      <LocationIcon size={10} color={colors.headerText} />
+                      <Text style={styles.mapLabelText}>{espacio.ubicacion}</Text>
+                    </View>
+                  </View>
+
+                  {/* Normas */}
+                  <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Normas del Lugar</Text>
+                  <View style={styles.normasCard}>
+                    {espacio.normas.map((norma, idx) => (
+                      <View key={idx} style={styles.normaRow}>
+                        <Text style={styles.normaDot}>•</Text>
+                        <Text style={styles.normaText}>{norma}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Calculadora de reserva */}
+                  <View style={styles.bookingCard}>
+                    <View style={styles.bookingHeader}>
+                      <Text style={styles.bookingHeaderLabel}>Planifica tu reserva</Text>
+                      <Text style={styles.bookingHeaderPrice}>
+                        ${espacio.precio} <Text style={styles.bookingPriceUnit}>/{unidadLabel}</Text>
+                      </Text>
+                    </View>
+
+                    <Text style={styles.inputLabel}>Día</Text>
+                    <DaySelector hoy={hoy} selectedDate={selectedDate} onSelect={setSelectedDate} />
+
+                    {selectedDate && (
+                      <>
+                        {disponibilidadLoading && (
+                          <View style={styles.infoBanner}>
+                            <ActivityIndicator size="small" color={colors.textSecondary} />
+                            <Text style={styles.infoBannerText}>Consultando tarifa y disponibilidad…</Text>
+                          </View>
+                        )}
+                        {!disponibilidadLoading && disponibilidadError && (
+                          <View style={styles.warningBanner}>
+                            <Text style={styles.warningBannerText}>⚠️ {disponibilidadError}</Text>
+                          </View>
+                        )}
+                        {!disponibilidadLoading && !disponibilidadError && disponibilidad && !disponibilidad.tarifa && (
+                          <View style={styles.warningBanner}>
+                            <Text style={styles.warningBannerText}>
+                              ⚠️ Este espacio no tiene una tarifa configurada para el {esHoy ? 'día de hoy' : 'día elegido'}.
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    )}
+
+                    {esCupoCompartido ? (
+                      <>
+                        <Text style={[styles.inputLabel, styles.inputLabelSpaced]}>Cantidad de entradas</Text>
+                        <TicketQuantitySelector
+                          cantidad={cantidadEntradas}
+                          onChange={setCantidadEntradas}
+                          aforo={aforo}
+                          loading={aforoLoading}
+                          error={aforoError}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Text style={[styles.inputLabel, styles.inputLabelSpaced]}>Horario</Text>
+                        <HourRangeSelector
+                          horaDesde={horaDesde}
+                          horaHasta={horaHasta}
+                          onChangeDesde={handleChangeHoraDesde}
+                          onChangeHasta={setHoraHasta}
+                          horasEstado={disponibilidad?.horas}
+                        />
+                      </>
+                    )}
+
+                    {/* Desglose de costos */}
+                    {cantidadUnidades > 0 && disponibilidad?.tarifa && (
+                      <View style={[styles.costBreakdown, styles.costBreakdownSpaced]}>
+                        <View style={styles.costRow}>
+                          <Text style={styles.costLabel}>
+                            Costo por {cantidadUnidades} {unidadLabel}
+                            {cantidadUnidades !== 1 ? 's' : ''}:
+                          </Text>
+                          <Text style={styles.costValue}>${precioDelDia} c/u</Text>
+                        </View>
+                        <View style={styles.costRow}>
+                          <Text style={styles.costLabel}>Subtotal:</Text>
+                          <Text style={styles.costValue}>${subtotalReserva.toFixed(2)}</Text>
+                        </View>
+                        <View style={styles.costRow}>
+                          <Text style={styles.costLabel}>
+                            Comisión de servicio ({(SERVICE_FEE_RATE * 100).toFixed(0)}%):
+                          </Text>
+                          <Text style={styles.costValue}>${comisionServicio.toFixed(2)}</Text>
+                        </View>
+                        <View style={styles.costDivider} />
+                        <View style={styles.costRow}>
+                          <Text style={styles.costTotal}>Total a pagar:</Text>
+                          <Text style={styles.costTotalValue}>${totalReserva.toFixed(2)}</Text>
+                        </View>
+
+                        <View style={styles.facturacionDivider} />
+                        <Text style={styles.facturacionTitle}>Datos de facturación (opcional)</Text>
+                        <Text style={styles.facturacionHelper}>
+                          Si no los completas, la factura se emite a &ldquo;Consumidor Final&rdquo;.
+                        </Text>
+
+                        <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Cédula o RUC</Text>
+                        <TextInput
+                          value={identificacionFacturacion}
+                          onChangeText={setIdentificacionFacturacion}
+                          placeholder="Ej. 0102030405"
+                          placeholderTextColor={colors.textMuted}
+                          keyboardType="number-pad"
+                          maxLength={13}
+                          style={styles.facturacionInput}
+                        />
+
+                        <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Razón social / Nombre</Text>
+                        <TextInput
+                          value={razonSocialFacturacion}
+                          onChangeText={setRazonSocialFacturacion}
+                          placeholder="Nombre o empresa a facturar"
+                          placeholderTextColor={colors.textMuted}
+                          style={styles.facturacionInput}
+                        />
+
+                        <Text style={[styles.inputLabel, styles.facturacionInputLabel]}>Correo electrónico</Text>
+                        <TextInput
+                          value={correoFacturacion}
+                          onChangeText={setCorreoFacturacion}
+                          placeholder="correo@ejemplo.com"
+                          placeholderTextColor={colors.textMuted}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          style={styles.facturacionInput}
+                        />
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={reservar}
+                      disabled={creandoReserva}
+                      style={[styles.reserveButton, creandoReserva && styles.reserveButtonDisabled]}>
+                      {creandoReserva ? (
+                        <ActivityIndicator size="small" color={colors.accent} />
+                      ) : (
+                        <Text style={styles.reserveButtonText}>CONTINUAR AL PAGO →</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Reseñas */}
+                  {espacio.comentarios.length > 0 && (
+                    <>
+                      <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
+                        Reseñas de Usuarios ({espacio.comentarios.length})
+                      </Text>
+                      {espacio.comentarios.map((com, idx) => (
+                        <View key={idx} style={styles.reviewCard}>
+                          <View style={styles.reviewHeader}>
+                            <Text style={styles.reviewUser}>{com.usuario}</Text>
+                            <Text style={styles.reviewDate}>{com.fecha}</Text>
+                          </View>
+                          <Text style={styles.reviewStars}>
+                            {'★'.repeat(com.rating)}{'☆'.repeat(5 - com.rating)}
+                          </Text>
+                          <Text style={styles.reviewText}>&ldquo;{com.texto}&rdquo;</Text>
+                        </View>
+                      ))}
+                    </>
+                  )}
+
+                </View>
+              </ScrollView>
+            </KeyboardAvoidingView>
+          )}
+        </DeferredContent>
       </View>
 
       {espacio && (

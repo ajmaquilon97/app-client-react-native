@@ -78,6 +78,26 @@ export default function RecepcionScanScreen() {
 
   const cerrarResultado = () => setResultado(null);
 
+  /**
+   * Única salida del modo kiosco. Sin esto la pantalla es un callejón sin
+   * salida: el botón físico de atrás está interceptado, el gesto de retroceso
+   * desactivado y la sesión sobrevive al cierre de la app, así que solo se salía
+   * esperando a que el PIN caducara.
+   *
+   * Va con confirmación porque el dispositivo está en la puerta, al alcance de
+   * los invitados, y volver a entrar exige pedirle el PIN al anfitrión.
+   */
+  const confirmarSalida = useCallback(() => {
+    Alert.alert(
+      'Salir del modo recepción',
+      'Se cerrará la sesión de kiosco. Para volver a validar entradas necesitarás el PIN del anfitrión.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Salir', style: 'destructive', onPress: () => logoutKiosk() },
+      ],
+    );
+  }, [logoutKiosk]);
+
   if (!permission) {
     return (
       <View style={styles.center}>
@@ -110,6 +130,20 @@ export default function RecepcionScanScreen() {
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
         onBarcodeScanned={escaneoActivo ? handleBarcodeScanned : undefined}
       />
+
+      {/* Sobre la cámara, discreto: es una acción del anfitrión, no del flujo
+          de validación. Los overlays de resultado lo tapan a propósito. */}
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.xs }]}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={confirmarSalida}
+          accessibilityRole="button"
+          accessibilityLabel="Salir del modo recepción"
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.exitBtn}>
+          <Text style={styles.exitBtnText}>Salir</Text>
+        </TouchableOpacity>
+      </View>
 
       {procesando && !resultado && (
         <View style={styles.processingOverlay}>
@@ -202,6 +236,26 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.accent,
     fontSize: t.fontSize.sm,
     fontWeight: t.fontWeight.extraBold,
+  },
+  topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: t.spacing.md,
+  },
+  exitBtn: {
+    paddingHorizontal: t.spacing.md,
+    paddingVertical: t.spacing.xs,
+    borderRadius: t.radius.full,
+    backgroundColor: t.colors.overlay,
+  },
+  exitBtnText: {
+    color: t.colors.textInverse,
+    fontSize: t.fontSize.sm,
+    fontWeight: t.fontWeight.bold,
   },
   processingOverlay: {
     position: 'absolute',

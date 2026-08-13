@@ -1,6 +1,17 @@
 // Módulos nativos que no existen en el entorno de Jest. `jest-expo` cubre los
 // del SDK de Expo; los de terceros hay que declararlos aquí.
 
+// `requestIdleCallback` lo aporta el runtime de React Native (lo usa
+// `DeferredContent` para aplazar el montaje de árboles pesados) y Node no.
+// Aquí se resuelve al momento: así los tests de componentes ven el contenido ya
+// montado y no tienen que saber que existe el aplazamiento. Una suite que sí
+// necesite controlar cuándo queda ocioso el hilo sustituye estos globales.
+global.requestIdleCallback = callback => {
+  callback({ didTimeout: false, timeRemaining: () => 50 });
+  return 0;
+};
+global.cancelIdleCallback = () => {};
+
 // El almacenamiento seguro es nativo: en Jest se sustituye por espías que cada
 // suite programa a su gusto. Por defecto se comporta como un llavero vacío.
 jest.mock('expo-secure-store', () => ({

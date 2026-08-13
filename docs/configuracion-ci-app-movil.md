@@ -82,16 +82,31 @@ protección de rama lo impide, y todo lo que llega ahí pasó ya por el PR.
 
 **Settings → Secrets and variables → Actions → pestaña *Secrets* → *New repository secret***
 
-| Secret | Usado por | Valor |
-| ------ | --------- | ----- |
-| `MAIL_USERNAME` | `pruebas.yml` | La cuenta de Gmail que envía: `angelmaquilon97@gmail.com` |
-| `MAIL_PASSWORD` | `pruebas.yml` | **Contraseña de aplicación** de Google (16 caracteres), no la contraseña de la cuenta |
-| `SONAR_TOKEN` | `code-analysis.yml` | Token generado en SonarCloud |
-| `GITHUB_TOKEN` | `code-analysis.yml` | **No hay que crearlo**: GitHub lo inyecta solo en cada ejecución |
+| Secret | Usado por | Valor | Si falta |
+| ------ | --------- | ----- | -------- |
+| `MAIL_USERNAME` | `pruebas.yml` | La cuenta de Gmail que envía: `angelmaquilon97@gmail.com` | No llega el correo; el merge **no** se bloquea |
+| `MAIL_PASSWORD` | `pruebas.yml` | **Contraseña de aplicación** de Google (16 caracteres), no la contraseña de la cuenta | Igual que el anterior |
+| `SONAR_TOKEN` | `code-analysis.yml` | Token generado en SonarCloud | El job *SonarCloud Analysis* falla; solo bloquea si lo pones como check obligatorio |
+| `GITHUB_TOKEN` | `code-analysis.yml` | **No hay que crearlo**: GitHub lo inyecta solo en cada ejecución | — |
 
 Son los mismos nombres que en el portal web, así que si ya los tienes ahí, los
 valores de `MAIL_USERNAME` y `MAIL_PASSWORD` sirven tal cual; `SONAR_TOKEN`
 puede ser el mismo token de la organización.
+
+### Qué necesitas según lo que quieras conseguir
+
+| Objetivo | Secrets necesarios |
+| -------- | ------------------ |
+| Solo bloquear el merge cuando fallan lint, tipos o pruebas | **Ninguno** |
+| Además recibir el reporte de cobertura por correo | `MAIL_USERNAME` + `MAIL_PASSWORD` |
+| Además análisis de SonarCloud | `SONAR_TOKEN` |
+
+El bloqueo del merge no depende de ningún secret: lo decide el paso *Reflejar el
+resultado de las verificaciones*, que solo mira el desenlace de lint, tipos y
+pruebas. El paso de envío del correo lleva `continue-on-error`, precisamente
+para que un fallo de SMTP —credenciales ausentes, Gmail caído— no impida
+integrar código que sí pasó las verificaciones. El fallo del envío queda visible
+como anotación en la ejecución, así que no pasa desapercibido.
 
 ### Cómo obtener `MAIL_PASSWORD`
 

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Text } from 'react-native';
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { act, render, screen, fireEvent } from '@testing-library/react-native';
 
 import { ConTema } from '../../../../jest/harness';
 import ScreenState from '../feedback/ScreenState';
 import QueryBoundary, { BoundaryQuery } from '../feedback/QueryBoundary';
+import DeferredContent from '../feedback/DeferredContent';
 
 describe('ScreenState', () => {
   it('en "cargando" ignora el título y la acción: solo va el indicador', async () => {
@@ -171,5 +172,122 @@ describe('QueryBoundary', () => {
     );
 
     expect(screen.getByText('Cancha, Piscina')).toBeTruthy();
+  });
+});
+
+describe('DeferredContent', () => {
+  // `requestIdleCallback` se intercepta para decidir en el test cuándo queda
+  // ocioso el hilo: con el real, el momento del montaje no es determinista.
+  let tareasOciosas: (() => void)[] = [];
+  const requestOriginal = globalThis.requestIdleCallback;
+  const cancelOriginal = globalThis.cancelIdleCallback;
+
+  beforeEach(() => {
+    tareasOciosas = [];
+    globalThis.requestIdleCallback = ((cb: () => void) =>
+      tareasOciosas.push(cb)) as unknown as typeof globalThis.requestIdleCallback;
+    globalThis.cancelIdleCallback = jest.fn();
+  });
+
+  afterEach(() => {
+    globalThis.requestIdleCallback = requestOriginal;
+    globalThis.cancelIdleCallback = cancelOriginal;
+  });
+
+  const quedarOcioso = async () => {
+    await act(async () => {
+      tareasOciosas.forEach(tarea => tarea());
+    });
+  };
+
+  it('pinta el indicador con su mensaje antes de montar el contenido', async () => {
+    await render(
+      <DeferredContent message="Preparando el espacio…">
+        {() => <Text>Contenido pesado</Text>}
+      </DeferredContent>,
+      { wrapper: ConTema },
+    );
+
+    expect(screen.getByText('Preparando el espacio…')).toBeTruthy();
+    expect(screen.queryByText('Contenido pesado')).toBeNull();
+  });
+
+  it('monta el contenido cuando el hilo queda ocioso', async () => {
+    await render(
+      <DeferredContent message="Preparando el espacio…">
+        {() => <Text>Contenido pesado</Text>}
+      </DeferredContent>,
+      { wrapper: ConTema },
+    );
+
+    await quedarOcioso();
+
+    expect(screen.getByText('Contenido pesado')).toBeTruthy();
+    expect(screen.queryByText('Preparando el espacio…')).toBeNull();
+  });
+
+  // Es la razón de ser del componente: si el árbol se construyera igual durante
+  // la espera, aplazar el montaje no ahorraría nada.
+  it('no construye el árbol pesado mientras espera', async () => {
+    const construir = jest.fn(() => <Text>Contenido pesado</Text>);
+
+    await render(<DeferredContent>{construir}</DeferredContent>, { wrapper: ConTema });
+
+    expect(construir).not.toHaveBeenCalled();
+
+    await quedarOcioso();
+
+    expect(construir).toHaveBeenCalled();
+  });
+
+  it('no pinta nada mientras está inactivo', async () => {
+    await render(
+      <DeferredContent active={false} message="Preparando el espacio…">
+        {() => <Text>Contenido pesado</Text>}
+      </DeferredContent>,
+      { wrapper: ConTema },
+    );
+
+    expect(screen.queryByText('Preparando el espacio…')).toBeNull();
+    expect(screen.queryByText('Contenido pesado')).toBeNull();
+  });
+
+  // Sin el rearme, la segunda apertura de una hoja mostraría el contenido de la
+  // anterior durante un frame en vez del indicador.
+  it('vuelve al indicador cuando se cierra y se reabre', async () => {
+    const vista = await render(
+      <DeferredContent active message="Preparando el espacio…">
+        {() => <Text>Contenido pesado</Text>}
+      </DeferredContent>,
+      { wrapper: ConTema },
+    );
+
+    await quedarOcioso();
+    expect(screen.getByText('Contenido pesado')).toBeTruthy();
+
+    await vista.rerender(
+      <DeferredContent active={false} message="Preparando el espacio…">
+        {() => <Text>Contenido pesado</Text>}
+      </DeferredContent>,
+    );
+    await vista.rerender(
+      <DeferredContent active message="Preparando el espacio…">
+        {() => <Text>Contenido pesado</Text>}
+      </DeferredContent>,
+    );
+
+    expect(screen.getByText('Preparando el espacio…')).toBeTruthy();
+    expect(screen.queryByText('Contenido pesado')).toBeNull();
+  });
+
+  it('admite un indicador propio en lugar del de la app', async () => {
+    await render(
+      <DeferredContent fallback={<Text>Abriendo…</Text>}>
+        {() => <Text>Contenido pesado</Text>}
+      </DeferredContent>,
+      { wrapper: ConTema },
+    );
+
+    expect(screen.getByText('Abriendo…')).toBeTruthy();
   });
 });

@@ -251,16 +251,90 @@ consume la rama `web` de `fonts`.
 - `QueryBoundary` — envuelve una query completa. Útil cuando la pantalla *es*
   una sola cosa; si hay cabecera que debe seguir visible durante la carga, usa
   `ScreenState` como `ListEmptyComponent`.
+- `DeferredContent` — aplaza el montaje de un árbol pesado y mientras tanto
+  pinta el indicador. Para demoras de render, no de red (§7.1).
 
 Regla de UX para errores: **inline** para validación de formulario, `Alert` para
 acciones destructivas, confirmaciones y fallos que interrumpen un flujo.
+
+### 7.1 Toda demora perceptible lleva indicador
+
+**Regla:** ninguna acción del usuario puede quedar sin respuesta visual. Si entre
+el toque y el resultado hay una espera que se nota, va el indicador de la app —
+el spinner rosa (`colors.accent`, `#FD548A`) que pinta `ScreenState`. Siempre el
+mismo, en cualquier pantalla: es la señal de "te escuché, estoy en ello".
+
+No inventes un indicador nuevo por pantalla. Lo que cambia según de dónde venga
+la demora es **qué componente** la cubre:
+
+| De dónde viene la demora | Qué usar | Ejemplo |
+| --- | --- | --- |
+| Una petición de red | `QueryBoundary`, o `ScreenState variant="loading"` si la cabecera debe seguir visible | catálogo de espacios, reservas |
+| El montaje de una pantalla pesada (imágenes, `WebView`, selectores) | `DeferredContent` | hoja de detalle del espacio |
+| Una acción puntual del usuario | El estado pendiente del propio botón (`isPending` de la mutación) | "Continuar al pago" |
+
+El tercer caso no lleva `ScreenState`: bloquear la pantalla entera por una
+mutación esconde el contexto que el usuario acaba de rellenar.
+
+### 7.2 `DeferredContent`: demoras de render
+
+Un contenedor solo pinta su primer frame cuando ya montó **todo** lo que lleva
+dentro. Si eso incluye imágenes remotas, selectores y un `WebView`, entre el
+toque y la aparición de la ventana hay un hueco en el que la app parece colgada:
+no hay nada que indique que el toque se registró.
+
+`DeferredContent` invierte el orden — primero la ventana con el indicador, que
+es barata de pintar; el trabajo caro después, ya con respuesta en pantalla:
+
+```tsx
+<DeferredContent active={visible} message="Preparando el espacio…">
+  {() => <ArbolPesado />}
+</DeferredContent>
+```
+
+Tres detalles que no son casuales:
+
+- **Los hijos son una función**, no un elemento. Así el árbol pesado ni siquiera
+  se construye hasta que toca montarlo, que es justo lo que se quiere aplazar.
+- **`active` rearma el gate.** Al cerrarse, la siguiente apertura vuelve a
+  empezar por el indicador en vez de enseñar un frame del contenido anterior.
+- **Deja fuera lo que deba responder ya.** En la hoja de detalle la cabecera vive
+  fuera del gate: se puede volver sin esperar a que cargue el resto.
+
+Por dentro usa `requestIdleCallback` y **no**
+`InteractionManager.runAfterInteractions`: este último quedó deprecado en React
+Native 0.84 (vamos por la 0.85) y su propia nota de deprecación remite a
+`requestIdleCallback`. Lleva un plazo máximo de 500 ms como seguro contra el
+indicador eterno: si el hilo de JS nunca llega a estar ocioso, el contenido se
+monta igual.
+
+En Jest el global lo aporta [`jest/setup.js`](../jest/setup.js), resuelto al
+momento, para que los tests de componentes no tengan que saber que existe el
+aplazamiento.
+
+### 7.3 Saneo de entrada
+
+[`shared/utils/texto.ts`](../src/shared/utils/texto.ts) — `soloDigitos`,
+`soloNombre`, `soloCorreo`. Se aplican en el **setter**, no en el `TextInput`:
+`keyboardType` es una sugerencia al teclado, no una restricción (no cubre pegar
+ni un teclado físico), y así lo que viaja a backend no depende de qué componente
+pinte el formulario. Ver `useReservaFlow` para el patrón.
+
+Van por lista blanca —qué se conserva— y no por lista negra de emojis: cada
+versión de Unicode añade rangos, y hay que contar con secuencias ZWJ, tonos de
+piel, keycaps y banderas. Además evita depender del soporte de
+`\p{Extended_Pictographic}` en Hermes, que no es el motor con el que corren los
+tests.
+
+Hoy solo lo usan los campos de facturación. Los formularios de registro e
+invitados siguen sin sanear.
 
 ---
 
 ## 8. Tests
 
 `npm test` (jest-expo). Cubren la capa barata y de mayor retorno: cliente HTTP,
-servicios de cada feature, utils y el mapeo DTO→dominio. **115 tests.**
+servicios de cada feature, utils y el mapeo DTO→dominio. **590 tests.**
 
 `jest/setup.js` mockea los módulos nativos de terceros; `jest/styleMock.js`
 absorbe los `import './global.css'`.

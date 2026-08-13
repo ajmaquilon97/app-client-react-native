@@ -119,8 +119,14 @@ jobs:
             jest-results.json
           retention-days: 30
 
+      # `continue-on-error` a propósito: el correo es una notificación, no una
+      # verificación de calidad. Este job es el status check que bloquea el
+      # merge, así que un fallo de SMTP —credenciales ausentes, Gmail caído—
+      # no puede impedir integrar código que sí pasó lint, tipos y pruebas.
+      # El fallo queda visible como anotación en la ejecución.
       - name: Enviar el reporte por correo
         if: always()
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
