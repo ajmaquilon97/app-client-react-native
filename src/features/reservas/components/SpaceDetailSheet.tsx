@@ -202,8 +202,9 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
               <View style={styles.metaRow}>
                 <Text style={styles.rating}>★ {espacio.rating}</Text>
                 <Text style={styles.metaDot}>•</Text>
-                <Text style={styles.reviewsLink}>{espacio.reviews} reseñas verificadas</Text>
-                <Text style={styles.metaDot}>•</Text>
+                {/* "reseñas verificadas" no lleva a ninguna pantalla todavía; se oculta hasta que exista esa acción. */}
+                {/* <Text style={styles.reviewsLink}>{espacio.reviews} reseñas verificadas</Text>
+                <Text style={styles.metaDot}>•</Text> */}
                 <Text style={styles.distancia}>
                   📍{' '}
                   {distanciaKm != null
@@ -231,9 +232,10 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
                   </Text>
                   <Text style={styles.hostSince}>{espacio.anfitrion.registro}</Text>
                 </View>
-                <TouchableOpacity activeOpacity={0.8} style={styles.contactBtn}>
+                {/* Botón "Contactar" sin acción implementada todavía; se oculta hasta que exista el flujo de contacto. */}
+                {/* <TouchableOpacity activeOpacity={0.8} style={styles.contactBtn}>
                   <Text style={styles.contactBtnText}>Contactar</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
 
               <View style={styles.divider} />

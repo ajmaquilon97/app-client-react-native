@@ -93,7 +93,7 @@ export default function SettingsScreen() {
 
         <Text style={styles.groupLabel}>GENERAL</Text>
         <View style={styles.settingsGroup}>
-          <SettingItem label="Notificaciones" onPress={() => {}} />
+          {/* "Notificaciones" no tiene pantalla ni acción implementada todavía; se oculta hasta que exista ese flujo. */}
           <SettingItem
             label="Tema"
             value={THEME_MODE_LABELS[mode]}
@@ -102,15 +102,11 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <Text style={styles.groupLabel}>CUENTA</Text>
-        <View style={styles.settingsGroup}>
-          <SettingItem label="Editar perfil" onPress={() => {}} />
-          <SettingItem label="Cambiar contraseña" onPress={() => {}} isLast />
-        </View>
+        {/* "Editar perfil" y "Cambiar contraseña" no tienen pantalla ni acción implementada todavía; se oculta el grupo hasta que exista ese flujo. */}
 
         <Text style={styles.groupLabel}>SOPORTE</Text>
         <View style={styles.settingsGroup}>
-          <SettingItem label="Centro de ayuda" onPress={() => {}} />
+          {/* "Centro de ayuda" no tiene pantalla ni acción implementada todavía; se oculta hasta que exista ese flujo. */}
           <SettingItem
             label="Términos y condiciones"
             onPress={() => router.push('/terminos-condiciones')}
