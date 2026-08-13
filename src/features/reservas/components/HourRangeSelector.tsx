@@ -60,6 +60,7 @@ export default function HourRangeSelector({
           return (
             <TouchableOpacity
               key={`desde-${hora}`}
+              testID={`hora-desde-${hora}`}
               activeOpacity={0.8}
               disabled={disabled}
               onPress={() => onChangeDesde(hora)}
@@ -90,6 +91,7 @@ export default function HourRangeSelector({
             return (
               <TouchableOpacity
                 key={`hasta-${hora}`}
+                testID={`hora-hasta-${hora}`}
                 activeOpacity={0.8}
                 onPress={() => onChangeHasta(hora)}
                 style={[styles.chip, isActive && styles.chipActive]}>

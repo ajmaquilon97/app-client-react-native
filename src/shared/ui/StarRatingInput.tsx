@@ -23,6 +23,8 @@ export default function StarRatingInput({ value, onChange, size = 30, disabled }
           key={star}
           activeOpacity={0.7}
           disabled={disabled}
+          accessibilityRole="button"
+          accessibilityLabel={star === 1 ? '1 estrella' : `${star} estrellas`}
           onPress={() => onChange(star)}
           hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
           <StarIcon size={size} color={colors.star} filled={star <= value} />

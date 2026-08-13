@@ -48,3 +48,5 @@ google-service-account.json
 # Android release signing keystore + credentials
 agora-release-key.jks
 agora-release-key.credentials.txt
+coverage/
+jest-results.json

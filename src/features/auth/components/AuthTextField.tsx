@@ -33,6 +33,8 @@ export default function AuthTextField({
         {isPassword && (
           <TouchableOpacity
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             onPress={() => setShowPassword((prev) => !prev)}>
             {showPassword ? (
               <EyeOffIcon size={20} color={colors.textMuted} />

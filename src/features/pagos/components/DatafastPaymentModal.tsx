@@ -102,8 +102,15 @@ const DatafastPaymentModal: React.FC<DatafastPaymentModalProps> = ({
 
   // Al abrir el modal, crea un checkout nuevo. Al cerrarlo, invalida cualquier
   // request en vuelo para que no pise el estado si se reabre con otra reserva.
+  //
+  // `set-state-in-effect` se desactiva aquí a conciencia: la regla apunta a los
+  // efectos que solo derivan estado de otro estado, y este dispara una petición
+  // de red contra Datafast y toca un ref de cancelación — un efecto es
+  // exactamente la herramienta correcta. Ver la nota de React sobre obtención de
+  // datos en https://react.dev/learn/you-might-not-need-an-effect
   useEffect(() => {
     if (visible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       iniciarCheckout();
     } else {
       requestIdRef.current += 1;

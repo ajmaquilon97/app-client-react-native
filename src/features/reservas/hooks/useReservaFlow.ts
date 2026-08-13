@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { useAuth } from '@/features/auth';
@@ -78,9 +78,15 @@ export function useReservaFlow({ espacio, visible, onReservaPagada }: UseReserva
     setCorreoFacturacion('');
   }, []);
 
-  useEffect(() => {
+  // Reinicio al cerrar la hoja, derivado del cambio de prop en vez de un efecto
+  // (React: "You Might Not Need an Effect" → ajustar el estado cuando cambia una
+  // prop). Con el efecto, React llegaba a pintar un render intermedio con la
+  // selección anterior todavía puesta.
+  const [visibleAnterior, setVisibleAnterior] = useState(visible);
+  if (visibleAnterior !== visible) {
+    setVisibleAnterior(visible);
     if (!visible) reset();
-  }, [visible, reset]);
+  }
 
   // El aforo del día acota cuántas entradas se pueden pedir.
   const maxEntradas = aforo ? Math.max(aforo.disponible, 1) : undefined;

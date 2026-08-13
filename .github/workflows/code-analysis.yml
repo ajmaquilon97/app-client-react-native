@@ -1,0 +1,101 @@
+name: Code Analysis
+
+# Mismo criterio que `pruebas.yml`: se valida en las ramas intermedias
+# (feature/**, hotfix) y en los PR que apuntan a main. `develop` queda fuera
+# para no frenar el desarrollo libre.
+on:
+  push:
+    branches:
+      - feature
+      - feature/**
+      - hotfix
+      - hotfix/**
+  pull_request:
+    branches:
+      - feature
+      - feature/**
+      - hotfix
+      - hotfix/**
+      - main
+  workflow_dispatch:
+
+jobs:
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # No hay paso de compilación equivalente al `next build` del portal web:
+      # una app de React Native se empaqueta con Metro hacia un binario nativo,
+      # que no aporta nada al análisis y tarda entre 10 y 20 minutos. CodeQL
+      # analiza JavaScript/TypeScript sin necesidad de compilar; las
+      # dependencias se instalan solo para que resuelva los imports.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}
+
+  # Sin `needs: codeql` — a diferencia del portal web. Los dos análisis son
+  # independientes, y encadenarlos significaría que un fallo de CodeQL deja a
+  # SonarCloud sin ejecutar: si además Sonar es un status check obligatorio, el
+  # merge quedaría bloqueado de forma permanente sin que Sonar haya tenido nada
+  # que decir. Corriendo en paralelo, cada uno reporta su propio resultado.
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Historial completo: SonarCloud lo usa para atribuir cada línea a su
+          # commit y calcular las métricas de "código nuevo".
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Sin este paso no existe `coverage/lcov.info` y SonarCloud reporta 0% de
+      # cobertura, que es peor que no reportar nada. `--forceExit` porque el
+      # entorno de RN deja handles abiertos tras la última suite.
+      - name: Generar el reporte de cobertura para Sonar
+        run: npx jest --coverage --ci --forceExit --silent
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

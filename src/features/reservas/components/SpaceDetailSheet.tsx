@@ -160,7 +160,12 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
 
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity activeOpacity={0.8} onPress={onClose} style={styles.headerBtn}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            style={styles.headerBtn}>
             <ArrowLeftIcon size={20} color={colors.headerText} strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={styles.headerTitle} numberOfLines={1}>Detalle del Espacio</Text>
@@ -168,6 +173,8 @@ const SpaceDetailSheet: React.FC<SpaceDetailSheetProps> = ({
             activeOpacity={0.8}
             onPress={handleFavoritePress}
             onLongPress={handleFavoriteLongPress}
+            accessibilityRole="button"
+            accessibilityLabel={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
             style={styles.headerBtn}>
             <HeartIcon size={20} color={isFavorite ? colors.favorite : colors.surface} filled={isFavorite} />
           </TouchableOpacity>

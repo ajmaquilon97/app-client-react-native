@@ -79,7 +79,13 @@ export const LocationProvider: React.FC<LocationProviderProps> = ({ children }) 
   }, []);
 
   // Solicita el permiso y captura la ubicación una vez, al abrir la app.
+  //
+  // `set-state-in-effect` se desactiva a conciencia: la regla apunta a los
+  // efectos que solo derivan estado de otro estado, y este consulta el GPS del
+  // dispositivo — un sistema externo, que es justo para lo que existen los
+  // efectos. Ver https://react.dev/learn/you-might-not-need-an-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
   }, [refresh]);
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Platform, Modal, ActivityIndicator } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,14 +42,19 @@ const KushkiPaymentModal: React.FC<KushkiPaymentModalProps> = ({
 
   const procesando = status === 'processing';
 
-  // Reinicia el estado cada vez que se abre/cierra el modal
-  useEffect(() => {
+  // Reinicia el estado al cerrar el modal. Derivado del cambio de prop y no en
+  // un efecto (React: "You Might Not Need an Effect" → ajustar el estado cuando
+  // cambia una prop), para no pintar un render intermedio con el resultado del
+  // pago anterior.
+  const [visibleAnterior, setVisibleAnterior] = useState(visible);
+  if (visibleAnterior !== visible) {
+    setVisibleAnterior(visible);
     if (!visible) {
       setStatus('form');
       setTransactionId('');
       setLoading(false);
     }
-  }, [visible]);
+  }
 
   // ─── Maneja mensajes del WebView ───
   const handleWebViewMessage = useCallback(
