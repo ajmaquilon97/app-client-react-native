@@ -1,0 +1,176 @@
+name: Pruebas y cobertura
+
+# Modelo de ramas del proyecto:
+#   develop            → desarrollo libre, sin validaciones
+#   feature/**, hotfix → camino intermedio, aquí sí se valida todo
+#   main               → producción, solo recibe PR desde feature/** y hotfix
+#
+# De ahí las dos listas: se valida al empujar commits a las ramas intermedias y
+# al abrir o actualizar un PR hacia ellas.
+#
+# `main` aparece únicamente en `pull_request` y no en `push`: la validación tiene
+# que ejecutarse *sobre el PR* que apunta a main, porque es ahí donde la
+# protección de rama exige el status check. Sin esta entrada, el check quedaría
+# esperando indefinidamente y ningún PR podría integrarse.
+on:
+  push:
+    branches:
+      - feature
+      - feature/**
+      - hotfix
+      - hotfix/**
+  pull_request:
+    branches:
+      - feature
+      - feature/**
+      - hotfix
+      - hotfix/**
+      - main
+  workflow_dispatch:
+
+# ── Configuración del correo ─────────────────────────────────────────────────
+# Los destinatarios se definen aquí (separados por coma). Las credenciales SMTP
+# NO: viven en Settings → Secrets and variables → Actions.
+env:
+  DESTINATARIOS_REPORTE: "angelmaquilon97@gmail.com"
+  NOMBRE_REMITENTE: "CI App Móvil"
+
+# Un push nuevo sobre el mismo PR cancela la ejecución anterior: no tiene
+# sentido gastar runners validando un commit ya reemplazado.
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    name: Lint, tipos, pruebas y cobertura
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci` y no `npm install`: instala exactamente lo que fija
+      # package-lock.json, así el runner reproduce el árbol de dependencias del
+      # entorno local en vez de resolver versiones nuevas.
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Los tres pasos de verificación llevan `continue-on-error`: el correo con
+      # el reporte tiene que salir precisamente cuando algo va mal. El job se
+      # marca en rojo en el último paso, según el `outcome` de cada uno.
+      - name: Análisis estático (ESLint)
+        id: lint
+        continue-on-error: true
+        run: npm run lint
+
+      # Los errores de tipo no los detecta Jest: Babel borra los tipos sin
+      # comprobarlos. Este paso es el único que los ve.
+      - name: Verificación de tipos (TypeScript)
+        id: typecheck
+        continue-on-error: true
+        run: npm run typecheck
+
+      # Falla si alguna prueba no pasa o si la cobertura cae por debajo del 70%
+      # en statements, branches, functions o lines (coverageThreshold en
+      # jest.config.js).
+      - name: Ejecutar pruebas con cobertura
+        id: pruebas
+        continue-on-error: true
+        run: npm run test:ci -- --json --outputFile=jest-results.json
+
+      - name: Construir el reporte de cobertura
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ] && [ -f jest-results.json ]; then
+            node scripts/coverage-email.mjs jest-results.json
+          else
+            # Jest ni siquiera llegó a escribir el resumen (error de compilación,
+            # dependencia rota…). Se envía un aviso mínimo en lugar de nada.
+            mkdir -p coverage
+            echo "[FALLO] Pruebas app móvil · ${GITHUB_REF_NAME} · la suite no llegó a ejecutarse" > coverage/asunto.txt
+            {
+              echo "<h2 style=\"font-family:sans-serif;color:#b91c1c\">La suite de pruebas no llegó a ejecutarse</h2>"
+              echo "<p style=\"font-family:sans-serif\">Rama <b>${GITHUB_REF_NAME}</b>, commit <b>${GITHUB_SHA}</b>.<br>"
+              echo "Revisa el detalle en <a href=\"${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\">la ejecución de GitHub Actions</a>.</p>"
+            } > coverage/reporte-correo.html
+            echo "## ❌ La suite de pruebas no llegó a ejecutarse" > coverage/resumen.md
+          fi
+          echo "ASUNTO_REPORTE=$(cat coverage/asunto.txt)" >> "$GITHUB_ENV"
+
+      - name: Publicar el resumen en la ejecución
+        if: always()
+        run: cat coverage/resumen.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar la cobertura como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-app-movil
+          path: |
+            coverage/
+            jest-results.json
+          retention-days: 30
+
+      # `continue-on-error` a propósito: el correo es una notificación, no una
+      # verificación de calidad. Este job es el status check que bloquea el
+      # merge, así que un fallo de SMTP —credenciales ausentes, Gmail caído—
+      # no puede impedir integrar código que sí pasó lint, tipos y pruebas.
+      # El fallo queda visible como anotación en la ejecución.
+      - name: Enviar el reporte por correo
+        if: always()
+        continue-on-error: true
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: ${{ env.NOMBRE_REMITENTE }} <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ env.DESTINATARIOS_REPORTE }}
+          subject: ${{ env.ASUNTO_REPORTE }}
+          html_body: file://coverage/reporte-correo.html
+          # Solo texto plano como adjunto. El reporte HTML navegable NO se adjunta:
+          # Gmail rechaza (552-5.7.0) cualquier archivo —o ZIP que los contenga— con
+          # .html/.js dentro, y `coverage/lcov-report/` está hecho justo de eso.
+          # Se descarga desde el artefacto `cobertura-app-movil` de la ejecución.
+          attachments: coverage/resumen.md
+          convert_markdown: false
+
+      # Detecta desalineaciones entre las versiones instaladas y las que exige
+      # el SDK de Expo. Informativo: el desfase de versiones se atiende en su
+      # propia tarea de mantenimiento y no debe frenar el merge de un cambio
+      # funcional.
+      - name: Diagnóstico de configuración de Expo
+        if: always()
+        continue-on-error: true
+        run: npx expo-doctor
+
+      # El resultado real del job: si el lint, los tipos o las pruebas fallaron,
+      # o si la cobertura quedó bajo el umbral de `jest.config.js`, aquí se
+      # marca en rojo. Este es el status check que protege la rama.
+      - name: Reflejar el resultado de las verificaciones
+        if: always()
+        run: |
+          fallo=0
+          if [ "${{ steps.lint.outcome }}" = "failure" ]; then
+            echo "::error::El análisis estático (ESLint) encontró errores."
+            fallo=1
+          fi
+          if [ "${{ steps.typecheck.outcome }}" = "failure" ]; then
+            echo "::error::La verificación de tipos de TypeScript falló."
+            fallo=1
+          fi
+          if [ "${{ steps.pruebas.outcome }}" = "failure" ]; then
+            echo "::error::Las pruebas fallaron o la cobertura quedó por debajo del umbral del 70 %."
+            fallo=1
+          fi
+          exit $fallo

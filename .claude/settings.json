@@ -1,4 +1,21 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(adb shell *)",
+      "Bash(adb -s emulator-5554 emu avd name)",
+      "Bash(adb -s emulator-5554 emu kill)",
+      "Bash(\"/c/Users/angel/AppData/Local/Android/Sdk/emulator/emulator.exe\" -avd Pixel_9 -wipe-data)",
+      "Bash(disown)",
+      "Bash(echo \"launched, pid $!\")",
+      "Bash(adb install *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3)",
+      "Bash(cp \"assets/images/theme_pink/AgoraVerticalTransparente.png\" \"assets/images/logo-agora-splash.png\")",
+      "Bash(cp \"assets/images/theme_pink/onlyLogoTransparente.png\" \"assets/images/logo-agora-splash.png\")",
+      "Bash(netstat -ano)",
+      "Bash(powershell -Command \"Stop-Process -Id 296 -Force\")"
+    ]
+  },
   "enabledPlugins": {
     "expo@claude-plugins-official": true
   }

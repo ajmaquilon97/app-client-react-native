@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430" role="img" aria-label="Flujo de una petición: pantalla, hook de React Query, servicio, cliente HTTP y API REST. La caché de React Query alimenta al hook y la política de sesión 401, refresco y reintento vive en el cliente HTTP.">
+          <defs>
+            <marker id="f2a-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#6b7c93"/>
+            </marker>
+            <marker id="f2b-2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#fd548a"/>
+            </marker>
+          </defs>
+
+          <!-- caché -->
+          <rect x="230" y="34" width="180" height="76" rx="6" fill="#eef2f8" stroke="#151b2d"/>
+          <text x="320" y="58" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">Caché de React Query</text>
+          <text x="320" y="75" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">staleTime 1 min · gcTime 5 min</text>
+          <text x="320" y="89" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">no reintenta errores 4xx</text>
+          <text x="320" y="103" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">revalida al recuperar foco o red</text>
+          <line x1="320" y1="110" x2="320" y2="146" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f2a-2)" marker-start="url(#f2a-2)"/>
+
+          <!-- cadena -->
+          <rect x="40" y="150" width="150" height="80" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="115" y="180" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">Pantalla</text>
+          <text x="115" y="197" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">src/app/</text>
+          <text x="115" y="211" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">solo compone la interfaz</text>
+
+          <rect x="230" y="150" width="180" height="80" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="320" y="180" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">Hook del dominio</text>
+          <text x="320" y="197" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">useQuery para leer</text>
+          <text x="320" y="211" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">useMutation con invalidación</text>
+
+          <rect x="450" y="150" width="160" height="80" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="530" y="180" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">Servicio</text>
+          <text x="530" y="197" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">api.get · post · put · del</text>
+          <text x="530" y="211" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">mapeo DTO → dominio</text>
+
+          <rect x="650" y="150" width="150" height="80" rx="6" fill="#eef2f8" stroke="#151b2d"/>
+          <text x="725" y="180" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">Cliente HTTP</text>
+          <text x="725" y="197" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">shared/api/client.ts</text>
+          <text x="725" y="211" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">URL · cabeceras · errores</text>
+
+          <rect x="840" y="150" width="130" height="80" rx="6" fill="#f1f5f9" stroke="#8b9cb0"/>
+          <text x="905" y="184" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">API REST</text>
+          <text x="905" y="201" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">fetch nativo</text>
+
+          <line x1="190" y1="190" x2="226" y2="190" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f2a-2)"/>
+          <line x1="410" y1="190" x2="446" y2="190" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f2a-2)"/>
+          <line x1="610" y1="190" x2="646" y2="190" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f2a-2)"/>
+          <line x1="800" y1="190" x2="836" y2="190" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f2a-2)"/>
+          <text x="723" y="142" fill="#46566d" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="500" text-anchor="middle">Authorization: Bearer</text>
+
+          <!-- retorno -->
+          <polyline points="530,230 530,272 115,272 115,234" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f2a-2)"/>
+          <text x="322" y="266" fill="#46566d" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="500" text-anchor="middle">{ data, isLoading, isError, refetch } — modelo de dominio, nunca el DTO</text>
+
+          <!-- sesión -->
+          <line x1="725" y1="230" x2="725" y2="316" stroke="#fd548a" stroke-width="1.8" fill="none" marker-end="url(#f2b-2)"/>
+          <rect x="600" y="322" width="370" height="82" rx="6" fill="#fff1f5" stroke="#fd548a"/>
+          <text x="785" y="346" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">Política de sesión — centralizada aquí</text>
+          <text x="785" y="365" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">401 → refresco del token → reintento una vez → si falla, cierre de sesión</text>
+          <text x="785" y="381" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">el token lo aporta AuthContext al registrar un TokenProvider</text>
+          <text x="785" y="395" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">excepción: el kiosco no refresca — su 401 vuelve a pedir el PIN</text>
+        </svg>

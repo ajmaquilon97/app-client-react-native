@@ -1,24 +1,22 @@
 {
   "expo": {
-    "name": "app-client-react-native",
+    "name": "Agora",
     "slug": "app-client-react-native",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "appclientreactnative",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.appclientreactnative"
+      "package": "com.obsidiantechlab.agora",
+      "versionCode": 9
     },
     "web": {
       "output": "static",
@@ -29,13 +27,27 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
-          }
+          "image": "./assets/images/logo-agora-splash.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#F5F7FA"
         }
-      ]
+      ],
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permite que Espacios use tu ubicación para calcular la distancia a cada espacio."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permite que Espacios use la cámara para escanear las entradas de los invitados en la puerta."
+        }
+      ],
+      "@react-native-google-signin/google-signin",
+      "./plugins/withAndroidReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": true,
