@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430" role="img" aria-label="Grafo de dependencias entre dominios: reservas y pagos se importan mutuamente formando un ciclo; reservas, pagos y resenas dependen de espacios; auth es la base de sesión que consumen casi todos los dominios.">
+          <defs>
+            <marker id="f3a-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#6b7c93"/>
+            </marker>
+            <marker id="f3b-3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#fd548a"/>
+            </marker>
+          </defs>
+
+          <rect x="40" y="46" width="160" height="48" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="120" y="70" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">invitados</text>
+          <text x="120" y="85" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">sin dependencias cruzadas</text>
+
+          <rect x="230" y="46" width="160" height="48" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="310" y="76" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">resenas</text>
+
+          <rect x="560" y="46" width="160" height="48" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="640" y="76" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">reservas</text>
+
+          <rect x="560" y="160" width="160" height="48" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="640" y="190" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">pagos</text>
+
+          <rect x="380" y="160" width="160" height="48" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="460" y="190" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">favoritos</text>
+
+          <rect x="380" y="274" width="160" height="48" rx="6" fill="#ffffff" stroke="#151b2d"/>
+          <text x="460" y="304" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">espacios</text>
+
+          <!-- ciclo reservas <-> pagos -->
+          <line x1="600" y1="94" x2="600" y2="156" stroke="#fd548a" stroke-width="1.8" fill="none" marker-end="url(#f3b-3)"/>
+          <line x1="680" y1="160" x2="680" y2="98" stroke="#fd548a" stroke-width="1.8" fill="none" marker-end="url(#f3b-3)"/>
+          <text x="736" y="122" fill="#a92b56" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600">ciclo — reservas usa PaymentModal y SERVICE_FEE_RATE;</text>
+          <text x="736" y="137" fill="#a92b56" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600">pagos usa el tipo Reserva</text>
+
+          <!-- reservas -> favoritos -->
+          <line x1="556" y1="70" x2="502" y2="156" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f3a-3)"/>
+
+          <!-- pagos -> espacios -->
+          <line x1="592" y1="208" x2="536" y2="272" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f3a-3)"/>
+
+          <!-- reservas -> espacios -->
+          <polyline points="720,64 790,64 790,298 544,298" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f3a-3)"/>
+
+          <!-- resenas -> espacios -->
+          <polyline points="310,94 310,298 376,298" stroke="#6b7c93" stroke-width="1.4" fill="none" marker-end="url(#f3a-3)"/>
+
+          <!-- base auth -->
+          <rect x="40" y="352" width="820" height="52" rx="6" fill="#eef2f8" stroke="#151b2d"/>
+          <text x="450" y="374" fill="#0f172a" font-family="Consolas, Cascadia Mono, Menlo, monospace" font-size="12.5" font-weight="600" text-anchor="middle">auth — base de sesión</text>
+          <text x="450" y="391" fill="#78859b" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="9.8" text-anchor="middle">espacios, reservas, favoritos, resenas e invitados la consumen vía useAuth para condicionar sus consultas</text>
+        </svg>
