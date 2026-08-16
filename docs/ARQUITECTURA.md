@@ -303,6 +303,6 @@ Decisiones tomadas a conciencia, no olvidos:
 | `pagos/services/datafastDirectUat.ts` | Diagnóstico temporal con credenciales UAT embebidas, mientras backend arregla la validación de `resourcePath`. Aislado tras el barrel de `pagos`. **Borrar junto con el flag `DATAFAST_DIAGNOSTICO_DIRECTO_UAT` cuando backend confirme.** |
 | `paymentConfig.ts:105` — único error de `tsc` | Comparación contra un toggle manual de pasarela fijado a `'datafast'`. Preexistente; tocarlo es cambiar configuración de pagos. |
 | 4 `react-hooks/set-state-in-effect` | Dos en los modales de pago, uno en `useReservaFlow`, uno en `LocationContext`. Son idiomáticos, no bugs: el reset funciona. Arreglarlos bien exige reestructurar el flujo de pago, que no conviene tocar sin poder ejecutarlo. |
-| ~104 `useMemo`/`useCallback` manuales | Redundantes con React Compiler, pero **no dañinos**: `preserve-manual-memoization` reporta 0. Se quitan al tocar cada archivo, no en un barrido masivo. Ojo con `SpaceDetailSheet` → `hoy`, marcado `NO BORRAR`: su dependencia es intencional. |
-| ~30 componentes con `React.FC` | Se migran a `export default function` al tocar cada archivo. |
+| 105 `useMemo`/`useCallback` manuales | Redundantes con React Compiler, pero **no dañinos**: `preserve-manual-memoization` reporta 0. Se quitan al tocar cada archivo, no en un barrido masivo. Ojo con `SpaceDetailSheet` → `hoy`, marcado `NO BORRAR`: su dependencia es intencional. |
+| 38 componentes con `React.FC` | Se migran a `export default function` al tocar cada archivo. |
 | `docs/theme_default/`, `docs/theme_pink/` | Plantillas de paleta fuera de `src/`; `docs/` está excluido de `tsconfig`. Decidir si se integran o se borran. |

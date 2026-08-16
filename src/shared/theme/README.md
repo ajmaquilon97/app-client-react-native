@@ -3,8 +3,9 @@
 Todo lo visual de la app se controla desde [`index.ts`](./index.ts): plantilla de
 colores, títulos y subtítulos, tamaños de letra, espaciados, radios y sombras.
 
-React Native no usa CSS. `src/global.css` solo aplica a la build web (define las
-familias tipográficas). El equivalente al "CSS global" es este archivo de tokens.
+React Native no usa CSS. [`global.css`](./global.css) solo aplica a la build web
+(define las familias tipográficas que consume la rama `web` de `fonts`). El
+equivalente al "CSS global" es este archivo de tokens.
 
 ## Reglas
 
