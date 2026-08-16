@@ -16,7 +16,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.obsidiantechlab.agora",
-      "versionCode": 8
+      "versionCode": 10
     },
     "web": {
       "output": "static",
