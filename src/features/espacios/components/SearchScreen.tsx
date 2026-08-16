@@ -125,6 +125,8 @@ export default function SearchScreen({
               onPress={handleClose}
               style={styles.backButton}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Volver"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <ArrowLeftIcon size={20} color={colors.headerText} strokeWidth={2.5} />
             </TouchableOpacity>
@@ -150,6 +152,8 @@ export default function SearchScreen({
               <TouchableOpacity
                 onPress={() => onChangeText('')}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Limpiar búsqueda"
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <CloseCircleIcon size={18} color={colors.headerTextSubtle} />
               </TouchableOpacity>
@@ -253,6 +257,8 @@ export default function SearchScreen({
               onPress={() => setPantallaSugeridos(false)}
               style={styles.backButton}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Volver"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <ArrowLeftIcon size={20} color={colors.headerText} strokeWidth={2.5} />
             </TouchableOpacity>

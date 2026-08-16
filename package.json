@@ -45,6 +45,7 @@
     "eslint-config-expo": "~56.0.4",
     "jest": "~29.7.0",
     "jest-expo": "~56.0.5",
+    "test-renderer": "^1.2.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -55,16 +56,12 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "test:watch": "jest --watchAll"
-  },
-  "jest": {
-    "preset": "jest-expo",
-    "setupFiles": [
-      "<rootDir>/jest/setup.js"
-    ],
-    "moduleNameMapper": {
-      "\\.css$": "<rootDir>/jest/styleMock.js"
-    }
+    "test:watch": "jest --watchAll",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --coverage --ci --forceExit",
+    "typecheck": "tsc --noEmit",
+    "test:tabla-tesis": "jest --coverage --coverageReporters=json-summary --silent --forceExit --json --outputFile=jest-results.json && node scripts/coverage-tesis.mjs jest-results.json",
+    "test:reporte-correo": "jest --coverage --ci --forceExit --json --outputFile=jest-results.json && node scripts/coverage-email.mjs jest-results.json"
   },
   "private": true
 }

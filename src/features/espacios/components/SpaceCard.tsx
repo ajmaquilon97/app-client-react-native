@@ -61,6 +61,8 @@ const SpaceCard: React.FC<SpaceCardProps> = ({
           activeOpacity={0.8}
           onPress={handleFavoritePress}
           onLongPress={onLongPressFavorite ? handleFavoriteLongPress : undefined}
+          accessibilityRole="button"
+          accessibilityLabel={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
           style={styles.favoriteButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <HeartIcon

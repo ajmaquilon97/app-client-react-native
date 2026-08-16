@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { useAuth } from '@/features/auth';
 import { Espacio, getModalidadReserva } from '@/features/espacios';
 import { SERVICE_FEE_RATE } from '@/features/pagos';
 import { toLocalDateTimeString } from '@/shared/utils/fechas';
+import { soloCorreo, soloDigitos, soloNombre } from '@/shared/utils/texto';
 
 import { CrearReservaInput, FacturacionInput, Reserva } from '../types';
 import {
@@ -52,9 +53,26 @@ export function useReservaFlow({ espacio, visible, onReservaPagada }: UseReserva
   const [showPayment, setShowPayment] = useState(false);
   const [reservaCreada, setReservaCreada] = useState<Reserva | null>(null);
 
-  const [identificacionFacturacion, setIdentificacionFacturacion] = useState('');
-  const [razonSocialFacturacion, setRazonSocialFacturacion] = useState('');
-  const [correoFacturacion, setCorreoFacturacion] = useState('');
+  const [identificacionFacturacion, guardarIdentificacion] = useState('');
+  const [razonSocialFacturacion, guardarRazonSocial] = useState('');
+  const [correoFacturacion, guardarCorreo] = useState('');
+
+  // El saneo vive en el setter y no en la pantalla: `SpaceDetailSheet` es solo
+  // presentación, así que lo que viaja a backend no puede depender de qué
+  // componente pinte el formulario. `keyboardType` es una sugerencia al
+  // teclado, no una restricción: no cubre pegar ni un teclado físico.
+  const setIdentificacionFacturacion = useCallback(
+    (valor: string) => guardarIdentificacion(soloDigitos(valor)),
+    [],
+  );
+  const setRazonSocialFacturacion = useCallback(
+    (valor: string) => guardarRazonSocial(soloNombre(valor)),
+    [],
+  );
+  const setCorreoFacturacion = useCallback(
+    (valor: string) => guardarCorreo(soloCorreo(valor)),
+    [],
+  );
 
   const disponibilidadQuery = useDisponibilidad(espacio?.id ?? null, visible ? selectedDate : null);
   const aforoQuery = useAforoDia(espacio?.id ?? null, visible ? selectedDate : null, esCupoCompartido);
@@ -73,14 +91,20 @@ export function useReservaFlow({ espacio, visible, onReservaPagada }: UseReserva
     setCantidadEntradas(1);
     setShowPayment(false);
     setReservaCreada(null);
-    setIdentificacionFacturacion('');
-    setRazonSocialFacturacion('');
-    setCorreoFacturacion('');
+    guardarIdentificacion('');
+    guardarRazonSocial('');
+    guardarCorreo('');
   }, []);
 
-  useEffect(() => {
+  // Reinicio al cerrar la hoja, derivado del cambio de prop en vez de un efecto
+  // (React: "You Might Not Need an Effect" → ajustar el estado cuando cambia una
+  // prop). Con el efecto, React llegaba a pintar un render intermedio con la
+  // selección anterior todavía puesta.
+  const [visibleAnterior, setVisibleAnterior] = useState(visible);
+  if (visibleAnterior !== visible) {
+    setVisibleAnterior(visible);
     if (!visible) reset();
-  }, [visible, reset]);
+  }
 
   // El aforo del día acota cuántas entradas se pueden pedir.
   const maxEntradas = aforo ? Math.max(aforo.disponible, 1) : undefined;

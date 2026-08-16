@@ -52,6 +52,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
         <TouchableOpacity
           onPress={handleClear}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Limpiar búsqueda"
           style={styles.clearButton}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <CloseCircleIcon size={18} color={colors.headerTextSubtle} />

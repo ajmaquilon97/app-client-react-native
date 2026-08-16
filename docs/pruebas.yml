@@ -1,0 +1,109 @@
+name: Pruebas y cobertura
+
+# Se dispara en las ramas de trabajo (`feature`, `feature/**`): tanto al empujar
+# commits como al abrir o actualizar un Pull Request hacia ellas.
+# Para extenderlo a `develop`/`main` basta con añadirlas a las dos listas.
+on:
+  push:
+    branches:
+      - feature
+      - feature/**
+  pull_request:
+    branches:
+      - feature
+      - feature/**
+  workflow_dispatch:
+
+# ── Configuración del correo ─────────────────────────────────────────────────
+# Los destinatarios se definen aquí (separados por coma). Las credenciales SMTP
+# NO: viven en Settings → Secrets and variables → Actions.
+env:
+  DESTINATARIOS_REPORTE: "angelmaquilon97@gmail.com"
+  NOMBRE_REMITENTE: "CI Portal Web"
+
+jobs:
+  pruebas:
+    name: Jest + reporte de cobertura
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # `continue-on-error` deja seguir el job aunque haya pruebas rojas o la
+      # cobertura caiga del 70 %: el correo con el reporte tiene que salir
+      # precisamente en ese caso. El job se marca en rojo en el último paso.
+      - name: Ejecutar pruebas con cobertura
+        id: pruebas
+        continue-on-error: true
+        run: npm run test:ci -- --json --outputFile=jest-results.json
+
+      - name: Construir el reporte de cobertura
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ] && [ -f jest-results.json ]; then
+            node scripts/coverage-email.mjs jest-results.json
+          else
+            # Jest ni siquiera llegó a escribir el resumen (error de compilación,
+            # dependencia rota…). Se envía un aviso mínimo en lugar de nada.
+            mkdir -p coverage
+            echo "[FALLO] Pruebas portal web · ${GITHUB_REF_NAME} · la suite no llegó a ejecutarse" > coverage/asunto.txt
+            {
+              echo "<h2 style=\"font-family:sans-serif;color:#b91c1c\">La suite de pruebas no llegó a ejecutarse</h2>"
+              echo "<p style=\"font-family:sans-serif\">Rama <b>${GITHUB_REF_NAME}</b>, commit <b>${GITHUB_SHA}</b>.<br>"
+              echo "Revisa el detalle en <a href=\"${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\">la ejecución de GitHub Actions</a>.</p>"
+            } > coverage/reporte-correo.html
+            echo "## ❌ La suite de pruebas no llegó a ejecutarse" > coverage/resumen.md
+          fi
+          echo "ASUNTO_REPORTE=$(cat coverage/asunto.txt)" >> "$GITHUB_ENV"
+
+      - name: Publicar el resumen en la ejecución
+        if: always()
+        run: cat coverage/resumen.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar la cobertura como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-portal-web
+          path: |
+            coverage/
+            jest-results.json
+          retention-days: 30
+
+      - name: Enviar el reporte por correo
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: ${{ env.NOMBRE_REMITENTE }} <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ env.DESTINATARIOS_REPORTE }}
+          subject: ${{ env.ASUNTO_REPORTE }}
+          html_body: file://coverage/reporte-correo.html
+          # Solo texto plano como adjunto. El reporte HTML navegable NO se adjunta:
+          # Gmail rechaza (552-5.7.0) cualquier archivo —o ZIP que los contenga— con
+          # .html/.js dentro, y `coverage/lcov-report/` está hecho justo de eso.
+          # Se descarga desde el artefacto `cobertura-portal-web` de la ejecución.
+          attachments: coverage/resumen.md
+          convert_markdown: false
+
+      # El resultado real del job: si las pruebas fallaron o la cobertura quedó
+      # bajo el umbral de `jest.config.ts`, aquí se marca en rojo.
+      - name: Reflejar el resultado de las pruebas
+        if: steps.pruebas.outcome == 'failure'
+        run: |
+          echo "::error::Las pruebas fallaron o la cobertura quedó por debajo del umbral del 70 %."
+          exit 1

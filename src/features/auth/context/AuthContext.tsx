@@ -7,6 +7,7 @@ import React, {
   ReactNode,
 } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { setTokenProvider } from '@/shared/api/client';
 
 import * as authService from '../services/auth.service';
@@ -143,6 +144,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(async () => {
     if (refreshToken) {
       await authService.logout(refreshToken);
+    }
+    // Sin esto, el SDK nativo de Google recuerda la última cuenta y el próximo
+    // signIn() la reutiliza en silencio en vez de mostrar el selector de cuentas.
+    try {
+      await GoogleSignin.signOut();
+    } catch {
+      // No hay sesión de Google activa (login por email/password) u otro error no crítico.
     }
     await clearSession();
   }, [refreshToken, clearSession]);
